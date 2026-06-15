@@ -1,0 +1,4002 @@
+[
+  {
+    "academic_year": "2021-2022",
+    "code": "1-53 01 02 04",
+    "title_ru": "Автоматизация систем сбора, учета и обработки финансовой и коммерческой информации",
+    "cluster": 2,
+    "cluster_name_ru": "Экономика и управление",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется экономикой, финансами и управлением.",
+    "career_matches": [
+      "экономист",
+      "финансист",
+      "аналитик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-98 01 01-01",
+    "title_ru": "Компьютерная безопасность",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется ИТ, цифровыми системами и инженерной подготовкой.",
+    "career_matches": [
+      "IT-специалист",
+      "инженер",
+      "техник"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-38 01 03",
+    "title_ru": "Электронные устройства",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется ИТ, цифровыми системами и инженерной подготовкой.",
+    "career_matches": [
+      "IT-специалист",
+      "инженер",
+      "техник"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 05 05",
+    "title_ru": "Информатика",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется ИТ, цифровыми системами и инженерной подготовкой.",
+    "career_matches": [
+      "IT-специалист",
+      "инженер",
+      "техник"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 05 05",
+    "title_ru": "Информатика",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется ИТ, цифровыми системами и инженерной подготовкой.",
+    "career_matches": [
+      "IT-специалист",
+      "инженер",
+      "техник"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 05 01",
+    "title_ru": "Математика",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 05 01",
+    "title_ru": "Математика",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 05 03-01",
+    "title_ru": "Математика. Физика",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-31 03 03-02",
+    "title_ru": "Прикладная математика",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-31 03 03-02",
+    "title_ru": "Прикладная математика",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-40 02 01",
+    "title_ru": "Вычислительные машины, системы и сети",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто хочет получить профильную профессиональную подготовку.",
+    "career_matches": [
+      "специалист",
+      "аналитик",
+      "практик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1 - 45 01 01",
+    "title_ru": "Многосетевые телекоммуникационные системы",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется ИТ, цифровыми системами и инженерной подготовкой.",
+    "career_matches": [
+      "IT-специалист",
+      "инженер",
+      "техник"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1 - 45 01 01",
+    "title_ru": "Многосетевые телекоммуникационные системы",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется ИТ, цифровыми системами и инженерной подготовкой.",
+    "career_matches": [
+      "IT-специалист",
+      "инженер",
+      "техник"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-08 01 01-02",
+    "title_ru": "Профессиональное обучение (радиоэлектроника)",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется ИТ, цифровыми системами и инженерной подготовкой.",
+    "career_matches": [
+      "IT-специалист",
+      "инженер",
+      "техник"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-40 01 01",
+    "title_ru": "Программное обеспечение информационных технологий",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется ИТ, цифровыми системами и инженерной подготовкой.",
+    "career_matches": [
+      "IT-специалист",
+      "инженер",
+      "техник"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 06 01",
+    "title_ru": "Технология",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто хочет получить профильную профессиональную подготовку.",
+    "career_matches": [
+      "специалист",
+      "аналитик",
+      "практик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 06 01",
+    "title_ru": "Технология",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто хочет получить профильную профессиональную подготовку.",
+    "career_matches": [
+      "специалист",
+      "аналитик",
+      "практик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 05 02",
+    "title_ru": "Физика",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 05 02",
+    "title_ru": "Физика",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 05 04-02",
+    "title_ru": "Физика. Информатика",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется ИТ, цифровыми системами и инженерной подготовкой.",
+    "career_matches": [
+      "IT-специалист",
+      "инженер",
+      "техник"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 05 04-01",
+    "title_ru": "Физика. Математика",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-25 01 04 03",
+    "title_ru": "Налоги и налогообложение",
+    "cluster": 2,
+    "cluster_name_ru": "Экономика и управление",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется экономикой, финансами и управлением.",
+    "career_matches": [
+      "экономист",
+      "финансист",
+      "аналитик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-25 01 11",
+    "title_ru": "Аудит и ревизия",
+    "cluster": 2,
+    "cluster_name_ru": "Экономика и управление",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется экономикой, финансами и управлением.",
+    "career_matches": [
+      "экономист",
+      "финансист",
+      "аналитик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-25 01 08",
+    "title_ru": "Бухгалтерский учет, анализ и аудит",
+    "cluster": 2,
+    "cluster_name_ru": "Экономика и управление",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется экономикой, финансами и управлением.",
+    "career_matches": [
+      "экономист",
+      "финансист",
+      "аналитик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-25 01 08",
+    "title_ru": "Бухгалтерский учет, анализ и аудит",
+    "cluster": 2,
+    "cluster_name_ru": "Экономика и управление",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется экономикой, финансами и управлением.",
+    "career_matches": [
+      "экономист",
+      "финансист",
+      "аналитик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 04 02",
+    "title_ru": "География",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 04 02",
+    "title_ru": "География",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 04 05",
+    "title_ru": "География. Основы экономики",
+    "cluster": 2,
+    "cluster_name_ru": "Экономика и управление",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется экономикой, финансами и управлением.",
+    "career_matches": [
+      "экономист",
+      "финансист",
+      "аналитик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 04 05-01",
+    "title_ru": "География. Биология",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 1
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 04 05-01",
+    "title_ru": "География. Биология",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 04 05",
+    "title_ru": "География. Дополнительная специальность (демография)",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 04 05",
+    "title_ru": "География. Дополнительная специальность (демография)",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-31 02 01-02 03",
+    "title_ru": "Туристическая география и менеджмент путешествий",
+    "cluster": 2,
+    "cluster_name_ru": "Экономика и управление",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-33 01 02",
+    "title_ru": "Геоэкология",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-33 01 02",
+    "title_ru": "Геоэкология",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-25 01 03",
+    "title_ru": "Мировая экономика",
+    "cluster": 2,
+    "cluster_name_ru": "Экономика и управление",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется экономикой, финансами и управлением.",
+    "career_matches": [
+      "экономист",
+      "финансист",
+      "аналитик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-25 01 03",
+    "title_ru": "Мировая экономика",
+    "cluster": 2,
+    "cluster_name_ru": "Экономика и управление",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется экономикой, финансами и управлением.",
+    "career_matches": [
+      "экономист",
+      "финансист",
+      "аналитик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-31 03 06-02",
+    "title_ru": "Экономическая кибернетика (информационные технологии в экономике)",
+    "cluster": 2,
+    "cluster_name_ru": "Экономика и управление",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется экономикой, финансами и управлением.",
+    "career_matches": [
+      "экономист",
+      "финансист",
+      "аналитик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-31 03 06-02",
+    "title_ru": "Экономическая кибернетика (информационные технологии в экономике)",
+    "cluster": 2,
+    "cluster_name_ru": "Экономика и управление",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется экономикой, финансами и управлением.",
+    "career_matches": [
+      "экономист",
+      "финансист",
+      "аналитик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-25 01 04 02",
+    "title_ru": "Банковское дело",
+    "cluster": 2,
+    "cluster_name_ru": "Экономика и управление",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется экономикой, финансами и управлением.",
+    "career_matches": [
+      "экономист",
+      "финансист",
+      "аналитик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-25 01 04 02",
+    "title_ru": "Банковское дело",
+    "cluster": 2,
+    "cluster_name_ru": "Экономика и управление",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется экономикой, финансами и управлением.",
+    "career_matches": [
+      "экономист",
+      "финансист",
+      "аналитик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-26 02 03",
+    "title_ru": "Маркетинг",
+    "cluster": 2,
+    "cluster_name_ru": "Экономика и управление",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется экономикой, финансами и управлением.",
+    "career_matches": [
+      "экономист",
+      "финансист",
+      "аналитик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-26 02 02 06",
+    "title_ru": "Социальный менеджмент",
+    "cluster": 2,
+    "cluster_name_ru": "Экономика и управление",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто хочет получить профильную профессиональную подготовку.",
+    "career_matches": [
+      "специалист",
+      "аналитик",
+      "практик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-25 01 04",
+    "title_ru": "Финансы и кредит",
+    "cluster": 2,
+    "cluster_name_ru": "Экономика и управление",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется экономикой, финансами и управлением.",
+    "career_matches": [
+      "экономист",
+      "финансист",
+      "аналитик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-19 01 01-03",
+    "title_ru": "Дизайн (графический)",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто хочет получить профильную профессиональную подготовку.",
+    "career_matches": [
+      "специалист",
+      "аналитик",
+      "практик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-19 01 01-05 01",
+    "title_ru": "Дизайн швейных изделий",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто хочет получить профильную профессиональную подготовку.",
+    "career_matches": [
+      "специалист",
+      "аналитик",
+      "практик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-21 05 01 08",
+    "title_ru": "Узбекский язык и литература",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-21 05 01 08",
+    "title_ru": "Узбекский язык и литература",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-21 05 01 08",
+    "title_ru": "Русский язык и литература",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 03 02",
+    "title_ru": "Русский язык и литература в национальных школах",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 03 02",
+    "title_ru": "Русский язык и литература в национальных школах",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 03 04-01",
+    "title_ru": "Русский язык и литература. Таджикский язык и литература",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 03 01",
+    "title_ru": "Таджикский язык и литература",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 03 01",
+    "title_ru": "Таджикский язык и литература",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-21 05 02 07",
+    "title_ru": "Таджикский язык и литература в узбекских школах",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-21 05 02 07",
+    "title_ru": "Таджикский язык и литература в узбекских школах",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 03 03",
+    "title_ru": "Таджикский язык и литература. Семейное воспитание",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 03 03",
+    "title_ru": "Таджикский язык и литература. Журналистика",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 2
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 03 03-03",
+    "title_ru": "Таджикский язык и литература. Мировая и отечественная культура",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 03 06-01",
+    "title_ru": "Английский язык. Немецкий язык",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 03 30 70 102",
+    "title_ru": "Таджикский язык и литература и узбекский язык и литература",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 03 30 70 102",
+    "title_ru": "Таджикский язык и литература и узбекский язык и литература",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-21 05 02 08",
+    "title_ru": "Иностранный язык (английский язык)",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-21 02 03 06 02",
+    "title_ru": "Иностранный язык (немецкий язык)",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-21 06 01 02 01",
+    "title_ru": "Современные иностранные языки (китайский - английский)",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-23 01 11-01",
+    "title_ru": "Библиотековедение и библиография (менеджмент)",
+    "cluster": 2,
+    "cluster_name_ru": "Экономика и управление",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-23 01 11-01",
+    "title_ru": "Библиотековедение и библиография (менеджмент)",
+    "cluster": 2,
+    "cluster_name_ru": "Экономика и управление",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-03 03 05-02",
+    "title_ru": "Логопедия. Начальное образование",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто хочет работать в образовании и развитии детей.",
+    "career_matches": [
+      "педагог",
+      "воспитатель",
+      "методист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-15 01 01-01",
+    "title_ru": "Станковая живопись",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется искусством, творчеством и художественной подготовкой.",
+    "career_matches": [
+      "артист",
+      "художник",
+      "творческий специалист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-03 03 08-01",
+    "title_ru": "Олигофренопедагогика. Дошкольное образование",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто хочет работать в образовании и развитии детей.",
+    "career_matches": [
+      "педагог",
+      "воспитатель",
+      "методист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-23 01 08",
+    "title_ru": "Журналистика",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-17 01 01",
+    "title_ru": "Актёрское искусство",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется искусством, творчеством и художественной подготовкой.",
+    "career_matches": [
+      "артист",
+      "художник",
+      "творческий специалист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-03 01 02",
+    "title_ru": "Музыкальное искусство",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется искусством, творчеством и художественной подготовкой.",
+    "career_matches": [
+      "артист",
+      "художник",
+      "творческий специалист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-03 01 06-02",
+    "title_ru": "Изобразительное искусство и черчение. Технология",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется искусством, творчеством и художественной подготовкой.",
+    "career_matches": [
+      "артист",
+      "художник",
+      "творческий специалист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-03 01 06-01",
+    "title_ru": "Изобразительное искусство и черчение. Народные художественные ремесла",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется искусством, творчеством и художественной подготовкой.",
+    "career_matches": [
+      "артист",
+      "художник",
+      "творческий специалист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-16 01 10-02",
+    "title_ru": "Пение (народное)",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется искусством, творчеством и художественной подготовкой.",
+    "career_matches": [
+      "артист",
+      "художник",
+      "творческий специалист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-16 01 10-02",
+    "title_ru": "Пение (народное)",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется искусством, творчеством и художественной подготовкой.",
+    "career_matches": [
+      "артист",
+      "художник",
+      "творческий специалист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-01 02 01",
+    "title_ru": "Начальное образование",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто хочет работать в образовании и развитии детей.",
+    "career_matches": [
+      "педагог",
+      "воспитатель",
+      "методист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-01 02 01",
+    "title_ru": "Начальное образование",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто хочет работать в образовании и развитии детей.",
+    "career_matches": [
+      "педагог",
+      "воспитатель",
+      "методист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-01 02 02-05",
+    "title_ru": "Начальное образование. Русский язык",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-01 02 02-05",
+    "title_ru": "Начальное образование. Иностранный язык (английский)",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-01 02 02-03",
+    "title_ru": "Начальное образование. Музыкальное искусство",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто хочет работать в образовании и развитии детей.",
+    "career_matches": [
+      "педагог",
+      "воспитатель",
+      "методист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-01 02 02-01",
+    "title_ru": "Начальное образование. Дошкольное образование",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто хочет работать в образовании и развитии детей.",
+    "career_matches": [
+      "педагог",
+      "воспитатель",
+      "методист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-01 01 02-06",
+    "title_ru": "Дошкольное образование. Практическая психология",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто хочет работать в образовании и развитии детей.",
+    "career_matches": [
+      "педагог",
+      "воспитатель",
+      "методист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-01 01 02-06",
+    "title_ru": "Дошкольное образование. Практическая психология",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто хочет работать в образовании и развитии детей.",
+    "career_matches": [
+      "педагог",
+      "воспитатель",
+      "методист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 3
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-21 05 07",
+    "title_ru": "Восточная филология (арабский - английский языки)",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-15 01 03",
+    "title_ru": "Скульптура",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется искусством, творчеством и художественной подготовкой.",
+    "career_matches": [
+      "артист",
+      "художник",
+      "творческий специалист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "2-18 01 01-02",
+    "title_ru": "Народное творчество (инструментальная музыка)",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется искусством, творчеством и художественной подготовкой.",
+    "career_matches": [
+      "артист",
+      "художник",
+      "творческий специалист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "2-18 01 01-02",
+    "title_ru": "Народное творчество (инструментальная музыка)",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется искусством, творчеством и художественной подготовкой.",
+    "career_matches": [
+      "артист",
+      "художник",
+      "творческий специалист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-23 01 08-02 03",
+    "title_ru": "WEB-журналистика",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-21 05 01 08",
+    "title_ru": "Русский язык и литература",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-21 06 01-01",
+    "title_ru": "Современный иностранный язык (арабский - китайский языки)",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-23 01 07-01",
+    "title_ru": "Информация и связь (технология связи)",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется ИТ, цифровыми системами и инженерной подготовкой.",
+    "career_matches": [
+      "IT-специалист",
+      "инженер",
+      "техник"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-23 01 08-02 01",
+    "title_ru": "Тележурналистика",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-23 01 08-02 01",
+    "title_ru": "Тележурналистика",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-03 01 02",
+    "title_ru": "Музыкальное искусство",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется искусством, творчеством и художественной подготовкой.",
+    "career_matches": [
+      "артист",
+      "художник",
+      "творческий специалист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-21 04 02-05 04",
+    "title_ru": "Художественная критика",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется искусством, творчеством и художественной подготовкой.",
+    "career_matches": [
+      "артист",
+      "художник",
+      "творческий специалист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-01 02 01",
+    "title_ru": "Начальное образование",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто хочет работать в образовании и развитии детей.",
+    "career_matches": [
+      "педагог",
+      "воспитатель",
+      "методист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-01 02 02-01",
+    "title_ru": "Начальное образование. Дошкольное образование",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто хочет работать в образовании и развитии детей.",
+    "career_matches": [
+      "педагог",
+      "воспитатель",
+      "методист"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-01 01 02-03",
+    "title_ru": "Дошкольное образование. Русский язык",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-23 01 02-03",
+    "title_ru": "Языковое обеспечение межкультурных коммуникаций (арабский - французский)",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-23 01 02-03",
+    "title_ru": "Языковое обеспечение межкультурных коммуникаций (персидский - французский)",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-23 01 04",
+    "title_ru": "Психология",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто хочет получить профильную профессиональную подготовку.",
+    "career_matches": [
+      "специалист",
+      "аналитик",
+      "практик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 01 01",
+    "title_ru": "История",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 01 01",
+    "title_ru": "История",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-21 03 01-02",
+    "title_ru": "История (археология)",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-21 03 01-02",
+    "title_ru": "История (археология)",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 01 02",
+    "title_ru": "История. Дополнительная специальность (право)",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 01 02",
+    "title_ru": "История. Дополнительная специальность (право)",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 01 02",
+    "title_ru": "История. История религии",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-23 01 13",
+    "title_ru": "История и культурология",
+    "cluster": 3,
+    "cluster_name_ru": "Гуманитарные науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-33 01 06",
+    "title_ru": "Агроэкология",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 04 01",
+    "title_ru": "Биология",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 04 01",
+    "title_ru": "Биология",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 04 04-01",
+    "title_ru": "Биология. Химия",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 04 04-01",
+    "title_ru": "Биология. Химия",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 4
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-80 02 01",
+    "title_ru": "Биомедицинское дело",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто хочет получить профильную профессиональную подготовку.",
+    "career_matches": [
+      "специалист",
+      "аналитик",
+      "практик"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 5
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-03 02 01",
+    "title_ru": "Физическая культура",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 5
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-03 02 01",
+    "title_ru": "Физическая культура",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 5
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-03 02 02",
+    "title_ru": "Физическая культура. Военная подготовка",
+    "cluster": 4,
+    "cluster_name_ru": "Педагогика и искусство",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется языками, культурой, историей и коммуникацией.",
+    "career_matches": [
+      "преподаватель",
+      "редактор",
+      "специалист по коммуникациям"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 5
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 04 03",
+    "title_ru": "Химия",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 5
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-02 04 03",
+    "title_ru": "Химия",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 5
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-33 01 01 01",
+    "title_ru": "Общая экология",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 5
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-33 01 01 01",
+    "title_ru": "Общая экология",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "заочная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется естественными науками и исследовательской работой.",
+    "career_matches": [
+      "исследователь",
+      "лаборант",
+      "преподаватель"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 5
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  },
+  {
+    "academic_year": "2021-2022",
+    "code": "1-31 04 03 09",
+    "title_ru": "Медицинская электроника",
+    "cluster": 1,
+    "cluster_name_ru": "Естественные и технические науки",
+    "level_allowed": [
+      "11"
+    ],
+    "institution": "Худжандский государственный университет имени академика Бободжона Гафурова",
+    "city": "Худжанд",
+    "study_form": [
+      "дневная"
+    ],
+    "study_type": [],
+    "languages": [],
+    "exams_required": [],
+    "restrictions": [],
+    "description_plain": "Направление для тех, кто интересуется ИТ, цифровыми системами и инженерной подготовкой.",
+    "career_matches": [
+      "IT-специалист",
+      "инженер",
+      "техник"
+    ],
+    "source": {
+      "type": "official_pdf",
+      "url": "",
+      "page": 5
+    },
+    "confidence": 0.93,
+    "last_verified_at": "2026-05-16"
+  }
+]

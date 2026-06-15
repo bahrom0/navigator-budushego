@@ -1,0 +1,423 @@
+"use client"
+
+import { useEffect, useCallback, useMemo, useState, useRef } from "react"
+import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
+import { Search, ArrowLeft, RefreshCw, ArrowUpDown, SlidersHorizontal } from "lucide-react"
+import { logActivityEvent } from "@/lib/activity-logger"
+import {
+  useCategoryStore,
+  hydrateCategoryStore,
+  persistCategories,
+} from "@/stores/category-store"
+import { CATEGORIES } from "@/constants/categories"
+import { NCTSignalCard } from "@/components/signal-cards/NCTSignalCard"
+import type { Category } from "@/types/categories"
+import { useAnalysisStore } from "@/stores/analysis-store"
+
+type SortField = "confidence" | "institution"
+type SortDir = "asc" | "desc"
+
+interface CachedAnalysisData {
+  ranked: any[];
+  overallConfidence: number | null;
+  categories: { id: string; name: string; description?: string }[];
+}
+
+export default function RecommendationsPage() {
+  const router = useRouter()
+  const cacheRestoredRef = useRef(false)
+
+  const selectedIds = useCategoryStore((s) => s.selected)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [results, setResults] = useState<any[]>([])
+  const [overallConfidence, setOverallConfidence] = useState<number | null>(null)
+  const [sortBy, setSortBy] = useState<SortField>("confidence")
+  const [sortDir, setSortDir] = useState<SortDir>("desc")
+  const [cityFilter, setCityFilter] = useState<string>("")
+  const [studyFormFilter, setStudyFormFilter] = useState<string>("")
+  const [showFilters, setShowFilters] = useState(false)
+  const cacheResults = useAnalysisStore((s) => s.cacheResults)
+  const restoreFromCache = useAnalysisStore((s) => s.restoreFromCache)
+  const [cacheRef, setCacheRef] = useState<CachedAnalysisData | null>(null)
+
+  const categories = useMemo(() => selectedIds
+    .map((id: string) => CATEGORIES.find((c: Category) => c.id === id))
+    .filter(Boolean) as Category[],
+  [selectedIds]
+  )
+
+  const fetchResults = useCallback(
+    async (skipCache = false) => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        if (!skipCache) {
+          const cached = restoreFromCache()
+          if (cached && Array.isArray(cached.ranked)) {
+            setResults(cached.ranked)
+            setOverallConfidence(cached.overallConfidence ?? null)
+            setCacheRef(cached)
+            setLoading(false)
+            logActivityEvent("view_recommendation", "Из кэша")
+            return
+          }
+        }
+
+        const res = await fetch("/api/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            categories: categories.map((c): { id: string; name: string; description?: string } => ({ id: c.id, name: c.name, description: c.description ?? "" })),
+            topK: 8,
+            minConfidence: 0.3,
+          }),
+        })
+
+        const data = await res.json()
+
+        if (data.status === "error") {
+          setError(data.error || "Ошибка анализа")
+          return
+        }
+
+      const payload: CachedAnalysisData = {
+        ranked: data.data.ranked || [],
+        overallConfidence: data.data.overallConfidence ?? null,
+        categories: categories.map((c): { id: string; name: string; description?: string } => ({ id: c.id, name: c.name, description: c.description ?? "" })),
+      }
+
+        setResults(payload.ranked)
+        setOverallConfidence(payload.overallConfidence)
+        setCacheRef(payload)
+        cacheResults(payload)
+        logActivityEvent("view_recommendation", `Категории: ${categories.map((c) => c.name).join(", ")}`)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Ошибка сети"
+        setError(message)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [categories, cacheResults, restoreFromCache]
+  )
+
+  useEffect(() => {
+    const restored = hydrateCategoryStore()
+
+    if (categories.length === 0 && !restored) {
+      router.replace("/categories")
+      return
+    }
+
+    const fetchedRef = { current: false }
+    async function init() {
+      if (fetchedRef.current) return
+      fetchedRef.current = true
+
+      if (!cacheRestoredRef.current && categories.length > 0) {
+        await fetchResults()
+        cacheRestoredRef.current = true
+      }
+    }
+
+    init()
+  }, [categories.length, router, fetchResults])
+
+  useEffect(() => {
+    persistCategories()
+  }, [selectedIds])
+
+  const handleRetry = useCallback(() => {
+    setCacheRef(null)
+    cacheRestoredRef.current = false
+    fetchResults(true)
+    logActivityEvent("view_recommendation", "Повторная загрузка")
+  }, [fetchResults])
+
+  const goBack = useCallback(() => {
+    if (typeof window !== "undefined") {
+      if (window.history.length > 2) router.back()
+      else router.push("/categories")
+    }
+  }, [router])
+
+const uniqueCities = useMemo(() => {
+  const set = new Set<string>()
+  results.forEach((r) => { if (r.city) set.add(r.city) })
+  return Array.from(set).sort((a, b) => a.localeCompare(b))
+}, [results])
+
+const uniqueStudyForms = useMemo(() => {
+  const set = new Set<string>()
+  results.forEach((r) => {
+    const forms = Array.isArray(r.study_form) ? r.study_form : (r.study_form ? [r.study_form] : [])
+    forms.forEach((f: string) => { if (f) set.add(f) })
+  })
+  return Array.from(set).sort()
+}, [results])
+
+const displayedResults = useMemo(() => {
+  let filtered = results.slice()
+
+  if (cityFilter) {
+    filtered = filtered.filter((r) => r.city === cityFilter)
+  }
+  if (studyFormFilter) {
+    filtered = filtered.filter((r) => {
+      const raw = (r as any).study_form
+      const forms = Array.isArray(raw) ? raw : raw ? [raw] : []
+      return forms.includes(studyFormFilter)
+    })
+  }
+
+  const sorted = filtered.slice().sort((a, b) => {
+    if (sortBy === "confidence") {
+      const av = a.confidence ?? 0
+      const bv = b.confidence ?? 0
+      return sortDir === "asc" ? av - bv : bv - av
+    }
+    if (sortBy === "institution") {
+      const av = (a.institution || "").localeCompare(b.institution || "")
+      return sortDir === "asc" ? av : -av
+    }
+    return 0
+  })
+
+  return sorted
+}, [results, sortBy, sortDir, cityFilter, studyFormFilter])
+
+const toggleSortDir = () => {
+  setSortDir((d) => (d === "asc" ? "desc" : "asc"))
+}
+
+if (loading) {
+    return (
+      <main className="flex flex-1 flex-col px-6">
+        <div className="mb-8 flex items-center gap-3">
+          <button
+            onClick={goBack}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-border bg-card-bg transition-colors hover:bg-background"
+          >
+            <ArrowLeft className="h-4 w-4 text-text-secondary" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Рекомендации</h1>
+            <p className="mt-1 text-sm text-text-secondary">Подбираем специальности на основе выбранных направлений</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-[20px] border border-border bg-card-bg p-6">
+              <div className="h-24 animate-pulse rounded-lg bg-background" />
+              <div className="mt-4 h-5 w-2/3 animate-pulse rounded bg-background" />
+              <div className="mt-2 h-4 w-1/2 animate-pulse rounded bg-background" />
+              <div className="mt-5 flex gap-2">
+                <div className="h-10 w-24 animate-pulse rounded-[12px] bg-background" />
+                <div className="h-10 w-32 animate-pulse rounded-[12px] bg-background" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
+    )
+  }
+
+  if (error) {
+    return (
+      <main className="flex flex-1 flex-col items-center justify-center px-6 py-24">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="max-w-md text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-error/10">
+            <Search className="h-7 w-7 text-error" />
+          </div>
+          <p className="mt-4 text-sm font-medium text-error">Не удалось получить рекомендации</p>
+          <p className="mt-2 text-sm text-text-secondary">{error}</p>
+          <button
+            onClick={handleRetry}
+            className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-[14px] bg-primary px-6 text-base font-medium text-white hover:bg-primary-hover"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Попробовать снова
+          </button>
+          <button
+            onClick={goBack}
+            className="mt-3 inline-flex h-11 items-center justify-center rounded-[14px] px-6 text-base font-medium text-text-secondary hover:text-foreground"
+          >
+            Вернуться назад
+          </button>
+        </motion.div>
+      </main>
+    )
+  }
+
+  if (results.length === 0) {
+    return (
+      <main className="flex flex-1 flex-col items-center justify-center px-6 py-24">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="max-w-md text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary-light">
+            <Search className="h-7 w-7 text-primary" />
+          </div>
+          <p className="mt-4 text-lg font-semibold text-foreground">Подходящих направлений не найдено</p>
+          <p className="mt-2 text-sm text-text-secondary">
+            Попробуйте выбрать другие категории или расширьте критерии поиска.
+          </p>
+          <button
+            onClick={goBack}
+            className="mt-6 inline-flex h-11 items-center justify-center rounded-[14px] bg-primary px-6 text-base font-medium text-white hover:bg-primary-hover"
+          >
+            Вернуться к выбору
+          </button>
+        </motion.div>
+      </main>
+    )
+  }
+
+return (
+  <main className="flex flex-1 flex-col px-6">
+    <div className="mb-6 flex items-center gap-3">
+      <button
+        onClick={goBack}
+        className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-border bg-card-bg transition-colors hover:bg-background"
+      >
+        <ArrowLeft className="h-4 w-4 text-text-secondary" />
+      </button>
+      <div className="flex-1">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Рекомендации</h1>
+        <p className="mt-1 text-sm text-text-secondary">
+          Подобрано {displayedResults.length}{cityFilter || studyFormFilter ? ` из ${results.length}` : ""} направлений
+          {overallConfidence !== null && (
+            <span className="ml-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary">
+              общая уверенность {Math.round(overallConfidence * 100)}%
+            </span>
+          )}
+        </p>
+      </div>
+      <button
+        onClick={() => setShowFilters((v) => !v)}
+        className="inline-flex h-10 items-center gap-2 rounded-[12px] border border-border bg-card-bg px-4 text-sm font-medium text-foreground transition-colors hover:bg-background"
+      >
+        <SlidersHorizontal className="h-4 w-4 text-text-muted" />
+        Фильтры
+      </button>
+    </div>
+
+    {showFilters && (
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6 grid grid-cols-1 gap-3 rounded-[16px] border border-border bg-card-bg p-4 md:grid-cols-3"
+      >
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-text-secondary">Город</span>
+          <select
+            value={cityFilter}
+            onChange={(e) => setCityFilter(e.target.value)}
+            className="h-10 rounded-[12px] border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-primary"
+          >
+            <option value="">Все города</option>
+            {uniqueCities.map((city) => (
+              <option key={city} value={city}>
+                {city}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-text-secondary">Форма обучения</span>
+          <select
+            value={studyFormFilter}
+            onChange={(e) => setStudyFormFilter(e.target.value)}
+            className="h-10 rounded-[12px] border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-primary"
+          >
+            <option value="">Все формы</option>
+            {uniqueStudyForms.map((form) => (
+              <option key={form} value={form}>
+                {form}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-text-secondary">Сортировка</span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setSortBy("confidence")}
+              className={`inline-flex h-10 flex-1 items-center justify-center rounded-[12px] border text-sm font-medium transition-colors ${
+                sortBy === "confidence"
+                  ? "border-primary bg-primary-light/60 text-primary"
+                  : "border-border bg-background text-foreground hover:bg-card-bg"
+              }`}
+            >
+              Уверенность
+            </button>
+            <button
+              onClick={() => setSortBy("institution")}
+              className={`inline-flex h-10 flex-1 items-center justify-center rounded-[12px] border text-sm font-medium transition-colors ${
+                sortBy === "institution"
+                  ? "border-primary bg-primary-light/60 text-primary"
+                  : "border-border bg-background text-foreground hover:bg-card-bg"
+              }`}
+            >
+              Вуз
+            </button>
+            <button
+              onClick={toggleSortDir}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-border bg-card-bg transition-colors hover:bg-background"
+              aria-label={sortDir === "asc" ? "По возрастанию" : "По убыванию"}
+            >
+              <ArrowUpDown className="h-4 w-4 text-text-muted" />
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    )}
+
+    {displayedResults.length === 0 ? (
+      <main className="flex flex-1 flex-col items-center justify-center px-6 py-24">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="max-w-md text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary-light">
+            <Search className="h-7 w-7 text-primary" />
+          </div>
+          <p className="mt-4 text-lg font-semibold text-foreground">Ничего не найдено по фильтрам</p>
+          <p className="mt-2 text-sm text-text-secondary">
+            Попробуйте изменить параметры фильтров или сбросить их.
+          </p>
+          <button
+            onClick={() => { setCityFilter(""); setStudyFormFilter(""); }}
+            className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-[14px] bg-primary px-6 text-base font-medium text-white hover:bg-primary-hover"
+          >
+            Сбросить фильтры
+          </button>
+        </motion.div>
+      </main>
+    ) : (
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+{displayedResults.map((result, idx) => (
+  <NCTSignalCard
+    key={`${result.code}-${idx}-${result.institution}`}
+    code={result.code}
+    title_ru={result.title_ru}
+            institution={result.institution}
+            city={result.city}
+            confidence={result.confidence}
+            career_matches={result.career_matches}
+            whyItFits={result.reasoning}
+            matchedInterests={result.matchedInterests || []}
+            taxonomy={{
+              cluster_name_ru: result.cluster_name_ru,
+              study_form: result.study_form,
+              study_type: result.study_type,
+            }}
+            index={idx}
+          />
+        ))}
+      </div>
+    )}
+  </main>
+)
+}
