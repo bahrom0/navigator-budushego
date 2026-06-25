@@ -5,6 +5,7 @@ export interface UserProfile {
   email: string | null
   name: string | null
   level: string
+  avatar_url?: string | null
 }
 
 export interface ConversationRecord {

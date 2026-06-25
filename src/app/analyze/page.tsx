@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, useSpring, useTransform } from "framer-motion";
 import { useAnalysisStore } from "@/stores/analysis-store";
+import { useOnboardingStore } from "@/stores/onboarding-store";
 import { AnalysisTimeline } from "@/components/analysis/AnalysisProgress";
 import { Stethoscope } from "lucide-react";
 import { hydrateCategoryStore, persistCategories, useCategoryStore } from "@/stores/category-store";
 import type { AnalysisStep } from "@/types/analysis";
-import { analyzeCategories } from "@/lib/ai/analyze-categories";
+import { STEPS as STEP_LIST } from "@/types/analysis";
 import { CATEGORIES } from "@/constants/categories";
 import type { Category } from "@/types/categories";
 import { logActivityEvent } from "@/lib/activity-logger";
@@ -20,6 +21,20 @@ const STEP_ORDER: AnalysisStep[] = [
   "forming_recommendations",
 ];
 
+function ProgressBar({ progress }: { progress: number }) {
+  const scaleX = useSpring(progress, { stiffness: 60, damping: 20 })
+  const width = useTransform(scaleX, [0, 1], ["0%", "100%"])
+
+  return (
+    <div className="h-1 w-full overflow-hidden rounded-full bg-black/[.06]">
+      <motion.div
+        className="h-full w-full rounded-full bg-primary"
+        style={{ scaleX, transformOrigin: "left" }}
+      />
+    </div>
+  )
+}
+
 export default function AnalyzePage() {
   const router = useRouter();
   const status = useAnalysisStore((s) => s.status);
@@ -27,6 +42,7 @@ export default function AnalyzePage() {
   const startAnalysis = useAnalysisStore((s) => s.startAnalysis);
   const setStep = useAnalysisStore((s) => s.setStep);
   const setError = useAnalysisStore((s) => s.setError);
+  const [progress, setProgress] = useState(0);
 
   const selectedIds = useCategoryStore((s) => s.selected);
   const analysisFiredRef = useRef(false);
@@ -65,29 +81,60 @@ export default function AnalyzePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categories.length]);
 
-  function delay(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  function advanceStep(index: number) {
+    if (index < STEP_ORDER.length) {
+      setStep(STEP_ORDER[index], index);
+      setProgress(index / (STEP_ORDER.length - 1));
+    }
   }
 
   async function runAnalysis() {
     try {
       startAnalysis();
+      advanceStep(0);
       logActivityEvent("start_analysis", `Анализ направлений: ${categories.map((c) => c.name).join(", ")}`);
 
-      for (let i = 0; i < STEP_ORDER.length; i++) {
-        if (i === 0) {
-          await analyzeCategories(categories);
-        }
-        if (i < STEP_ORDER.length - 1) {
-          setStep(STEP_ORDER[i + 1], i + 1);
-          await delay(700 + Math.random() * 400);
-        }
+      const onboardingData = useOnboardingStore.getState().data
+
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          categories: categories.map((c) => ({ id: c.id, name: c.name, description: c.description ?? "" })),
+          topK: 8,
+          minConfidence: 0.3,
+          onboarding: {
+            userCity: onboardingData.userCity,
+            studyCity: onboardingData.studyCity,
+            userType: onboardingData.userType,
+            educationLevel: onboardingData.educationLevel,
+            interests: onboardingData.interests,
+          },
+        }),
+      })
+
+      advanceStep(1)
+
+      const data = await res.json()
+
+      if (data.status === "error") {
+        setError(data.error || "Ошибка анализа")
+        return
       }
 
-      await delay(180);
-      goToResults();
+      advanceStep(2)
+
+      useAnalysisStore.getState().cacheResults({
+        ranked: data.data.ranked || [],
+        overallConfidence: data.data.overallConfidence ?? null,
+        categories: categories.map((c) => ({ id: c.id, name: c.name, description: c.description ?? "" })),
+      })
+
+      advanceStep(3)
+      setProgress(1)
+      goToResults()
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Ошибка анализа";
+      const message = err instanceof Error ? err.message : "Ошибка сети";
       setError(message);
     }
   }
@@ -98,6 +145,7 @@ export default function AnalyzePage() {
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 200, damping: 20 }}
           className="max-w-md text-center"
         >
           <p className="text-sm font-medium text-error">Ошибка при выполнении анализа</p>
@@ -126,12 +174,13 @@ export default function AnalyzePage() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ type: "spring", stiffness: 200, damping: 25 }}
         className="w-full max-w-2xl"
       >
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 200, damping: 25, delay: 0.05 }}
           className="mb-8 flex items-center gap-3"
         >
           <Stethoscope className="h-6 w-6 text-primary" />
@@ -143,10 +192,15 @@ export default function AnalyzePage() {
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mb-10 text-sm text-text-secondary"
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="mb-6 text-sm text-text-secondary"
         >
-          Подбираем специальности на основе ваших интересов. Это займёт несколько секунд.
+          Подбираем специальности на основе ваших интересов и профиля
         </motion.p>
+
+        <div className="mb-8">
+          <ProgressBar progress={progress} />
+        </div>
 
         <AnalysisTimeline currentStep={currentStep} status={status} />
       </motion.div>

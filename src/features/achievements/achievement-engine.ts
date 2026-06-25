@@ -33,6 +33,12 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     check: () => useProfileStore.getState().plans.length >= 1,
   },
   {
+    id: "first_completed_plan",
+    title: "Первый завершённый план",
+    description: "Прошли все этапы плана развития и успешно сдали тест",
+    check: () => useProfileStore.getState().plans.some((p) => p.status === "completed"),
+  },
+  {
     id: "five_days_active",
     title: "5 дней активности",
     description: "Возвращались в приложение 5 дней",

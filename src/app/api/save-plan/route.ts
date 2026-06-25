@@ -28,19 +28,45 @@ export async function POST(request: Request) {
 
     const { nctCode, nctTitle, level, goals, stages } = parsed.data
 
-    const { data, error } = await supabase
+    const { data: existing } = await supabase
       .from("plans")
-      .insert({
-        user_id: user.id,
-        nct_code: nctCode,
-        nct_title: nctTitle,
-        level,
-        goals: JSON.stringify(goals),
-        stages: JSON.stringify(stages),
-      })
-      .select("id")
-      .single()
+      .select("id, completed_steps, status")
+      .eq("user_id", user.id)
+      .eq("nct_code", nctCode)
+      .maybeSingle()
 
+    let result
+    if (existing) {
+      result = await supabase
+        .from("plans")
+        .update({
+          nct_code: nctCode,
+          nct_title: nctTitle,
+          level,
+          goals,
+          stages,
+        })
+        .eq("id", existing.id)
+        .select("id")
+        .single()
+    } else {
+      result = await supabase
+        .from("plans")
+        .insert({
+          user_id: user.id,
+          nct_code: nctCode,
+          nct_title: nctTitle,
+          level,
+          goals,
+          stages,
+          completed_steps: [],
+          status: "active",
+        })
+        .select("id")
+        .single()
+    }
+
+    const { data, error } = result
     if (error) {
       return NextResponse.json(
         { status: "error", error: error.message, data: null },

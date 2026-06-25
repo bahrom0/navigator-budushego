@@ -10,6 +10,9 @@ export const ACTIVITY_EVENT_TYPES = [
   "generate_plan",
   "save_plan",
   "complete_plan_step",
+  "test_plan",
+  "complete_plan",
+  "regenerate_plan",
   "use_teacher",
 ] as const
 
@@ -27,5 +30,8 @@ export const ACTIVITY_EVENT_LABELS: Record<ActivityEventType, string> = {
   generate_plan: "Генерация плана развития",
   save_plan: "Сохранение плана",
   complete_plan_step: "Выполнение шага плана",
+  test_plan: "Тестирование плана",
+  complete_plan: "Завершение плана развития",
+  regenerate_plan: "Регенерация плана",
   use_teacher: "Общение с AI Teacher",
 }

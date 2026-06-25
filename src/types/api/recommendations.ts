@@ -1,5 +1,13 @@
 import { z } from "zod"
 
+const OnboardingSchema = z.object({
+  userCity: z.string().optional(),
+  studyCity: z.string().optional(),
+  userType: z.string().optional(),
+  educationLevel: z.enum(["after_9", "after_11", "applicant", ""]).optional(),
+  interests: z.array(z.string()).optional(),
+})
+
 export const RecommendationsRequestSchema = z.object({
   categories: z.array(
     z.object({
@@ -10,6 +18,7 @@ export const RecommendationsRequestSchema = z.object({
   keywords: z.array(z.string()).optional(),
   topK: z.coerce.number().int().min(1).max(20).default(8),
   minConfidence: z.coerce.number().min(0).max(1).default(0.5),
+  onboarding: OnboardingSchema.optional(),
 })
 
 export type RecommendationsRequest = z.infer<

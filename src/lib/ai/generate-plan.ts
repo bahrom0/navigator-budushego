@@ -14,7 +14,7 @@ export interface GeneratePlanOptions {
   assessment: SkillAssessment
 }
 
-export async function generateDevelopmentPlan(options: GeneratePlanOptions): Promise<DevelopmentPlan> {
+export async function generateDevelopmentPlan(options: GeneratePlanOptions): Promise<DevelopmentPlan | null> {
   const { nctCode, nctTitle, userInterests = [], assessment } = options
 
   const prompt: DeepSeekMessage = {
@@ -56,8 +56,9 @@ export async function generateDevelopmentPlan(options: GeneratePlanOptions): Pro
   let parsed: Record<string, unknown>
   try {
     parsed = JSON.parse(cleaned)
-  } catch {
-    return getFallbackPlan(nctCode, nctTitle, assessment.level)
+  } catch (err) {
+    console.error("[generate-plan] failed to parse AI response:", err)
+    return null
   }
 
   const goals = Array.isArray(parsed.goals)
@@ -91,6 +92,8 @@ export async function generateDevelopmentPlan(options: GeneratePlanOptions): Pro
         }))
     : []
 
+  if (stages.length === 0) return null
+
   return {
     nctCode: typeof parsed.nctCode === "string" ? parsed.nctCode : nctCode,
     nctTitle: typeof parsed.nctTitle === "string" ? parsed.nctTitle : nctTitle,
@@ -99,39 +102,5 @@ export async function generateDevelopmentPlan(options: GeneratePlanOptions): Pro
       : assessment.level,
     goals,
     stages,
-  }
-}
-
-function getFallbackPlan(nctCode: string, nctTitle: string, level: SkillAssessment["level"]): DevelopmentPlan {
-  const levelLabel: Record<SkillAssessment["level"], string> = {
-    beginner: "начальный",
-    intermediate: "средний",
-    advanced: "продвинутый",
-  }
-
-  return {
-    nctCode,
-    nctTitle,
-    level,
-    goals: [
-      { title: "Изучить основы", description: "Освоить базовые понятия направления." },
-      { title: "Закрепить практикой", description: "Выполнить практические задания для прокачки навыков." },
-    ],
-    stages: [
-      {
-        id: "s1",
-        title: "Этап 1. Основы",
-        description: `Уровень ${levelLabel[level]}. Изучение базовых концепций и терминологии.`,
-        skills: ["Базовые знания", "Теория"],
-        recommendations: ["Онлайн-курсы", "Учебники и документация"],
-      },
-      {
-        id: "s2",
-        title: "Этап 2. Практика",
-        description: "Закрепление знаний на практике через проекты и задачи.",
-        skills: ["Практические навыки"],
-        recommendations: ["Pet-проекты", "Стажировки", "Хактоны"],
-      },
-    ],
   }
 }

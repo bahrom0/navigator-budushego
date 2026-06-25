@@ -54,10 +54,10 @@ export async function GET() {
         if (otherMemberIds.length > 0) {
           const { data: profile } = await supabase
             .from("profiles")
-            .select("id, user_id, username, email, name, level")
+            .select("id, user_id, username, email, name, level, avatar_url")
             .eq("user_id", otherMemberIds[0])
-            .single()
-          otherMember = profile
+            .maybeSingle()
+          otherMember = profile ?? null
         }
 
         return {

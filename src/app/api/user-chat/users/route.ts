@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 
     const { data: users } = await supabase
       .from("profiles")
-      .select("id, user_id, username, email, name")
+      .select("id, user_id, username, email, name, avatar_url")
       .or(`username.ilike.%${parsed.data.q}%,name.ilike.%${parsed.data.q}%`)
       .not("user_id", "eq", userId)
       .not("username", "is", null)

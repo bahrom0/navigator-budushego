@@ -79,7 +79,7 @@ export async function GET(
     const senderIds = [...new Set(orderedMessages.map((m) => m.sender_id))]
     const { data: senders } = await supabase
       .from("profiles")
-      .select("user_id, username, email, name")
+      .select("user_id, username, email, name, avatar_url")
       .in("user_id", senderIds)
 
     const messagesWithAttachments = orderedMessages.map((msg) => ({

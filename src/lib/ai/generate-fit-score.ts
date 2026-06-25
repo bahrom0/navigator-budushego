@@ -62,7 +62,8 @@ export async function generateFitScoreAI(
     }
 
     return null
-  } catch {
+  } catch (err) {
+    console.error("[generate-fit-score] failed:", err)
     return null
   }
 }

@@ -8,23 +8,48 @@ export interface CategoryAnalysisResult {
   reasoning: string;
 }
 
+export interface AnalysisContext {
+  userCity?: string
+  studyCity?: string
+  userType?: string
+  educationLevel?: string
+}
+
 const ANALYSIS_PROMPT: DeepSeekMessage = {
   role: "system",
-  content: `Ты — профориентационный ассистент для абитуриентов Узбекистана.
+  content: `Ты — профориентационный ассистент для абитуриентов Таджикистана.
 Твоя задача — проанализировать выбранные категории и выдать структурированный результат.
 Ответь только JSON без markdown и пояснений.`,
 };
 
 export async function analyzeCategories(
   categories: Category[],
+  context?: AnalysisContext,
 ): Promise<CategoryAnalysisResult> {
   const categoryList = categories
     .map((c) => c.name)
     .join(", ");
 
+  let contextBlock = ""
+  if (context) {
+    const parts: string[] = []
+    if (context.userCity) parts.push(`Город проживания: ${context.userCity}`)
+    if (context.studyCity) parts.push(`Желаемый город обучения: ${context.studyCity}`)
+    if (context.educationLevel === "after_9") parts.push("Уровень образования: после 9 класса")
+    else if (context.educationLevel === "after_11") parts.push("Уровень образования: после 11 класса")
+    else if (context.educationLevel === "applicant") parts.push("Уровень образования: абитуриент")
+    if (context.userType) {
+      const typeLabels: Record<string, string> = { schoolboy: "Школьник", applicant: "Абитуриент", student: "Студент", working: "Работающий", other: "Другое" }
+      parts.push(`Тип пользователя: ${typeLabels[context.userType] ?? context.userType}`)
+    }
+    if (parts.length > 0) {
+      contextBlock = `\n\nДополнительная информация о пользователе:\n${parts.join("\n")}`
+    }
+  }
+
   const userPrompt: DeepSeekMessage = {
     role: "user",
-    content: `Абитуриент выбрал следующие направления: ${categoryList}.
+    content: `Абитуриент выбрал следующие направления: ${categoryList}.${contextBlock}
 
 Проанализируй выбор и верни JSON с такой структурой:
 {
@@ -38,7 +63,6 @@ export async function analyzeCategories(
   };
 
   const raw = await deepseekChat([ANALYSIS_PROMPT, userPrompt], {
-    model: "deepseek-chat",
     temperature: 0.3,
     maxTokens: 2048,
     responseFormat: { type: "json_object" },

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
-import { matchNCTByCluster, type MatchOptions } from "@/lib/ai/nct-match"
+import { matchNCTByCluster } from "@/lib/ai/nct-match"
+import type { PrefilterOptions } from "@/lib/ai/nct-match"
 import { rankNCTResults, calculateOverallConfidence } from "@/lib/ai/rank-nct"
 import {
   RecommendationsRequestSchema,
@@ -20,15 +21,29 @@ export async function POST(request: Request) {
       )
     }
 
-    const { categories, keywords, topK, minConfidence }: RecommendationsRequest =
+    const { categories, topK, minConfidence, onboarding }: RecommendationsRequest =
       parsed.data
 
-    const matchOptions: MatchOptions = {
+    const edLevel = onboarding?.educationLevel === "applicant"
+      ? "after_11" as const
+      : onboarding?.educationLevel || ""
+
+    const prefilterOptions: PrefilterOptions | undefined = onboarding
+      ? {
+          categoryNames: categories.map((c) => c.name),
+          educationLevel: edLevel,
+          studyCity: onboarding.studyCity,
+          interests: onboarding.interests,
+        }
+      : undefined
+
+    const matchOptions = {
       topK: topK * 2,
       minScore: 0.1,
+      prefilter: prefilterOptions,
     }
 
-    const rawMatches = matchNCTByCluster(categories, matchOptions)
+    const rawMatches = await matchNCTByCluster(categories, matchOptions)
 
     const ranked = rankNCTResults(rawMatches, {
       topK,

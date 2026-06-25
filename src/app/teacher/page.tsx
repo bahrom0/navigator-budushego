@@ -75,7 +75,6 @@ export default function TeacherPage() {
   const [mounted, setMounted] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const [selectedModel, setSelectedModel] = useState("facts")
   const [streamingId, setStreamingId] = useState<string | null>(null)
   const [initialLoadDone, setInitialLoadDone] = useState(false)
   const [sessionLoading, setSessionLoading] = useState(false)
@@ -226,6 +225,7 @@ export default function TeacherPage() {
       })
 
       const result: TeacherChatApiResponse = await res.json()
+      console.error("[/api/teacher/chat] response:", result, "http:", res.status)
 
       if (result.status === "error") {
         setError(result.error ?? "Ошибка при получении ответа")
@@ -234,7 +234,7 @@ export default function TeacherPage() {
 
       const reply = result.data?.reply?.trim()
       if (!reply) {
-        setError("AI Teacher временно не отвечает. Попробуйте ещё раз.")
+        setError(result.error ?? "AI Teacher временно не отвечает. Попробуйте ещё раз.")
         return
       }
 
@@ -439,8 +439,6 @@ export default function TeacherPage() {
             onInputChange={setInput}
             onSend={sendMessage}
             isLoading={isLoading}
-            selectedModel={selectedModel}
-            onModelChange={setSelectedModel}
           />
         </div>
       </div>

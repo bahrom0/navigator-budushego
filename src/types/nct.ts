@@ -33,6 +33,10 @@ export interface NCTMatchResult {
   matchScore: number
   finalScore: number
   matchedKeywords: string[]
+  cluster?: number
+  cluster_name_ru?: string
+  study_form?: string[]
+  study_type?: string[]
 }
 
 export interface RankedNCT extends NCTMatchResult {

@@ -9,6 +9,7 @@ import { CategoryCard } from "@/components/CategoryCard";
 import { Button } from "@/components/Button";
 import { CATEGORIES } from "@/constants/categories";
 import { useCategoryStore } from "@/stores/category-store";
+import { useOnboardingStore } from "@/stores/onboarding-store";
 import { Sparkles, GitCompare, BookOpen, Plus, X } from "lucide-react";
 import type { Category } from "@/types/categories";
 import { logActivityEvent } from "@/lib/activity-logger";
@@ -47,6 +48,11 @@ export default function CategoriesPage() {
 
   const handleContinue = () => {
     if (selected.length > 0) {
+      const interestNames = selected
+        .map((id) => allCategories.find((c) => c.id === id))
+        .filter(Boolean)
+        .map((c) => c!.name)
+      useOnboardingStore.getState().setInterests(interestNames)
       logActivityEvent("open_app", `Запуск анализа для ${selected.length} направлений`);
       router.push("/analyze");
     }

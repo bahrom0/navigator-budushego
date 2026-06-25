@@ -134,6 +134,7 @@ export default function ExplainContent() {
   const displayCareers = nctResult?.career_matches || resultFromApi?.career_matches || []
   const displayWhyItFits = explanationFromApi?.whyItFits || ""
   const displayInterests = explanationFromApi?.matchedInterests || []
+  const displayCluster = nctResult?.cluster ?? 0
   const displayClusterName = nctResult?.cluster_name_ru || resultFromApi?.cluster_name_ru || ""
   const displayStudyForm = nctResult?.study_form || resultFromApi?.study_form || []
   const displayStudyType = nctResult?.study_type || resultFromApi?.study_type || []
@@ -161,6 +162,7 @@ export default function ExplainContent() {
           career_matches={displayCareers}
           whyItFits={displayWhyItFits}
           matchedInterests={displayInterests}
+          cluster={displayCluster}
           taxonomy={{
             cluster_name_ru: displayClusterName,
             study_form: displayStudyForm,

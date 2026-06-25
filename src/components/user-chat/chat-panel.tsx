@@ -46,6 +46,7 @@ export function ChatPanel(props: ChatPanelProps) {
     renderActions,
     recipientLastReadMessageId = null,
     recipientName = null,
+    recipientOnline = false,
     replyTo = null,
     onCancelReply,
     isMobile = false,
@@ -113,8 +114,9 @@ export function ChatPanel(props: ChatPanelProps) {
       groupMessages(messages, currentUserId, {
         recipientLastReadMessageId,
         recipientName,
+        recipientOnline,
       }),
-    [messages, currentUserId, recipientLastReadMessageId, recipientName],
+    [messages, currentUserId, recipientLastReadMessageId, recipientName, recipientOnline],
   )
 
   const replyIndex = useMemo(() => {

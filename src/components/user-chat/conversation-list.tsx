@@ -259,11 +259,11 @@ function SearchResults({ loading, searched, results, query, onStart }: SearchRes
             className="flex min-h-11 w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors hover:bg-border/30"
           >
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-              {avatarInitial(user.username ?? user.name)}
+              {avatarInitial(user.name ?? user.username)}
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-foreground">
-                {user.username ?? "Пользователь"}
+                {user.name ?? user.username ?? "Пользователь"}
               </p>
               {user.name ? (
                 <p className="truncate text-[11px] text-text-muted">{user.name}</p>

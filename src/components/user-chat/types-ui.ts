@@ -50,6 +50,7 @@ export interface ChatPanelProps {
   renderActions?: (messageId: string, content: string) => ReactNode
   recipientLastReadMessageId?: string | null
   recipientName?: string | null
+  recipientOnline?: boolean
   replyTo?: ReplyTargetLike | null
   onCancelReply?: () => void
   isMobile?: boolean

@@ -869,6 +869,7 @@ function ChatLayout(props: ChatLayoutProps) {
             activeConv?.other_member_last_read_message_id ?? null
           }
           recipientName={otherMember?.name ?? otherMember?.username ?? null}
+          recipientOnline={isOnline}
         />
       </motion.main>
     </div>

@@ -197,12 +197,12 @@ export function useProfileSync() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(profileToPayload(current)),
           })
-          if (!res.ok) {
+          if (!res.ok && res.status !== 401 && res.status !== 403) {
             const text = await res.text()
-            console.error("[profile-sync] POST error:", res.status, text)
+            console.warn("[profile-sync] POST error:", res.status, text.slice(0, 200))
           }
-        } catch (err) {
-          console.error("[profile-sync] POST failed:", err)
+        } catch {
+          // silent — network errors are expected when offline or Supabase is unreachable
         }
       }, 2000)
     })

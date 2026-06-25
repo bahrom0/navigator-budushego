@@ -21,7 +21,7 @@ className="max-w-2xl text-center"
 код и объяснит, почему он выбран.
 </p>
 <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-<Link href="/categories">
+<Link href="/onboarding">
 <Button size="lg">Начать анализ</Button>
 </Link>
 </div>

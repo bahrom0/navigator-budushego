@@ -152,7 +152,7 @@ interface DeliveryBadgeProps {
 function DeliveryBadge({ status }: DeliveryBadgeProps) {
   if (status === "read") {
     return (
-      <span className="inline-flex items-center gap-1 text-primary">
+      <span className="inline-flex items-center gap-1 text-[#60A5FA]">
         <CheckCheck className="h-3.5 w-3.5" />
         <span>Прочитано</span>
       </span>

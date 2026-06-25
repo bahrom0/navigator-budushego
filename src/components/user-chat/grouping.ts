@@ -64,9 +64,10 @@ export function groupMessages(
   options: {
     recipientLastReadMessageId: string | null
     recipientName?: string | null
+    recipientOnline?: boolean
   },
 ): ChatEntry[] {
-  const { recipientLastReadMessageId, recipientName } = options
+  const { recipientLastReadMessageId, recipientName, recipientOnline = false } = options
   const entries: ChatEntry[] = []
 
   let prevSender: string | null = null
@@ -112,11 +113,13 @@ export function groupMessages(
     const showName = !isFromMe && isFirstInGroup && !!recipientName
 
     let delivery: DeliveryStatus | null = null
-    if (isFromMe && isLastInGroup) {
+    if (isFromMe) {
       if (readIndex >= 0 && i <= readIndex) {
         delivery = "read"
-      } else {
+      } else if (recipientOnline) {
         delivery = "delivered"
+      } else {
+        delivery = "sent"
       }
     }
 

@@ -7,6 +7,10 @@ export interface RankingOptions {
   maxPerCluster?: number
 }
 
+function extractCluster(match: NCTMatchResult): number {
+  return (match as unknown as Record<string, number>).cluster ?? 0
+}
+
 export function rankNCTResults(
   matches: NCTMatchResult[],
   options: RankingOptions = {},
@@ -41,17 +45,16 @@ function diversifyByCluster(
   matches: NCTMatchResult[],
   maxPerCluster: number,
 ): NCTMatchResult[] {
-  const clusterCount: Record<string, number> = {}
+  const clusterCount = new Map<number, number>()
   const result: NCTMatchResult[] = []
 
   for (const match of matches) {
-    const code = match.code
-    const cluster = code.split(/\s+/)[0] || "unknown"
-    const count = clusterCount[code] || 0
+    const cluster = extractCluster(match)
+    const count = clusterCount.get(cluster) ?? 0
 
     if (count < maxPerCluster) {
       result.push(match)
-      clusterCount[code] = count + 1
+      clusterCount.set(cluster, count + 1)
     }
   }
 
@@ -74,13 +77,12 @@ function buildReasoning(match: NCTMatchResult, rank: number): string {
 export function getTopMatchesByCluster(
   ranked: RankedNCT[],
   topPerCluster: number = 2,
-): Map<string, RankedNCT[]> {
-  const grouped = new Map<string, RankedNCT[]>()
+): Map<number, RankedNCT[]> {
+  const grouped = new Map<number, RankedNCT[]>()
 
   for (const item of ranked) {
-    const cluster =
-      item.code.split(/\s+/).slice(0, 2).join(" ") || "unknown"
-    const list = grouped.get(cluster) || []
+    const cluster = extractCluster(item)
+    const list = grouped.get(cluster) ?? []
     if (list.length < topPerCluster) {
       list.push(item)
       grouped.set(cluster, list)

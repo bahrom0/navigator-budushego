@@ -13,11 +13,16 @@ export interface GenerateQuestionsOptions {
   count?: number
 }
 
+export interface InterviewQuestion {
+  id: string
+  question: string
+  type: "choice" | "text"
+  options?: string[]
+}
+
 export async function generateInterviewQuestions(
   options: GenerateQuestionsOptions,
-): Promise<
-  { id: string; question: string; type: "choice" | "text"; options?: string[] }[]
-> {
+): Promise<InterviewQuestion[]> {
   const { nctCode, nctTitle, userInterests = [], count = 5 } = options
 
   const prompt: DeepSeekMessage = {
@@ -48,13 +53,16 @@ export async function generateInterviewQuestions(
   let parsed: unknown
   try {
     parsed = JSON.parse(cleaned)
-  } catch {
-    return getFallbackQuestions(nctTitle)
+  } catch (err) {
+    console.error("[generate-interview] failed to parse questions:", err)
+    throw new Error("Failed to parse interview questions")
   }
 
-  if (!Array.isArray(parsed)) return getFallbackQuestions(nctTitle)
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    throw new Error("AI returned empty interview questions list")
+  }
 
-  return parsed
+  const questions: InterviewQuestion[] = parsed
     .filter(
       (q: unknown): q is { id: string; question: string; type: string; options?: string[] | null } =>
         typeof (q as Record<string, unknown>).id === "string" &&
@@ -67,6 +75,12 @@ export async function generateInterviewQuestions(
       type: q.type as "choice" | "text",
       options: Array.isArray(q.options) ? q.options.filter((o): o is string => typeof o === "string") : undefined,
     }))
+
+  if (questions.length === 0) {
+    throw new Error("AI returned no valid interview questions")
+  }
+
+  return questions
 }
 
 export interface EvaluateAnswerOptions {
@@ -82,7 +96,7 @@ export interface EvaluateAnswerOptions {
 export async function evaluateAndGetNextQuestion(
   options: EvaluateAnswerOptions,
 ): Promise<{
-  nextQuestion: { id: string; question: string; type: "choice" | "text"; options?: string[] } | null
+  nextQuestion: InterviewQuestion | null
   isComplete: boolean
   summary: string
 }> {
@@ -121,23 +135,26 @@ export async function evaluateAndGetNextQuestion(
   let parsed: Record<string, unknown>
   try {
     parsed = JSON.parse(cleaned)
-  } catch {
-    if (isLast) {
-      return { nextQuestion: null, isComplete: true, summary: "Интервью завершено." }
-    }
-    return { nextQuestion: getFallbackSingleQuestion(questionIndex), isComplete: false, summary: "" }
+  } catch (err) {
+    console.error("[generate-interview] failed to parse evaluate response:", err)
+    throw new Error("Failed to parse interview evaluation")
   }
 
   if (typeof parsed.isComplete === "boolean" && parsed.isComplete) {
     return {
       nextQuestion: null,
       isComplete: true,
-      summary: typeof parsed.summary === "string" ? parsed.summary : "Интервью завершено.",
+      summary: typeof parsed.summary === "string" ? parsed.summary : "",
     }
   }
 
   const nq = parsed.nextQuestion as Record<string, unknown> | undefined
-  if (nq && typeof nq.id === "string" && typeof nq.question === "string" && ["choice", "text"].includes(nq.type as string)) {
+  if (
+    nq &&
+    typeof nq.id === "string" &&
+    typeof nq.question === "string" &&
+    ["choice", "text"].includes(nq.type as string)
+  ) {
     return {
       nextQuestion: {
         id: nq.id,
@@ -148,29 +165,9 @@ export async function evaluateAndGetNextQuestion(
           : undefined,
       },
       isComplete: false,
-      summary: typeof nq.summary === "string" ? nq.summary : "",
+      summary: typeof parsed.summary === "string" ? parsed.summary : "",
     }
   }
 
-  if (isLast) {
-    return { nextQuestion: null, isComplete: true, summary: "Интервью завершено." }
-  }
-
-  return { nextQuestion: getFallbackSingleQuestion(questionIndex), isComplete: false, summary: "" }
-}
-
-function getFallbackQuestions(nctTitle: string) {
-  return [
-    { id: "q1", question: `Почему вас интересует направление «${nctTitle}»?`, type: "text" as const },
-    { id: "q2", question: "Есть ли у вас опыт в этой области?", type: "choice" as const, options: ["Да, был практический опыт", "Только теоретическая база", "Пока нет, только интерес"] },
-    { id: "q3", question: "Какие навыки вы считаете своими сильными?", type: "text" as const },
-  ]
-}
-
-function getFallbackSingleQuestion(index: number) {
-  const fallbacks = [
-    { id: `q${index + 1}`, question: "Расскажите о своих академических достижениях.", type: "text" as const },
-    { id: `q${index + 1}`, question: "Как вы относитесь к командной работе?", type: "choice" as const, options: ["Легко работаю в команде", "Предпочитаю индивидуальную работу", "Оба варианта меня устраивают"] },
-  ]
-  return fallbacks[index % fallbacks.length]
+  throw new Error("AI returned malformed interview evaluation")
 }

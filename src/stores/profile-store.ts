@@ -83,17 +83,23 @@ interface ProfileStore extends ProfileData {
   syncFromServer: (data: Partial<ProfileData>) => void
 }
 
-export const useProfileStore = create<ProfileStore>((set, get) => ({
-  ...emptyProfile(getSessionId()),
+export const useProfileStore = create<ProfileStore>((set, get) => {
+  const base = emptyProfile(getSessionId())
 
-  hydrate: () => {
-    if (typeof window === "undefined") return
+  if (typeof window !== "undefined") {
     const saved = cacheGet<ProfileData>(STORAGE_KEY)
     if (saved && saved.sessionId) {
       sessionIdState = saved.sessionId
-      set(saved)
+      Object.assign(base, saved)
     }
-  },
+  }
+
+  return {
+    ...base,
+
+    hydrate: () => {
+      // no-op — hydration happens synchronously at store creation
+    },
 
   logActivity: (type, label) => {
     const event: ActivityEvent = {
@@ -208,7 +214,8 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
       ...data,
       sessionId: state.sessionId || getSessionId(),
     })),
-}))
+  }
+})
 
 export function persistStore(): void {
   persistProfile(useProfileStore.getState())

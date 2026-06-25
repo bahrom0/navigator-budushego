@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useMemo, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion"
 import { Search, ArrowLeft, RefreshCw, ArrowUpDown, SlidersHorizontal } from "lucide-react"
 import { logActivityEvent } from "@/lib/activity-logger"
 import {
@@ -10,6 +10,7 @@ import {
   hydrateCategoryStore,
   persistCategories,
 } from "@/stores/category-store"
+import { useOnboardingStore } from "@/stores/onboarding-store"
 import { CATEGORIES } from "@/constants/categories"
 import { NCTSignalCard } from "@/components/signal-cards/NCTSignalCard"
 import type { Category } from "@/types/categories"
@@ -66,6 +67,7 @@ export default function RecommendationsPage() {
           }
         }
 
+        const onboardingData = useOnboardingStore.getState().data
         const res = await fetch("/api/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -73,6 +75,13 @@ export default function RecommendationsPage() {
             categories: categories.map((c): { id: string; name: string; description?: string } => ({ id: c.id, name: c.name, description: c.description ?? "" })),
             topK: 8,
             minConfidence: 0.3,
+            onboarding: {
+              userCity: onboardingData.userCity,
+              studyCity: onboardingData.studyCity,
+              userType: onboardingData.userType,
+              educationLevel: onboardingData.educationLevel,
+              interests: onboardingData.interests,
+            },
           }),
         })
 
@@ -193,6 +202,33 @@ const toggleSortDir = () => {
   setSortDir((d) => (d === "asc" ? "desc" : "asc"))
 }
 
+function SkeletonCard() {
+  return (
+    <div className="rounded-[20px] border border-border bg-card-bg p-6">
+      <div className="flex items-start justify-between gap-4">
+        <span className="inline-block h-6 w-24 animate-pulse rounded-[8px] bg-background" />
+        <span className="inline-block h-6 w-28 animate-pulse rounded-full bg-background" />
+      </div>
+      <div className="mt-4 space-y-2">
+        <div className="h-5 w-3/4 animate-pulse rounded bg-background" />
+        <div className="h-4 w-1/2 animate-pulse rounded bg-background" />
+      </div>
+      <div className="mt-3 h-4 w-1/3 animate-pulse rounded bg-background" />
+      <div className="mt-4 flex gap-1.5">
+        {Array.from({ length: 3 }).map((_, j) => (
+          <span key={j} className="inline-block h-6 w-16 animate-pulse rounded-[8px] bg-background" />
+        ))}
+      </div>
+      <div className="mt-5 h-20 animate-pulse rounded-[12px] bg-background" />
+      <div className="mt-5 flex gap-3 border-t border-border pt-4">
+        <span className="inline-block h-10 w-10 animate-pulse rounded-[12px] bg-background" />
+        <span className="inline-block h-10 w-28 animate-pulse rounded-[12px] bg-background" />
+        <span className="inline-block h-10 w-32 animate-pulse rounded-[12px] bg-background" />
+      </div>
+    </div>
+  )
+}
+
 if (loading) {
     return (
       <main className="flex flex-1 flex-col px-6">
@@ -211,15 +247,14 @@ if (loading) {
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-[20px] border border-border bg-card-bg p-6">
-              <div className="h-24 animate-pulse rounded-lg bg-background" />
-              <div className="mt-4 h-5 w-2/3 animate-pulse rounded bg-background" />
-              <div className="mt-2 h-4 w-1/2 animate-pulse rounded bg-background" />
-              <div className="mt-5 flex gap-2">
-                <div className="h-10 w-24 animate-pulse rounded-[12px] bg-background" />
-                <div className="h-10 w-32 animate-pulse rounded-[12px] bg-background" />
-              </div>
-            </div>
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 180, damping: 24, delay: i * 0.05 }}
+            >
+              <SkeletonCard />
+            </motion.div>
           ))}
         </div>
       </main>
@@ -277,7 +312,12 @@ if (loading) {
 
 return (
   <main className="flex flex-1 flex-col px-6">
-    <div className="mb-6 flex items-center gap-3">
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 200, damping: 25 }}
+      className="mb-6 flex items-center gap-3"
+    >
       <button
         onClick={goBack}
         className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-border bg-card-bg transition-colors hover:bg-background"
@@ -295,87 +335,95 @@ return (
           )}
         </p>
       </div>
-      <button
+      <motion.button
+        whileTap={{ scale: 0.95 }}
         onClick={() => setShowFilters((v) => !v)}
         className="inline-flex h-10 items-center gap-2 rounded-[12px] border border-border bg-card-bg px-4 text-sm font-medium text-foreground transition-colors hover:bg-background"
       >
         <SlidersHorizontal className="h-4 w-4 text-text-muted" />
         Фильтры
-      </button>
-    </div>
+      </motion.button>
+    </motion.div>
 
-    {showFilters && (
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-6 grid grid-cols-1 gap-3 rounded-[16px] border border-border bg-card-bg p-4 md:grid-cols-3"
-      >
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-text-secondary">Город</span>
-          <select
-            value={cityFilter}
-            onChange={(e) => setCityFilter(e.target.value)}
-            className="h-10 rounded-[12px] border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-primary"
-          >
-            <option value="">Все города</option>
-            {uniqueCities.map((city) => (
-              <option key={city} value={city}>
-                {city}
-              </option>
-            ))}
-          </select>
-        </label>
+    <AnimatePresence>
+      {showFilters && (
+        <motion.div
+          key="filters"
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ type: "spring", stiffness: 200, damping: 25 }}
+          className="mb-6 overflow-hidden"
+        >
+          <div className="grid grid-cols-1 gap-3 rounded-[16px] border border-border bg-card-bg p-4 md:grid-cols-3">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-text-secondary">Город</span>
+              <select
+                value={cityFilter}
+                onChange={(e) => setCityFilter(e.target.value)}
+                className="h-10 rounded-[12px] border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-primary"
+              >
+                <option value="">Все города</option>
+                {uniqueCities.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-text-secondary">Форма обучения</span>
-          <select
-            value={studyFormFilter}
-            onChange={(e) => setStudyFormFilter(e.target.value)}
-            className="h-10 rounded-[12px] border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-primary"
-          >
-            <option value="">Все формы</option>
-            {uniqueStudyForms.map((form) => (
-              <option key={form} value={form}>
-                {form}
-              </option>
-            ))}
-          </select>
-        </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-text-secondary">Форма обучения</span>
+              <select
+                value={studyFormFilter}
+                onChange={(e) => setStudyFormFilter(e.target.value)}
+                className="h-10 rounded-[12px] border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-primary"
+              >
+                <option value="">Все формы</option>
+                {uniqueStudyForms.map((form) => (
+                  <option key={form} value={form}>
+                    {form}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-        <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-text-secondary">Сортировка</span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setSortBy("confidence")}
-              className={`inline-flex h-10 flex-1 items-center justify-center rounded-[12px] border text-sm font-medium transition-colors ${
-                sortBy === "confidence"
-                  ? "border-primary bg-primary-light/60 text-primary"
-                  : "border-border bg-background text-foreground hover:bg-card-bg"
-              }`}
-            >
-              Уверенность
-            </button>
-            <button
-              onClick={() => setSortBy("institution")}
-              className={`inline-flex h-10 flex-1 items-center justify-center rounded-[12px] border text-sm font-medium transition-colors ${
-                sortBy === "institution"
-                  ? "border-primary bg-primary-light/60 text-primary"
-                  : "border-border bg-background text-foreground hover:bg-card-bg"
-              }`}
-            >
-              Вуз
-            </button>
-            <button
-              onClick={toggleSortDir}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-border bg-card-bg transition-colors hover:bg-background"
-              aria-label={sortDir === "asc" ? "По возрастанию" : "По убыванию"}
-            >
-              <ArrowUpDown className="h-4 w-4 text-text-muted" />
-            </button>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-text-secondary">Сортировка</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSortBy("confidence")}
+                  className={`inline-flex h-10 flex-1 items-center justify-center rounded-[12px] border text-sm font-medium transition-colors ${
+                    sortBy === "confidence"
+                      ? "border-primary bg-primary-light/60 text-primary"
+                      : "border-border bg-background text-foreground hover:bg-card-bg"
+                  }`}
+                >
+                  Уверенность
+                </button>
+                <button
+                  onClick={() => setSortBy("institution")}
+                  className={`inline-flex h-10 flex-1 items-center justify-center rounded-[12px] border text-sm font-medium transition-colors ${
+                    sortBy === "institution"
+                      ? "border-primary bg-primary-light/60 text-primary"
+                      : "border-border bg-background text-foreground hover:bg-card-bg"
+                  }`}
+                >
+                  Вуз
+                </button>
+                <button
+                  onClick={toggleSortDir}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-border bg-card-bg transition-colors hover:bg-background"
+                  aria-label={sortDir === "asc" ? "По возрастанию" : "По убыванию"}
+                >
+                  <ArrowUpDown className="h-4 w-4 text-text-muted" />
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </motion.div>
-    )}
+        </motion.div>
+      )}
+    </AnimatePresence>
 
     {displayedResults.length === 0 ? (
       <main className="flex flex-1 flex-col items-center justify-center px-6 py-24">
@@ -396,27 +444,46 @@ return (
         </motion.div>
       </main>
     ) : (
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-{displayedResults.map((result, idx) => (
-  <NCTSignalCard
-    key={`${result.code}-${idx}-${result.institution}`}
-    code={result.code}
-    title_ru={result.title_ru}
-            institution={result.institution}
-            city={result.city}
-            confidence={result.confidence}
-            career_matches={result.career_matches}
-            whyItFits={result.reasoning}
-            matchedInterests={result.matchedInterests || []}
-            taxonomy={{
-              cluster_name_ru: result.cluster_name_ru,
-              study_form: result.study_form,
-              study_type: result.study_type,
-            }}
-            index={idx}
-          />
-        ))}
-      </div>
+      <LayoutGroup>
+        <motion.div
+          layout
+          className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3"
+        >
+          {displayedResults.map((result, idx) => (
+            <motion.div
+              key={`${result.code}-${idx}-${result.institution}`}
+              layout
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{
+                type: "spring",
+                stiffness: 180,
+                damping: 24,
+                delay: idx * 0.03,
+              }}
+            >
+              <NCTSignalCard
+                code={result.code}
+                title_ru={result.title_ru}
+                institution={result.institution}
+                city={result.city}
+                confidence={result.confidence}
+                career_matches={result.career_matches}
+                whyItFits={result.reasoning}
+                matchedInterests={result.matchedInterests || []}
+                cluster={result.cluster}
+                taxonomy={{
+                  cluster_name_ru: result.cluster_name_ru,
+                  study_form: result.study_form,
+                  study_type: result.study_type,
+                }}
+                index={idx}
+              />
+            </motion.div>
+          ))}
+        </motion.div>
+      </LayoutGroup>
     )}
   </main>
 )

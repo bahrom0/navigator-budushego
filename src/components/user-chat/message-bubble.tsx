@@ -32,7 +32,7 @@ export function MessageBubble({
   time,
   edited,
   deleted,
-  showAvatar = false,
+  showAvatar: _showAvatar,
   isFirstInGroup = true,
   isLastInGroup = true,
   replyTo = null,
@@ -96,11 +96,6 @@ export function MessageBubble({
         <span className="text-[10px]">{time}</span>
         {own ? <DeliveryIcon status={delivery} /> : null}
       </div>
-      {showAvatar && !own ? (
-        <div className="mt-1 text-[9px] uppercase tracking-wide opacity-0">
-          avatar-stub
-        </div>
-      ) : null}
     </div>
   )
 }
@@ -172,7 +167,7 @@ function DeliveryIcon({ status }: { status: DeliveryStatus | null }) {
     )
   }
   return (
-    <CheckCheck className="h-3 w-3 text-white" aria-label="Прочитано" />
+    <CheckCheck className="h-3 w-3 text-[#93C5FD]" aria-label="Прочитано" />
   )
 }
 

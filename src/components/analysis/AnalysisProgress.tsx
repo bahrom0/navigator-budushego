@@ -12,6 +12,13 @@ const ICONS: Record<AnalysisStep, (props: { className?: string }) => React.React
   forming_recommendations: Sparkles,
 };
 
+const SUBTITLES: Record<AnalysisStep, string> = {
+  analyzing_interests: "Обрабатываем ваши интересы и предпочтения",
+  matching_nct: "Сопоставляем с базой кодов НЦТ",
+  searching_universities: "Проверяем доступные университеты",
+  forming_recommendations: "Формируем персонализированные рекомендации",
+};
+
 function PulsingDot() {
   return (
     <motion.div
@@ -37,9 +44,10 @@ function ConnectingLine({ completed }: { completed: boolean }) {
       initial={false}
     >
       <motion.div
-        className="h-full w-full"
-        animate={completed ? { backgroundColor: "var(--primary)" } : { backgroundColor: "var(--border)" }}
-        transition={{ duration: 0.3 }}
+        className="h-full w-full origin-top"
+        initial={{ scaleY: 0 }}
+        animate={completed ? { scaleY: 1, backgroundColor: "var(--primary)" } : { scaleY: 1, backgroundColor: "var(--border)" }}
+        transition={{ type: "spring", stiffness: 120, damping: 20 }}
       />
     </motion.div>
   );
@@ -55,6 +63,13 @@ export function AnalysisTimeline({
   const currentIndex = STEP_LIST.findIndex((s) => s.key === currentStep);
   const isRunning = status === "running";
 
+  const springIn = (i: number) => ({
+    type: "spring" as const,
+    stiffness: 180,
+    damping: 24,
+    delay: i * 0.08,
+  })
+
   return (
     <div className="w-full max-w-xl space-y-0">
       {STEP_LIST.map((step, index) => {
@@ -65,9 +80,9 @@ export function AnalysisTimeline({
         return (
           <motion.div
             key={step.key}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.12 }}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={springIn(index)}
             className="relative flex gap-5"
           >
             {index < STEP_LIST.length - 1 && <ConnectingLine completed={isCompleted} />}
@@ -79,9 +94,9 @@ export function AnalysisTimeline({
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ duration: 0.2, delay: 0.1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.05 }}
                 >
-                  <CheckCircle2 className="h-[14px] w-[14px] text-primary" />
+                  <CheckCircle2 className="h-[15px] w-[15px] text-primary" />
                 </motion.div>
               ) : (
                 IconComponent && <IconComponent className="h-[14px] w-[14px] text-text-muted" />
@@ -90,9 +105,7 @@ export function AnalysisTimeline({
 
             <div className="flex flex-1 flex-col justify-center pb-8">
               <motion.p
-                initial={isActive ? { opacity: 0, y: 4 } : false}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
+                layout
                 className={`text-sm ${
                   isActive
                     ? "font-medium text-foreground"
@@ -105,12 +118,13 @@ export function AnalysisTimeline({
               </motion.p>
               {isActive && (
                 <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.15 }}
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
                   className="mt-1 text-xs text-text-muted"
                 >
-                  Идёт анализ...
+                  {SUBTITLES[step.key]}
                 </motion.p>
               )}
             </div>

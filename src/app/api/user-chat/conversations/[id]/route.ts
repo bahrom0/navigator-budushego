@@ -34,7 +34,7 @@ export async function GET(
     const memberIds = (members ?? []).map((m) => m.user_id)
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("user_id, username, email, name, level")
+      .select("user_id, username, email, name, level, avatar_url")
       .in("user_id", memberIds)
 
     return NextResponse.json({

@@ -23,6 +23,8 @@ export interface PlanRecord {
   goals: { title: string; description: string }[]
   stages: { id: string; title: string; description: string; skills: string[]; recommendations: string[] }[]
   createdAt: number
+  status: string
+  completedSteps: string[]
 }
 
 export interface InterviewRecord {

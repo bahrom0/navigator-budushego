@@ -60,20 +60,24 @@ export async function POST(request: Request) {
     const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim()
 
     if (!cleaned) {
-      return NextResponse.json({
-        status: "success",
-        data: { reply: "Извините, я временно не могу ответить. Попробуйте задать вопрос иначе.", type: "text" },
-      })
+      return NextResponse.json(
+        { status: "error", error: "AI returned empty response", data: null },
+        { status: 502 },
+      )
     }
 
     let parsedResponse: Record<string, unknown>
     try {
       parsedResponse = JSON.parse(cleaned)
-    } catch {
-      return NextResponse.json({
-        status: "success",
-        data: { reply: cleaned, type: "text" },
-      })
+    } catch (parseError) {
+      return NextResponse.json(
+        {
+          status: "error",
+          error: `AI returned invalid JSON: ${cleaned.slice(0, 100)}`,
+          data: null,
+        },
+        { status: 502 },
+      )
     }
 
     const replyText =
@@ -83,7 +87,14 @@ export async function POST(request: Request) {
           ? parsedResponse.message
           : typeof parsedResponse.text === "string" && parsedResponse.text.trim()
             ? parsedResponse.text
-            : "Извините, я временно не могу ответить. Попробуйте задать вопрос иначе."
+            : ""
+
+    if (!replyText) {
+      return NextResponse.json(
+        { status: "error", error: "AI response missing text content", data: null },
+        { status: 502 },
+      )
+    }
 
     const validated = TeacherChatResponseSchema.safeParse({
       reply: replyText,
@@ -91,15 +102,19 @@ export async function POST(request: Request) {
     })
 
     if (!validated.success) {
-      return NextResponse.json({
-        status: "success",
-        data: { reply: replyText, type: "text" },
-      })
+      return NextResponse.json(
+        { status: "error", error: validated.error.message, data: null },
+        { status: 502 },
+      )
     }
 
     return NextResponse.json({ status: "success", data: validated.data })
   } catch (error) {
+    console.error("[/api/teacher/chat] error:", error)
     const message = error instanceof Error ? error.message : "Internal server error"
-    return NextResponse.json({ status: "error", error: message, data: null }, { status: 500 })
+    return NextResponse.json(
+      { status: "error", error: message, data: null },
+      { status: 500 },
+    )
   }
 }
