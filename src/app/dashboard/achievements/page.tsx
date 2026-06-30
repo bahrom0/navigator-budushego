@@ -1,12 +1,16 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Trophy, Lock } from "lucide-react"
 import { useProfileStore } from "@/stores/profile-store"
 import { ACHIEVEMENT_DEFS } from "@/features/achievements"
 
 export default function DashboardAchievements() {
+  const [hydrated, setHydrated] = useState(false)
   const storeAchievements = useProfileStore((s) => s.achievements)
+
+  useEffect(() => { setHydrated(true) }, [])
 
   const unlockedMap = new Map(
     storeAchievements.filter((a) => a.unlockedAt).map((a) => [a.id, a.unlockedAt!])
@@ -19,7 +23,7 @@ export default function DashboardAchievements() {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Достижения</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          {unlockedCount === 0
+          {!hydrated || unlockedCount === 0
             ? "Достижения появятся после выполнения действий"
             : `Получено ${unlockedCount} из ${ACHIEVEMENT_DEFS.length}`}
         </p>

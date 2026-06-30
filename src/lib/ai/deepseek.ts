@@ -1,4 +1,4 @@
-const REQUEST_TIMEOUT_MS = 25_000
+const REQUEST_TIMEOUT_MS = 60_000
 
 export type AIProvider = "deepseek" | "openai"
 

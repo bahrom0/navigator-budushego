@@ -92,7 +92,12 @@ export async function generateTaskDetail(
   try {
     parsed = JSON.parse(cleaned)
   } catch {
-    throw new Error("Failed to parse task detail JSON")
+    const jsonStart = cleaned.indexOf('{')
+    const jsonEnd = cleaned.lastIndexOf('}')
+    if (jsonStart !== -1 && jsonEnd > jsonStart) {
+      try { parsed = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1)) }
+      catch { throw new Error("Failed to parse task detail JSON") }
+    } else { throw new Error("Failed to parse task detail JSON") }
   }
 
   const result = TaskDetailResponseSchema.safeParse(parsed)

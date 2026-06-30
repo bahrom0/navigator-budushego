@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, ClipboardList } from "lucide-react";
 import { useCoachStore } from "@/stores/coach-store";
@@ -39,6 +39,12 @@ export default function CoachPage() {
   const setTaskSteps = useCoachStore((s) => s.setTaskSteps);
   const roadmap = useCoachStore((s) => s.roadmap);
   const [showDiagnostic, setShowDiagnostic] = useState(false);
+  // Автостарт диагностики при первой установке цели
+  useEffect(() => {
+    if (goal && diagnostics.length === 0 && !showDiagnostic) {
+      setShowDiagnostic(true);
+    }
+  }, [goal, diagnostics.length, showDiagnostic]);
 
   if (!goal) return <GoalEmptyState />;
   if (showDiagnostic) {
@@ -148,7 +154,7 @@ export default function CoachPage() {
   return (
     <CoachShell>
       {error ? <CoachErrorBanner message={error} onDismiss={() => setError(null)} /> : null}
-      {!hasDiagnostic ? (
+      {!hasDiagnostic && activeTab !== "chat" ? (
         <DiagnosticPrompt onClick={() => setShowDiagnostic(true)} />
       ) : (
         <CoachTabContent

@@ -61,6 +61,33 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     description: "Прошли 3 AI-собеседования",
     check: () => useProfileStore.getState().interviews.length >= 3,
   },
+  {
+    id: "coach_first_goal",
+    title: "Первая цель Coach",
+    description: "Установили первую цель в Coach",
+    check: () => useProfileStore.getState().activityLog.some((e) => e.type === "coach_goal_set"),
+  },
+  {
+    id: "coach_first_diagnostic",
+    title: "Первая диагностика",
+    description: "Прошли первую диагностику знаний",
+    check: () => useProfileStore.getState().activityLog.some((e) => e.type === "coach_diagnostic_taken"),
+  },
+  {
+    id: "coach_50_tasks",
+    title: "50 задач",
+    description: "Выполнили 50 задач в Coach",
+    check: () => {
+      const count = useProfileStore.getState().activityLog.filter((e) => e.type === "coach_task_completed").length
+      return count >= 50
+    },
+  },
+  {
+    id: "coach_goal_achieved",
+    title: "Цель достигнута",
+    description: "Достигли цели подготовки в Coach",
+    check: () => useProfileStore.getState().activityLog.some((e) => e.type === "coach_goal_achieved"),
+  },
 ]
 
 export function checkAndUnlockAchievements(): void {

@@ -150,7 +150,12 @@ export async function generateDailyPlan(
   try {
     parsed = JSON.parse(cleaned)
   } catch {
-    throw new Error("Failed to parse daily plan JSON")
+    const jsonStart = cleaned.indexOf('{')
+    const jsonEnd = cleaned.lastIndexOf('}')
+    if (jsonStart !== -1 && jsonEnd > jsonStart) {
+      try { parsed = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1)) }
+      catch { throw new Error("Failed to parse daily plan JSON") }
+    } else { throw new Error("Failed to parse daily plan JSON") }
   }
 
   const result = DailyPlanResponseSchema.safeParse(parsed)

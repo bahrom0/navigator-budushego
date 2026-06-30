@@ -122,7 +122,26 @@ export async function generateRoadmap(
   try {
     parsed = JSON.parse(cleaned)
   } catch {
-    throw new Error("Failed to parse roadmap JSON")
+    const jsonStart = cleaned.indexOf('{')
+    const jsonEnd = cleaned.lastIndexOf('}')
+    if (jsonStart !== -1 && jsonEnd > jsonStart) {
+      const extracted = cleaned.slice(jsonStart, jsonEnd + 1)
+      try {
+        parsed = JSON.parse(extracted)
+      } catch {
+        const arrStart = cleaned.indexOf('[')
+        const arrEnd = cleaned.lastIndexOf(']')
+        if (arrStart !== -1 && arrEnd > arrStart) {
+          parsed = JSON.parse(cleaned.slice(arrStart, arrEnd + 1))
+        } else {
+          console.error("[coach-roadmap] Failed to parse:", raw.slice(0, 200))
+          throw new Error("Failed to parse roadmap JSON")
+        }
+      }
+    } else {
+      console.error("[coach-roadmap] No JSON object found:", raw.slice(0, 200))
+      throw new Error("Failed to parse roadmap JSON")
+    }
   }
 
   const result = RoadmapResponseSchema.safeParse(parsed)

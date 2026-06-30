@@ -134,7 +134,12 @@ export async function evaluateDiagnostic(
   try {
     parsed = JSON.parse(cleaned)
   } catch {
-    throw new Error("Failed to parse diagnostic evaluation JSON")
+    const jsonStart = cleaned.indexOf('{')
+    const jsonEnd = cleaned.lastIndexOf('}')
+    if (jsonStart !== -1 && jsonEnd > jsonStart) {
+      try { parsed = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1)) }
+      catch { throw new Error("Failed to parse diagnostic evaluation JSON") }
+    } else { throw new Error("Failed to parse diagnostic evaluation JSON") }
   }
 
   const result = EvaluateResponseSchema.safeParse(parsed)

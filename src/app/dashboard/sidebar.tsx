@@ -5,12 +5,13 @@ import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  LayoutDashboard, ClipboardList, History, Mic, Bookmark, Activity, Award, Menu, X, ArrowLeft,
+  LayoutDashboard, ClipboardList, GraduationCap, History, Mic, Bookmark, Activity, Award, Menu, X, ArrowLeft,
 } from "lucide-react"
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Обзор", icon: LayoutDashboard },
   { href: "/dashboard/plans", label: "Планы", icon: ClipboardList },
+  { href: "/coach", label: "Coach", icon: GraduationCap },
   { href: "/dashboard/history", label: "История", icon: History },
   { href: "/dashboard/interviews", label: "Интервью", icon: Mic },
   { href: "/dashboard/bookmarks", label: "Закладки", icon: Bookmark },

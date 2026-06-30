@@ -3,7 +3,7 @@
 import { useState, useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, Bot, MessageCircle } from "lucide-react";
+import { ArrowLeft, Bot, GraduationCap, MessageCircle } from "lucide-react";
 import { ProfileButton, ProfileDrawer } from "@/components/profile";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { useAuthStore } from "@/stores/auth-store";
@@ -83,6 +83,16 @@ export function AppShell({ children }: { children: ReactNode }) {
               >
                 <MessageCircle className="h-4 w-4" />
                 <span className="hidden sm:inline">Chat</span>
+              </Link>
+            )}
+            {isAuthenticated && (
+              <Link
+                href="/coach"
+                className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary/10 px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
+                aria-label="AI Coach"
+              >
+                <GraduationCap className="h-4 w-4" />
+                <span className="hidden sm:inline">Coach</span>
               </Link>
             )}
             <ProfileButton />

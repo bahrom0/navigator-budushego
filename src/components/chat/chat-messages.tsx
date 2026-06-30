@@ -19,6 +19,7 @@ interface ChatMessagesProps {
   error: string | null
   streamingId: string | null
   onRegenerate: (messageId: string) => void
+  renderAfterMessage?: (messageId: string) => React.ReactNode
 }
 
 function StreamingContent({ content }: { content: string }) {
@@ -181,6 +182,7 @@ export function ChatMessages({
   error,
   streamingId,
   onRegenerate,
+  renderAfterMessage,
 }: ChatMessagesProps) {
   const listRef = useRef<HTMLDivElement>(null)
   const [deletedIds, setDeletedIds] = useState<string[]>([])
@@ -204,7 +206,7 @@ export function ChatMessages({
           : "chat-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-smooth"
       }
     >
-      <div className="mx-auto w-full max-w-[860px] px-5 pb-6 pt-8 sm:px-10 lg:px-14">
+      <div className="mx-auto w-full max-w-[860px] px-5 pb-20 pt-8 sm:px-10 lg:px-14">
         {visibleMessages.length === 0 && !isLoading && !error && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -226,13 +228,20 @@ export function ChatMessages({
 
         <AnimatePresence initial={false}>
           {visibleMessages.map((msg) => (
-            <div key={msg.id} className="py-2">
-              <MessageItem
-                message={msg}
-                isStreaming={streamingId === msg.id}
-                onRegenerate={onRegenerate}
-                onDelete={(id) => setDeletedIds((current) => [...current, id])}
-              />
+            <div key={msg.id}>
+              <div className="py-2">
+                <MessageItem
+                  message={msg}
+                  isStreaming={streamingId === msg.id}
+                  onRegenerate={onRegenerate}
+                  onDelete={(id) => setDeletedIds((current) => [...current, id])}
+                />
+              </div>
+              {renderAfterMessage?.(msg.id) && (
+                <div className="pb-2">
+                  {renderAfterMessage(msg.id)}
+                </div>
+              )}
             </div>
           ))}
         </AnimatePresence>

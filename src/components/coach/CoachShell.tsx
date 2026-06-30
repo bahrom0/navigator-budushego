@@ -38,7 +38,9 @@ export function CoachShell({ children }: CoachShellProps) {
   const archiveGoal = useCoachStore((s) => s.archiveGoal);
 
   return (
-    <div className="-mt-px bg-background">
+    <div className={`bg-background ${
+      activeTab === "chat" ? "-mt-px h-[calc(100dvh-3.5rem)] flex flex-col" : "-mt-px"
+    }`}>
       <header className="sticky top-14 z-30 border-b border-border bg-card-bg">
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-3 px-4 sm:px-6">
           <div className="min-w-0 flex-1">
@@ -70,16 +72,24 @@ export function CoachShell({ children }: CoachShellProps) {
        </div>
      </header>
 
-      <main className="mx-auto w-full max-w-3xl px-4 pb-24 pt-4 sm:px-6 md:pb-8">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.18, ease: "easeOut" }}
-        >
-          {children}
-       </motion.div>
-     </main>
+      <main className={`mx-auto w-full ${
+        activeTab === "chat"
+          ? "flex min-h-0 flex-col flex-1 overflow-hidden"
+          : "max-w-3xl px-4 pb-24 pt-4 sm:px-6 md:pb-8"
+      }`}>
+        {activeTab === "chat" ? (
+          children
+        ) : (
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+          >
+            {children}
+          </motion.div>
+        )}
+      </main>
 
       <MobileTabs activeTab={activeTab} onChange={setActiveTab} />
    </div>

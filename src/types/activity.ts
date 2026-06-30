@@ -14,6 +14,14 @@ export const ACTIVITY_EVENT_TYPES = [
   "complete_plan",
   "regenerate_plan",
   "use_teacher",
+  "coach_goal_set",
+  "coach_diagnostic_taken",
+  "coach_roadmap_created",
+  "coach_day_completed",
+  "coach_task_completed",
+  "coach_mini_test_taken",
+  "coach_streak_milestone",
+  "coach_goal_achieved",
 ] as const
 
 export type ActivityEventType = (typeof ACTIVITY_EVENT_TYPES)[number]
@@ -34,4 +42,12 @@ export const ACTIVITY_EVENT_LABELS: Record<ActivityEventType, string> = {
   complete_plan: "Завершение плана развития",
   regenerate_plan: "Регенерация плана",
   use_teacher: "Общение с AI Teacher",
+  coach_goal_set: "Установка цели в Coach",
+  coach_diagnostic_taken: "Прохождение диагностики",
+  coach_roadmap_created: "Создание Roadmap",
+  coach_day_completed: "Завершение дня",
+  coach_task_completed: "Выполнение задачи",
+  coach_mini_test_taken: "Прохождение мини-теста",
+  coach_streak_milestone: "Достижение streak",
+  coach_goal_achieved: "Достижение цели",
 }
