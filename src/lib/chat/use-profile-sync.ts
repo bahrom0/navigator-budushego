@@ -52,11 +52,18 @@ function profileToPayload(state: ProfileData) {
   return {
     sessionId: state.sessionId,
     plans: state.plans.map((p) => ({
+      id: p.id,
+      goal_id: p.goalId,
       nct_code: p.nctCode,
       nct_title: p.nctTitle,
       level: p.level || undefined,
       goals: p.goals,
       stages: p.stages,
+      completed_steps: p.completedSteps,
+      status: p.status,
+      plan_type: p.planType,
+      roadmap_id: p.roadmapId,
+      updated_at: new Date().toISOString(),
     })),
     bookmarks: state.bookmarks.map((b) => ({
       nct_code: b.nctCode,
@@ -88,6 +95,9 @@ function extractProfile(state: Record<string, unknown>): ProfileData {
   return {
     sessionId: (state.sessionId as string) ?? "",
     level: (state.level as ProfileData["level"]) ?? "beginner",
+    activeGoalId: state.activeGoalId as string | undefined,
+    activeGoal: (state.activeGoal as ProfileData["activeGoal"]) ?? null,
+    goalHistory: (state.goalHistory as ProfileData["goalHistory"]) ?? [],
     lastNctCodes: (state.lastNctCodes as string[]) ?? [],
     recommendations: (state.recommendations as any[]) ?? [],
     savedCodes: (state.savedCodes as string[]) ?? [],
@@ -128,11 +138,16 @@ export function useProfileSync() {
         const serverData: Partial<ProfileData> = {
           plans: json.data.plans.map((p: any) => ({
             id: p.id,
+            goalId: p.goal_id ?? undefined,
             nctCode: p.nct_code,
             nctTitle: p.nct_title,
             level: p.level,
             goals: typeof p.goals === "string" ? JSON.parse(p.goals) : (p.goals ?? []),
             stages: typeof p.stages === "string" ? JSON.parse(p.stages) : (p.stages ?? []),
+            completedSteps: Array.isArray(p.completed_steps) ? p.completed_steps : [],
+            status: p.status ?? "active",
+            planType: p.plan_type ?? "general",
+            roadmapId: p.roadmap_id ?? undefined,
             createdAt: new Date(p.created_at).getTime(),
           })),
           bookmarks: json.data.bookmarks.map((b: any) => ({

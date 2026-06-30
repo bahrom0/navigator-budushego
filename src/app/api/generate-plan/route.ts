@@ -20,9 +20,15 @@ export async function POST(request: Request) {
     const payload: GeneratePlanRequest = parsed.data
 
     const plan = await generateDevelopmentPlan({
+      goalId: payload.goalId,
       nctCode: payload.nctCode,
       nctTitle: payload.nctTitle,
+      university: payload.university,
+      profession: payload.profession,
+      city: payload.city,
       userInterests: payload.userInterests,
+      previousAnswers: payload.previousAnswers,
+      diagnosticContext: payload.diagnosticContext,
       assessment: payload.assessment ?? {
         level: "beginner",
         skills: [],
@@ -44,8 +50,37 @@ export async function POST(request: Request) {
     if (session) {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        await supabase.from("plans").insert({
+        let goalId = payload.goalId
+
+        if (!goalId) {
+          const { data: activeGoal } = await supabase
+            .from("admission_goals")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("status", "active")
+            .eq("nct_code", plan.nctCode)
+            .maybeSingle()
+          goalId = activeGoal?.id
+        }
+
+        if (goalId) {
+          await supabase
+            .from("profiles")
+            .update({ active_goal_id: goalId, updated_at: new Date().toISOString() })
+            .eq("user_id", user.id)
+        }
+
+        const { data: existingPlan } = await supabase
+          .from("plans")
+          .select("id, created_at")
+          .eq("user_id", user.id)
+          .eq("goal_id", goalId ?? null)
+          .eq("plan_type", "general")
+          .maybeSingle()
+
+        const payloadToSave = {
           user_id: user.id,
+          goal_id: goalId ?? null,
           nct_code: plan.nctCode,
           nct_title: plan.nctTitle,
           level: plan.level,
@@ -53,7 +88,19 @@ export async function POST(request: Request) {
           stages: plan.stages,
           completed_steps: [],
           status: "active",
-        })
+          plan_type: "general",
+          roadmap_id: null,
+          updated_at: new Date().toISOString(),
+        }
+
+        if (existingPlan?.id) {
+          await supabase
+            .from("plans")
+            .update(payloadToSave)
+            .eq("id", existingPlan.id)
+        } else {
+          await supabase.from("plans").insert(payloadToSave)
+        }
       }
     }
 

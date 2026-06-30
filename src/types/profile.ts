@@ -1,3 +1,5 @@
+import type { CoachGoal } from "@/types/coach"
+
 export type UserLevel = "beginner" | "intermediate" | "advanced"
 
 export interface SkillAssessment {
@@ -17,6 +19,7 @@ export interface PlanStep {
 
 export interface PlanRecord {
   id: string
+  goalId?: string
   nctCode: string
   nctTitle: string
   level: UserLevel
@@ -25,6 +28,8 @@ export interface PlanRecord {
   createdAt: number
   status: string
   completedSteps: string[]
+  planType?: "general" | "roadmap" | "daily"
+  roadmapId?: string
 }
 
 export interface InterviewRecord {
@@ -63,6 +68,9 @@ export interface AchievementRecord {
 export interface ProfileData {
   sessionId: string
   level: UserLevel
+  activeGoalId?: string
+  activeGoal?: CoachGoal | null
+  goalHistory: CoachGoal[]
   lastNctCodes: string[]
   recommendations: any[]
   savedCodes: string[]

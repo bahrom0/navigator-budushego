@@ -6,6 +6,7 @@ import { Cloud, CloudOff, Check, Loader2 } from "lucide-react"
 import { useAuthStore } from "@/stores/auth-store"
 import { useProfileStore } from "@/stores/profile-store"
 import { logActivityEvent } from "@/lib/activity-logger"
+import { createClient } from "@/lib/supabase/client"
 
 interface SavePlanButtonProps {
   nctCode: string
@@ -34,33 +35,62 @@ export function SavePlanButton({ nctCode, nctTitle }: SavePlanButtonProps) {
         return
       }
 
-      const res = await fetch("/api/save-plan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nctCode: existing.nctCode,
-          nctTitle: existing.nctTitle,
-          level: existing.level,
-          goals: existing.goals,
-          stages: existing.stages,
-        }),
-      })
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
-      const result = await res.json()
-
-      if (result.status === "error") {
+      if (!user) {
         setState("error")
-        setErrorMsg(result.error)
+        setErrorMsg("Войдите в аккаунт, чтобы сохранить план.")
         return
       }
 
+      const payload = {
+        user_id: user.id,
+        goal_id: existing.goalId ?? null,
+        nct_code: existing.nctCode,
+        nct_title: existing.nctTitle,
+        level: existing.level,
+        university: null,
+        profession: null,
+        city: null,
+        goals: existing.goals,
+        stages: existing.stages,
+        completed_steps: existing.completedSteps ?? [],
+        status: existing.status ?? "active",
+        plan_type: existing.planType ?? "general",
+        roadmap_id: existing.roadmapId ?? null,
+        updated_at: new Date().toISOString(),
+      }
+
+      const { data: currentPlan, error: selectError } = await supabase
+        .from("plans")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("nct_code", existing.nctCode)
+        .eq("plan_type", existing.planType ?? "general")
+        .maybeSingle()
+
+      if (selectError) {
+        throw selectError
+      }
+
+      const result = currentPlan?.id
+        ? await supabase.from("plans").update(payload).eq("id", currentPlan.id).select("id").single()
+        : await supabase.from("plans").insert(payload).select("id").single()
+
+      if (result.error) {
+        throw result.error
+      }
+
       setState("success")
-      logActivityEvent("save_plan", `План сохранён на сервере: ${nctCode}`)
-    } catch {
+      logActivityEvent("save_plan", `План сохранён в профиле: ${nctCode}`)
+    } catch (err) {
       setState("error")
-      setErrorMsg("Ошибка сети. Попробуйте снова.")
+      setErrorMsg(err instanceof Error ? err.message : "Ошибка сети. Попробуйте снова.")
     }
-  }, [nctCode, state, profilePlans])
+  }, [nctCode, profilePlans, state])
 
   if (!isAuthenticated) {
     return (

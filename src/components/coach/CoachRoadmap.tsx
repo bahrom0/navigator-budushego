@@ -8,9 +8,11 @@ import {
   PlayCircle,
   ChevronDown,
   Map,
+  Clock,
 } from "lucide-react"
 import { useCoachStore } from "@/stores/coach-store"
-import type { CoachWeek, CoachWeekStatus } from "@/types/coach"
+import { RoadmapDurationModal } from "@/components/coach/RoadmapDurationModal"
+import type { CoachWeek, CoachWeekStatus, RoadmapDurationWeeks } from "@/types/coach"
 
 const STATUS_ICONS: Record<CoachWeekStatus, typeof CheckCircle> = {
   completed: CheckCircle,
@@ -25,15 +27,38 @@ const STATUS_COLORS: Record<CoachWeekStatus, string> = {
 }
 
 export interface CoachRoadmapProps {
-  onGenerate?: () => void
+  onGenerate?: (durationWeeks?: RoadmapDurationWeeks) => void
+}
+
+function durationLabel(weeks?: number): string {
+  if (!weeks) return ""
+  if (weeks === 1) return "1 неделя"
+  if (weeks < 5) return `${weeks} недели`
+  return `${weeks} недель`
 }
 
 export function CoachRoadmap({ onGenerate }: CoachRoadmapProps) {
   const roadmap = useCoachStore((s) => s.roadmap)
   const isLoading = useCoachStore((s) => s.isLoading)
+  const [showModal, setShowModal] = useState(false)
 
   if (isLoading) return <RoadmapSkeleton />
-  if (!roadmap) return <RoadmapEmpty onGenerate={onGenerate} />
+  if (!roadmap) {
+    return (
+      <>
+        <RoadmapEmpty onGenerate={() => setShowModal(true)} />
+        <RoadmapDurationModal
+          open={showModal}
+          onClose={() => setShowModal(false)}
+          onConfirm={(duration) => {
+            setShowModal(false)
+            onGenerate?.(duration)
+          }}
+          loading={isLoading}
+        />
+      </>
+    )
+  }
 
   const completedCount = roadmap.weeks.filter(
     (w) => w.status === "completed",
@@ -43,8 +68,14 @@ export function CoachRoadmap({ onGenerate }: CoachRoadmapProps) {
     <section>
       <div className="mb-4">
         <h2 className="text-base font-semibold text-foreground">Roadmap</h2>
-        <p className="mt-0.5 text-sm text-text-secondary">
-          {roadmap.weeks.length} недель · пройдено {completedCount}
+        <p className="mt-0.5 flex items-center gap-1.5 text-sm text-text-secondary">
+          <span>{roadmap.weeks.length} недель · пройдено {completedCount}</span>
+          {roadmap.durationWeeks ? (
+            <span className="inline-flex items-center gap-1 text-xs text-text-muted">
+              <Clock className="h-3 w-3" />
+              {durationLabel(roadmap.durationWeeks)}
+            </span>
+          ) : null}
         </p>
       </div>
       <div className="space-y-2">

@@ -1,7 +1,7 @@
 import type { UserLevel } from "@/types/profile"
 
 export type CoachTaskType = "study" | "practice" | "review" | "test"
-export type CoachGoalStatus = "active" | "achieved" | "changed"
+export type CoachGoalStatus = "active" | "archived" | "achieved" | "changed" | "completed"
 export type CoachWeekStatus = "pending" | "active" | "completed"
 export type CoachSubjectLevelName = UserLevel
 export type CoachMessageRole = "user" | "coach"
@@ -18,8 +18,12 @@ export interface CoachGoal {
   nctCode: string
   nctTitle: string
   university?: string
+  profession?: string
+  city?: string
   setAt: number
   status: CoachGoalStatus
+  planId?: string
+  roadmapId?: string
 }
 
 export interface CoachWeekTask {
@@ -39,9 +43,21 @@ export interface CoachWeek {
   status: CoachWeekStatus
 }
 
+export type RoadmapDurationWeeks = 1 | 2 | 4 | 12
+
 export interface CoachRoadmap {
+  id?: string
   goalId: string
   weeks: CoachWeek[]
+  durationWeeks?: RoadmapDurationWeeks
+  title?: string
+  nctCode?: string
+  nctTitle?: string
+  planSnapshot?: Record<string, unknown> | null
+  diagnosticSnapshot?: Record<string, unknown> | null
+  generationContext?: Record<string, unknown> | null
+  currentWeekNumber?: number
+  status?: string
   createdAt: number
   updatedAt: number
 }
@@ -54,13 +70,26 @@ export interface CoachDayTask {
   duration?: number
   completed: boolean
   completedAt?: number
+  position?: number
+  metadata?: Record<string, unknown>
 }
 
 export interface CoachDayPlan {
   date: string
   weekId: string
   tasks: CoachDayTask[]
+  dailyPlanId?: string
+  roadmapId?: string
+  goalId?: string
+  weekNumber?: number
+  title?: string
+  completedTaskIds?: string[]
+  skippedTaskIds?: string[]
+  previousDate?: string
+  nextDate?: string
   completedAt?: number
+  stats?: Record<string, unknown> | null
+  generationContext?: Record<string, unknown> | null
 }
 
 export interface CoachSubjectLevel {

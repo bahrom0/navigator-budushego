@@ -12,6 +12,8 @@ import type {
   CoachActiveTab,
   CoachTaskStep,
 } from "@/types/coach"
+import type { DevelopmentPlan } from "@/types/plan"
+import type { DailyPlanRecord } from "@/types/admission"
 
 interface CoachStore {
   goal: CoachGoal | null
@@ -19,14 +21,24 @@ interface CoachStore {
   archiveGoal: () => void
   clearGoal: () => void
 
+  plan: DevelopmentPlan | null
+  setPlan: (plan: DevelopmentPlan | null) => void
+
+  dailyHistory: DailyPlanRecord[]
+  setDailyHistory: (plans: DailyPlanRecord[]) => void
+
   roadmap: CoachRoadmap | null
-  setRoadmap: (roadmap: CoachRoadmap) => void
+  setRoadmap: (roadmap: CoachRoadmap | null) => void
   clearRoadmap: () => void
 
   dayPlan: CoachDayPlan | null
-  setDayPlan: (plan: CoachDayPlan) => void
+  setDayPlan: (plan: CoachDayPlan | null) => void
   toggleTask: (taskId: string) => void
+  persistToggleTask: (dayPlanId: string, taskId: string, completed: boolean) => Promise<void>
   clearDayPlan: () => void
+
+  navigateDate: string
+  setNavigateDate: (date: string) => void
 
   diagnostics: CoachDiagnosticResult[]
   addDiagnostic: (result: CoachDiagnosticResult) => void
@@ -70,7 +82,7 @@ const initialProgress: CoachProgress = {
   subjectLevels: [],
 }
 
-export const useCoachStore = create<CoachStore>((set) => ({
+export const useCoachStore = create<CoachStore>((set, get) => ({
   goal: null,
   setGoal: (goal) => set({ goal, error: null }),
   archiveGoal: () =>
@@ -78,6 +90,12 @@ export const useCoachStore = create<CoachStore>((set) => ({
       state.goal ? { goal: { ...state.goal, status: "changed" } } : state,
     ),
   clearGoal: () => set({ goal: null }),
+
+  plan: null,
+  setPlan: (plan) => set({ plan }),
+
+  dailyHistory: [],
+  setDailyHistory: (plans) => set({ dailyHistory: plans }),
 
   roadmap: null,
   setRoadmap: (roadmap) => set({ roadmap, error: null }),
@@ -99,7 +117,31 @@ export const useCoachStore = create<CoachStore>((set) => ({
       )
       return { dayPlan: { ...state.dayPlan, tasks } }
     }),
+  persistToggleTask: async (dayPlanId: string, taskId: string, completed: boolean) => {
+    const state = get()
+    try {
+      const res = await fetch("/api/coach/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dayPlanId,
+          taskId,
+          completed,
+          currentProgress: state.progress,
+        }),
+      })
+      const payload = (await res.json()) as { status?: string; data?: { progress?: CoachProgress }; error?: string }
+      if (res.ok && payload.status === "success" && payload.data?.progress) {
+        set({ progress: payload.data.progress })
+      }
+    } catch (err) {
+      console.error("[coach-store] Failed to persist task toggle:", err)
+    }
+  },
   clearDayPlan: () => set({ dayPlan: null }),
+
+  navigateDate: new Date().toISOString().slice(0, 10),
+  setNavigateDate: (date) => set({ navigateDate: date }),
 
   diagnostics: [],
   addDiagnostic: (result) =>
@@ -147,11 +189,14 @@ export const useCoachStore = create<CoachStore>((set) => ({
   error: null,
   setError: (error) => set({ error }),
 
-  reset: () =>
+    reset: () =>
     set({
       goal: null,
+      plan: null,
       roadmap: null,
       dayPlan: null,
+      dailyHistory: [],
+      navigateDate: new Date().toISOString().slice(0, 10),
       diagnostics: [],
       miniTests: [],
       messages: [],

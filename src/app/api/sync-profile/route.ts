@@ -49,6 +49,8 @@ export async function GET() {
 
 const SyncProfileSchema = z.object({
   plans: z.array(z.object({
+    id: z.string().optional(),
+    goal_id: z.string().nullable().optional(),
     nct_code: z.string(),
     nct_title: z.string(),
     level: z.string().nullish(),
@@ -56,6 +58,9 @@ const SyncProfileSchema = z.object({
     stages: z.any(),
     completed_steps: z.any().optional(),
     status: z.string().optional(),
+    plan_type: z.string().optional(),
+    roadmap_id: z.string().nullable().optional(),
+    updated_at: z.string().optional(),
   })),
   bookmarks: z.array(z.object({
     nct_code: z.string(),
@@ -130,6 +135,7 @@ export async function POST(request: Request) {
     for (const plan of plans) {
       const { error } = await supabase.from("plans").insert({
         user_id: user.id,
+        goal_id: plan.goal_id ?? null,
         nct_code: plan.nct_code,
         nct_title: plan.nct_title,
         level: plan.level,
@@ -137,6 +143,9 @@ export async function POST(request: Request) {
         stages: plan.stages,
         completed_steps: Array.isArray(plan.completed_steps) ? plan.completed_steps : [],
         status: plan.status || "active",
+        plan_type: plan.plan_type || "general",
+        roadmap_id: plan.roadmap_id ?? null,
+        updated_at: plan.updated_at || new Date().toISOString(),
       })
       if (error) results.plans.errors++
       else results.plans.success++

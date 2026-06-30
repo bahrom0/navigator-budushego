@@ -8,30 +8,71 @@ const SYSTEM_PROMPT: DeepSeekMessage = {
 }
 
 export interface GeneratePlanOptions {
+  goalId?: string
   nctCode: string
   nctTitle: string
+  university?: string
+  profession?: string
+  city?: string
   userInterests?: string[]
+  previousAnswers?: { question: string; answer: string }[]
+  diagnosticContext?: {
+    source?: "interview" | "plan-test"
+    summary?: string
+    level?: "beginner" | "intermediate" | "advanced"
+    answers?: { question: string; answer: string }[]
+  }
   assessment: SkillAssessment
 }
 
 export async function generateDevelopmentPlan(options: GeneratePlanOptions): Promise<DevelopmentPlan | null> {
-  const { nctCode, nctTitle, userInterests = [], assessment } = options
+  const {
+    goalId,
+    nctCode,
+    nctTitle,
+    university,
+    profession,
+    city,
+    userInterests = [],
+    previousAnswers = [],
+    diagnosticContext,
+    assessment,
+  } = options
 
   const prompt: DeepSeekMessage = {
     role: "user",
     content: [
+      goalId ? `Цель ID: ${goalId}` : null,
       `Направление: ${nctTitle} (код ${nctCode})`,
+      university ? `Университет: ${university}` : null,
+      profession ? `Профессия/направление: ${profession}` : null,
+      city ? `Город: ${city}` : null,
       `Интересы: ${userInterests.join(", ") || "не указаны"}`,
+      diagnosticContext?.source ? `Источник диагностики: ${diagnosticContext.source}` : null,
+      diagnosticContext?.summary ? `Сводка диагностики: ${diagnosticContext.summary}` : null,
+      previousAnswers.length > 0
+        ? [
+            "Ответы пользователя из диагностики:",
+            ...previousAnswers.map((item, index) => `${index + 1}. ${item.question} -> ${item.answer}`),
+          ].join("\n")
+        : null,
+      diagnosticContext?.answers && diagnosticContext.answers.length > 0
+        ? [
+            "Подробные ответы из окна диагностики:",
+            ...diagnosticContext.answers.map((item, index) => `${index + 1}. ${item.question} -> ${item.answer}`),
+          ].join("\n")
+        : null,
       `Уровень: ${assessment.level}`,
       `Навыки: ${assessment.skills.join(", ") || "не указаны"}`,
       `Сильные стороны: ${assessment.strengths.join(", ") || "не указаны"}`,
       `Зоны роста: ${assessment.gaps.join(", ") || "не указаны"}`,
-      "Сгенерируй план развития из 3–5 этапов. Каждый этап должен содержать:",
+      "Учитывай, что генерация должна опираться на ответы из диагностики, а не только на код.",
+      "Сгенерируй общий план развития для активной цели поступления из 3-5 этапов. Каждый этап должен содержать:",
       "- title: название",
       "- description: описание",
       "- skills: массив навыков для освоения на этом этапе",
       "- recommendations: массив рекомендаций",
-      "Также добавь 2–3 general goals.",
+      "Также добавь 2-3 general goals.",
       "Ответь JSON строго по схеме:",
       "{",
       `  "nctCode": "${nctCode}",`,

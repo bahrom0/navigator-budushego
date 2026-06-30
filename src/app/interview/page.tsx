@@ -15,6 +15,10 @@ function InterviewContent() {
   const categoryStore = useCategoryStore()
   const upsertInterview = useProfileStore((s) => s.upsertInterview)
   const [submitting, setSubmitting] = useState(false)
+  const [creatingPlan, setCreatingPlan] = useState(false)
+  const [planError, setPlanError] = useState<string | null>(null)
+  const [finalSummary, setFinalSummary] = useState<string>("")
+  const [finalLevel, setFinalLevel] = useState<"beginner" | "intermediate" | "advanced">("beginner")
 
   const nctCode = searchParams.get("code") || ""
   const nctTitle = searchParams.get("title") || ""
@@ -38,6 +42,85 @@ function InterviewContent() {
   const currentQuestion = questions[currentQuestionIndex]
   const [textAnswer, setTextAnswer] = useState("")
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
+
+  const persistPlanContext = useCallback(
+    (payload: {
+      nctCode: string
+      nctTitle: string
+      summary?: string
+      level?: string
+      answers: { question: string; answer: string }[]
+    }) => {
+      if (typeof window === "undefined") return
+      window.sessionStorage.setItem("pending_plan_context_v1", JSON.stringify(payload))
+    },
+    [],
+  )
+
+  const createPlanFromInterview = useCallback(async () => {
+    if (!nctCode || !nctTitle || creatingPlan) return
+    setCreatingPlan(true)
+    setPlanError(null)
+
+    const interviewAnswers = answers.map((item) => ({ question: item.question, answer: item.answer }))
+    persistPlanContext({
+      nctCode,
+      nctTitle,
+      summary: finalSummary || undefined,
+      level: finalLevel,
+      answers: interviewAnswers,
+    })
+
+    try {
+      const res = await fetch("/api/generate-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nctCode,
+          nctTitle,
+          university: "",
+          profession: "",
+          city: "",
+          userInterests: categoryStore.selected,
+          previousAnswers: interviewAnswers,
+          diagnosticContext: {
+            source: "interview",
+            summary: finalSummary || undefined,
+            level: finalLevel,
+            answers: interviewAnswers,
+          },
+          assessment: {
+            level: finalLevel,
+            skills: [],
+            strengths: [],
+            gaps: [],
+          },
+        }),
+      })
+
+      const result = await res.json()
+      if (!res.ok || result.status !== "success") {
+        throw new Error(result.error || "Не удалось создать план развития")
+      }
+
+      if (typeof window !== "undefined" && result.data) {
+        window.sessionStorage.setItem(
+          "pending_generated_plan_v1",
+          JSON.stringify({
+            goalId: nctCode,
+            nctCode,
+            nctTitle,
+            plan: result.data,
+          }),
+        )
+      }
+
+      router.push(`/plan?code=${encodeURIComponent(nctCode)}&title=${encodeURIComponent(nctTitle)}&source=interview`)
+    } catch (err) {
+      setPlanError(err instanceof Error ? err.message : "Не удалось создать план развития")
+      setCreatingPlan(false)
+    }
+  }, [answers, categoryStore.selected, creatingPlan, finalLevel, finalSummary, nctCode, nctTitle, persistPlanContext, router])
 
   useEffect(() => {
     if (!nctCode) {
@@ -120,6 +203,8 @@ function InterviewContent() {
 
       if (result.data?.isComplete) {
         setCompleted(result.data.summary || "Интервью завершено.")
+        setFinalSummary(result.data.summary || "Интервью завершено.")
+        setFinalLevel(result.data.level || "beginner")
         upsertInterview({
           nctCode,
           nctTitle: nctTitle || "выбранное направление",
@@ -160,10 +245,18 @@ function InterviewContent() {
           </p>
           <div className="mt-8 flex flex-col gap-3">
             <button
-              onClick={() => router.push(`/plan?code=${encodeURIComponent(nctCode)}`)}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-[14px] bg-primary px-6 text-base font-medium text-white transition-colors hover:bg-primary-hover"
+              onClick={createPlanFromInterview}
+              disabled={creatingPlan}
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-[14px] bg-primary px-6 text-base font-medium text-white transition-colors hover:bg-primary-hover disabled:cursor-wait disabled:opacity-70"
             >
-              Перейти к плану развития
+              {creatingPlan ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Создаём план...
+                </>
+              ) : (
+                "Перейти к плану развития"
+              )}
             </button>
             <button
               onClick={reset}
@@ -171,6 +264,7 @@ function InterviewContent() {
             >
               Пройти снова
             </button>
+            {planError ? <p className="text-sm text-error">{planError}</p> : null}
           </div>
         </motion.div>
       </main>

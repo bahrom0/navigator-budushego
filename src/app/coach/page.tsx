@@ -1,135 +1,249 @@
-"use client";
+"use client"
 
-import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { BookOpen, ClipboardList } from "lucide-react";
-import { useCoachStore } from "@/stores/coach-store";
-import { useProfileStore } from "@/stores/profile-store";
-import { CoachShell } from "@/components/coach/CoachShell";
-import { CoachErrorBanner } from "@/components/coach/CoachErrorBanner";
-import { CoachTabContent } from "@/components/coach/CoachTabContent";
-import {
-  CoachGoalSetup,
-  type CoachGoalDraft,
-  type CoachRecommendation,
-} from "@/components/coach/CoachGoalSetup";
-import {
-  CoachDiagnostic,
-} from "@/components/coach/CoachDiagnostic";
-import type { DiagnosticResult } from "@/types/diagnostic";
-import type {
-  CoachGoal,
-  CoachMessageType,
-  CoachSubjectLevel,
-  CoachDiagnosticResult,
-  CoachTaskStep,
-} from "@/types/coach";
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCoachStore } from "@/stores/coach-store"
+import { useProfileStore } from "@/stores/profile-store"
+import { CoachShell } from "@/components/coach/CoachShell"
+import { CoachErrorBanner } from "@/components/coach/CoachErrorBanner"
+import { CoachTabContent } from "@/components/coach/CoachTabContent"
+import { CoachGoalSetup, type CoachGoalDraft, type CoachRecommendation } from "@/components/coach/CoachGoalSetup"
+import type { CoachGoal, CoachDayPlan, CoachDayTask, CoachRoadmap, CoachTaskStep, RoadmapDurationWeeks } from "@/types/coach"
+import type { DevelopmentPlan } from "@/types/plan"
+import type { DailyPlanRecord, PlanBundle } from "@/types/admission"
 
 export default function CoachPage() {
-  const goal = useCoachStore((s) => s.goal);
-  const diagnostics = useCoachStore((s) => s.diagnostics);
-  const addDiagnostic = useCoachStore((s) => s.addDiagnostic);
-  const setRoadmap = useCoachStore((s) => s.setRoadmap);
-  const setLoading = useCoachStore((s) => s.setLoading);
-  const error = useCoachStore((s) => s.error);
-  const setError = useCoachStore((s) => s.setError);
-  const activeTab = useCoachStore((s) => s.activeTab);
-  const setDayPlan = useCoachStore((s) => s.setDayPlan);
-  const dayPlan = useCoachStore((s) => s.dayPlan);
-  const setTaskSteps = useCoachStore((s) => s.setTaskSteps);
-  const roadmap = useCoachStore((s) => s.roadmap);
-  const [showDiagnostic, setShowDiagnostic] = useState(false);
-  // Автостарт диагностики при первой установке цели
+  const goal = useCoachStore((s) => s.goal)
+  const plan = useCoachStore((s) => s.plan)
+  const roadmap = useCoachStore((s) => s.roadmap)
+  const dayPlan = useCoachStore((s) => s.dayPlan)
+  const dailyHistory = useCoachStore((s) => s.dailyHistory)
+  const setGoal = useCoachStore((s) => s.setGoal)
+  const setPlan = useCoachStore((s) => s.setPlan)
+  const setRoadmap = useCoachStore((s) => s.setRoadmap)
+  const setDayPlan = useCoachStore((s) => s.setDayPlan)
+  const setDailyHistory = useCoachStore((s) => s.setDailyHistory)
+  const setLoading = useCoachStore((s) => s.setLoading)
+  const error = useCoachStore((s) => s.error)
+  const setError = useCoachStore((s) => s.setError)
+  const activeTab = useCoachStore((s) => s.activeTab)
+  const setActiveTab = useCoachStore((s) => s.setActiveTab)
+  const setTaskSteps = useCoachStore((s) => s.setTaskSteps)
+  const progress = useCoachStore((s) => s.progress)
+  const setProgress = useCoachStore((s) => s.updateProgress)
+  const diagnostics = useCoachStore((s) => s.diagnostics)
+  const navigateDate = useCoachStore((s) => s.navigateDate)
+  const setNavigateDate = useCoachStore((s) => s.setNavigateDate)
+  const profileActiveGoal = useProfileStore((s) => s.activeGoal)
+  const profileRecommendations = useProfileStore((s) => s.recommendations)
+  const sessionId = useProfileStore((s) => s.sessionId)
+  const setProfileActiveGoal = useProfileStore((s) => s.setActiveGoal)
+  const [mounted, setMounted] = useState(false)
+  const hasGoal = !!goal || !!profileActiveGoal
+
+  useEffect(() => { setMounted(true) }, [])
+
   useEffect(() => {
-    if (goal && diagnostics.length === 0 && !showDiagnostic) {
-      setShowDiagnostic(true);
+    if (profileActiveGoal && !goal) {
+      setGoal(profileActiveGoal)
     }
-  }, [goal, diagnostics.length, showDiagnostic]);
+  }, [profileActiveGoal, goal, setGoal])
 
-  if (!goal) return <GoalEmptyState />;
-  if (showDiagnostic) {
-    return (
-      <CoachShell>
-        <CoachDiagnostic
-          nctCode={goal.nctCode}
-          nctTitle={goal.nctTitle}
-          onComplete={(result) => {
-            addDiagnostic(buildDiagnosticResult(goal.id, result));
-            setShowDiagnostic(false);
-          }}
-          onSkip={() => setShowDiagnostic(false)}
-        />
-      </CoachShell>
-    );
-  }
+  useEffect(() => {
+    let cancelled = false
 
-  const hasDiagnostic = diagnostics.length > 0;
+    async function loadBundle() {
+      setLoading(true)
+      setError(null)
 
-  const handleGenerateRoadmap = async () => {
-    if (!goal) return;
-    setLoading(true);
-    setError(null);
+      try {
+        const res = await fetch("/api/plan/full", { method: "GET" })
+        const payload = (await res.json()) as {
+          status?: string
+          data?: { activeGoalId?: string | null; bundle?: PlanBundle | null }
+          error?: string
+        }
+
+        if (cancelled) return
+
+        if (payload.status === "success" && payload.data?.bundle) {
+          const bundle = payload.data.bundle
+          if (bundle.goal) setGoal(bundle.goal as CoachGoal)
+          if (bundle.plan) setPlan(bundle.plan as DevelopmentPlan)
+          if (bundle.roadmap) {
+            const rm = bundle.roadmap as CoachRoadmap
+            setRoadmap(rm)
+            if (rm.goalId) {
+              setActiveTab("today")
+            }
+          }
+          if (bundle.today) {
+            setDayPlan({
+              date: bundle.today.planDate,
+              weekId: bundle.today.weekId,
+              tasks: bundle.today.tasks,
+              dailyPlanId: bundle.today.id,
+              roadmapId: bundle.today.roadmapId,
+              goalId: bundle.today.goalId,
+              weekNumber: bundle.today.weekNumber,
+              title: bundle.today.title,
+              completedTaskIds: bundle.today.completedTaskIds,
+              previousDate: bundle.today.previousDate,
+              completedAt: bundle.today.updatedAt,
+            })
+          }
+          setDailyHistory(bundle.history ?? [])
+          syncProgress(bundle)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Ошибка загрузки данных")
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    loadBundle()
+    return () => {
+      cancelled = true
+    }
+  }, [setDayPlan, setDailyHistory, setError, setGoal, setLoading, setPlan, setProgress, setRoadmap, setActiveTab])
+
+  const recommendations = useMemo<CoachRecommendation[]>(() => {
+    if (!Array.isArray(profileRecommendations)) return []
+    return profileRecommendations
+      .map((item): CoachRecommendation | null => {
+        if (!item || typeof item !== "object") return null
+        const code = (item as { code?: unknown }).code
+        const title = (item as { title_ru?: unknown }).title_ru
+        const institution = (item as { institution?: unknown }).institution
+        const city = (item as { city?: unknown }).city
+        const profession = Array.isArray((item as { career_matches?: unknown }).career_matches)
+          ? ((item as { career_matches?: string[] }).career_matches?.[0] ?? undefined)
+          : undefined
+
+        if (typeof code !== "string" || typeof title !== "string") return null
+        return {
+          nctCode: code,
+          nctTitle: title,
+          institution: typeof institution === "string" ? institution : undefined,
+          city: typeof city === "string" ? city : undefined,
+          matchScore: profession ? undefined : undefined,
+        }
+      })
+      .filter((x): x is CoachRecommendation => x !== null)
+  }, [profileRecommendations])
+
+  const handleGenerateRoadmap = async (durationWeeks?: RoadmapDurationWeeks) => {
+    if (!goal) return
+    setLoading(true)
+    setError(null)
     try {
       const res = await fetch("/api/coach/roadmap", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           goalId: goal.id,
+          planId: plan ? `${goal.id}:${plan.nctCode}` : undefined,
           nctCode: goal.nctCode,
           nctTitle: goal.nctTitle,
-          university: goal.university,
+          university: goal.university ?? "",
+          profession: goal.profession ?? "",
+          city: goal.city ?? "",
+          durationWeeks: durationWeeks ?? 12,
+          generalPlan: plan ?? null,
           diagnosticResult: diagnostics.length > 0 ? diagnostics[0] : null,
         }),
-      });
-      const payload = (await res.json()) as { status?: string; data?: { roadmap?: unknown }; error?: string };
-      if (!res.ok || payload.status !== "success" || !payload.data?.roadmap)
-        throw new Error(payload.error ?? "Не удалось создать Roadmap");
-      setRoadmap(payload.data.roadmap as never);
+      })
+      const payload = (await res.json()) as { status?: string; data?: { roadmap?: unknown }; error?: string }
+      if (!res.ok || payload.status !== "success" || !payload.data?.roadmap) {
+        throw new Error(payload.error ?? "Не удалось создать Roadmap")
+      }
+      setRoadmap(payload.data.roadmap as CoachRoadmap)
+      setActiveTab("today")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка создания Roadmap");
+      setError(err instanceof Error ? err.message : "Ошибка создания Roadmap")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleGenerateDailyPlan = async () => {
-    if (!goal || !roadmap) return;
-    const activeWeek = roadmap.weeks.find((w) => w.status === "active") ?? roadmap.weeks[0];
-    if (!activeWeek) return;
-    setLoading(true);
-    setError(null);
+    if (!goal || !roadmap) return
+    if (!roadmap.id) {
+      setError("Roadmap ID отсутствует. Создайте Roadmap заново.")
+      return
+    }
+    const activeWeek = roadmap.weeks.find((w) => w.status === "active") ?? roadmap.weeks[0]
+    if (!activeWeek) return
+    setLoading(true)
+    setError(null)
     try {
       const res = await fetch("/api/coach/daily-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           goalId: goal.id,
+          roadmapId: roadmap.id,
+          planId: plan ? `${goal.id}:${plan.nctCode}` : undefined,
           weekId: activeWeek.id,
           nctCode: goal.nctCode,
           nctTitle: goal.nctTitle,
           weekTitle: activeWeek.title,
           weekSubjects: activeWeek.subjects,
           weekTasks: activeWeek.tasks,
+          previousCompletedCount: dayPlan?.tasks.filter((t) => t.completed).length ?? 0,
+          previousSkippedCount: dayPlan ? dayPlan.tasks.length - dayPlan.tasks.filter((t) => t.completed).length : 0,
           diagnosticResult: diagnostics.length > 0 ? diagnostics[0] : null,
+          planDate: navigateDate,
+          generalPlan: plan ?? null,
+          roadmap: roadmap ?? null,
+          dailyHistory: dailyHistory ?? null,
         }),
-      });
-      const payload = (await res.json()) as { status?: string; data?: { dayPlan?: unknown }; error?: string };
-      if (!res.ok || payload.status !== "success" || !payload.data?.dayPlan)
-        throw new Error(payload.error ?? "Не удалось создать план на день");
-      setDayPlan(payload.data.dayPlan as never);
+      })
+      const payload = (await res.json()) as {
+        status?: string
+        data?: {
+          dayPlan?: {
+            date: string
+            weekId: string
+            tasks: CoachDayTask[]
+            dailyPlanId?: string
+            roadmapId?: string
+            goalId?: string
+            previousDate?: string
+            completedAt?: number
+          }
+        }
+        error?: string
+      }
+      if (!res.ok || payload.status !== "success" || !payload.data?.dayPlan) {
+        throw new Error(payload.error ?? "Не удалось создать план на сегодня")
+      }
+      const dp = payload.data.dayPlan
+      setDayPlan({
+        date: dp.date,
+        weekId: dp.weekId,
+        tasks: dp.tasks,
+        dailyPlanId: dp.dailyPlanId,
+        roadmapId: dp.roadmapId,
+        goalId: dp.goalId,
+        previousDate: dp.previousDate,
+        completedAt: dp.completedAt,
+      })
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка создания плана");
+      setError(err instanceof Error ? err.message : "Ошибка создания плана")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleTaskDetail = async (taskId: string) => {
-    if (!goal || !roadmap || !dayPlan) return;
-    const task = dayPlan.tasks.find((t) => t.id === taskId);
-    if (!task) return;
-    const activeWeek = roadmap.weeks.find((w) => w.status === "active") ?? roadmap.weeks[0];
-    if (!activeWeek) return;
+    if (!goal || !roadmap || !dayPlan) return
+    const task = dayPlan.tasks.find((t) => t.id === taskId)
+    if (!task) return
+    const activeWeek = roadmap.weeks.find((w) => w.id === dayPlan.weekId) ?? roadmap.weeks[0]
+    if (!activeWeek) return
     try {
       const res = await fetch("/api/coach/task-detail", {
         method: "POST",
@@ -141,144 +255,128 @@ export default function CoachPage() {
           nctTitle: goal.nctTitle,
           weekTitle: activeWeek.title,
         }),
-      });
-      const payload = (await res.json()) as { status?: string; data?: { steps?: CoachTaskStep[] }; error?: string };
-      if (!res.ok || payload.status !== "success" || !payload.data?.steps)
-        throw new Error(payload.error ?? "Не удалось загрузить план");
-      setTaskSteps(taskId, payload.data.steps);
+      })
+      const payload = (await res.json()) as { status?: string; data?: { steps?: CoachTaskStep[] }; error?: string }
+      if (!res.ok || payload.status !== "success" || !payload.data?.steps) {
+        throw new Error(payload.error ?? "Не удалось загрузить план")
+      }
+      setTaskSteps(taskId, payload.data.steps)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка загрузки плана");
+      setError(err instanceof Error ? err.message : "Ошибка загрузки плана")
     }
-  };
+  }
+
+  const handleNavigateDate = useCallback(async (date: string) => {
+    if (!goal) return
+    setNavigateDate(date)
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/coach/daily-plan?planDate=${date}&goalId=${goal.id}`, {
+        method: "GET",
+      })
+      const payload = (await res.json()) as {
+        status?: string
+        data?: { dayPlan?: CoachDayPlan | null }
+        error?: string
+      }
+      if (res.ok && payload.status === "success") {
+        if (payload.data?.dayPlan) {
+          setDayPlan(payload.data.dayPlan)
+        } else {
+          setDayPlan(null)
+        }
+      }
+    } catch (err) {
+      console.error("[coach] navigate date error:", err)
+    } finally {
+      setLoading(false)
+    }
+  }, [goal, setNavigateDate, setDayPlan, setLoading])
+
+  if (!mounted) {
+    return (
+      <CoachShell>
+        <div className="flex items-center justify-center py-20">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      </CoachShell>
+    )
+  }
+
+  if (!hasGoal) return <GoalSetupFlow recommendations={recommendations} sessionId={sessionId} />
 
   return (
     <CoachShell>
       {error ? <CoachErrorBanner message={error} onDismiss={() => setError(null)} /> : null}
-      {!hasDiagnostic && activeTab !== "chat" ? (
-        <DiagnosticPrompt onClick={() => setShowDiagnostic(true)} />
-      ) : (
-        <CoachTabContent
-          tab={activeTab}
-          onGenerateRoadmap={handleGenerateRoadmap}
-          onGenerateDailyPlan={handleGenerateDailyPlan}
-          onRequestTaskDetail={handleTaskDetail}
-        />
-      )}
+      <CoachTabContent
+        tab={activeTab}
+        onGenerateRoadmap={handleGenerateRoadmap}
+        onGenerateDailyPlan={handleGenerateDailyPlan}
+        onRequestTaskDetail={handleTaskDetail}
+        onNavigateDate={handleNavigateDate}
+      />
     </CoachShell>
-  );
+  )
 }
 
-function DiagnosticPrompt({ onClick }: { onClick: () => void }) {
-  return (
-    <motion.section
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-[18px] border border-border bg-card-bg p-6 text-center"
-    >
-      <div className="mx-auto flex max-w-sm flex-col items-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-light">
-          <ClipboardList className="h-6 w-6 text-primary" />
-        </div>
-        <h2 className="mt-4 text-base font-semibold text-foreground">
-          Пройдите диагностику знаний
-        </h2>
-        <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-          Без диагностики планы будут приблизительными. Coach подберёт вопросы
-          под вашу специальность. Это займёт 10-15 минут.
-        </p>
-        <button
-          type="button"
-          onClick={onClick}
-          className="mt-5 inline-flex h-11 items-center gap-2 rounded-[12px] bg-primary px-5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
-        >
-          <BookOpen className="h-4 w-4" />
-          Начать диагностику
-        </button>
-      </div>
-    </motion.section>
-  );
-}
-
-function buildDiagnosticResult(goalId: string, result: DiagnosticResult): CoachDiagnosticResult {
-  const subjectCounts: Record<string, { correct: number; total: number }> = {};
-  result.questions.forEach((q, i) => {
-    const prev = subjectCounts[q.subject] ?? { correct: 0, total: 0 };
-    prev.total++;
-    if (result.answers[i]?.isCorrect) prev.correct++;
-    subjectCounts[q.subject] = prev;
-  });
-  const subjects: CoachSubjectLevel[] = Object.entries(subjectCounts).map(([subject, counts]) => {
-    const pct = counts.total > 0 ? counts.correct / counts.total : 0;
-    return {
-      subject,
-      level: pct >= 0.7 ? "advanced" : pct >= 0.4 ? "intermediate" : "beginner",
-      score: Math.round(pct * 100),
-    };
-  });
-  return {
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-    goalId,
-    subjects,
-    strengths: subjects.filter((s) => s.level === "advanced").map((s) => s.subject),
-    weaknesses: subjects.filter((s) => s.level === "beginner").map((s) => s.subject),
-    recommendations: [],
-    takenAt: Date.now(),
-  };
-}
-
-function GoalSetupFlow() {
-  const setGoal = useCoachStore((s) => s.setGoal);
-  const setError = useCoachStore((s) => s.setError);
-  const rawRecommendations = useProfileStore((s) => s.recommendations);
-  const [submitting, setSubmitting] = useState(false);
-  const [localError, setLocalError] = useState<string | null>(null);
-
-  const recommendations = useMemo<CoachRecommendation[]>(() => {
-    if (!Array.isArray(rawRecommendations)) return [];
-    return rawRecommendations
-      .map((item): CoachRecommendation | null => {
-        if (!item || typeof item !== "object") return null;
-        const code = (item as { code?: unknown }).code;
-        const title = (item as { title_ru?: unknown }).title_ru;
-        const institution = (item as { institution?: unknown }).institution;
-        const city = (item as { city?: unknown }).city;
-        if (typeof code !== "string" || typeof title !== "string") return null;
-        return {
-          nctCode: code,
-          nctTitle: title,
-          institution: typeof institution === "string" ? institution : undefined,
-          city: typeof city === "string" ? city : undefined,
-        };
-      })
-      .filter((x): x is CoachRecommendation => x !== null);
-  }, [rawRecommendations]);
+function GoalSetupFlow({
+  recommendations,
+  sessionId,
+}: {
+  recommendations: CoachRecommendation[]
+  sessionId: string
+}) {
+  const setGoal = useCoachStore((s) => s.setGoal)
+  const setPlan = useCoachStore((s) => s.setPlan)
+  const setRoadmap = useCoachStore((s) => s.setRoadmap)
+  const setDayPlan = useCoachStore((s) => s.setDayPlan)
+  const setDailyHistory = useCoachStore((s) => s.setDailyHistory)
+  const setError = useCoachStore((s) => s.setError)
+  const setLoading = useCoachStore((s) => s.setLoading)
+  const setProfileGoal = useProfileStore((s) => s.setActiveGoal)
+  const [submitting, setSubmitting] = useState(false)
+  const [localError, setLocalError] = useState<string | null>(null)
 
   const handleSubmit = async (draft: CoachGoalDraft) => {
-    setSubmitting(true);
-    setLocalError(null);
+    setSubmitting(true)
+    setLocalError(null)
     try {
-      const res = await fetch("/api/coach/goal", {
+      const selected = recommendations.find((item) => item.nctCode === draft.nctCode)
+      const res = await fetch("/api/goals/select", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nctCode: draft.nctCode, nctTitle: draft.nctTitle, university: draft.university ?? "" }),
-      });
-      const payload = (await res.json()) as { status?: string; data?: { goal?: CoachGoal }; error?: string };
+        body: JSON.stringify({
+          sessionId,
+          nctCode: draft.nctCode,
+          nctTitle: draft.nctTitle,
+          university: draft.university ?? selected?.institution ?? "",
+          profession: selected?.nctTitle ?? draft.nctTitle,
+          city: selected?.city ?? "",
+          careerMatches: selected ? [selected.nctTitle] : [],
+          matchedInterests: [],
+        }),
+      })
+      const payload = (await res.json()) as { status?: string; data?: { goal?: CoachGoal; persisted?: boolean }; error?: string }
       if (!res.ok || payload.status !== "success" || !payload.data?.goal) {
-        const message = payload.error ?? "Не удалось сохранить цель";
-        setLocalError(message);
-        setError(message);
-        return;
+        const message = payload.error ?? "Не удалось сохранить цель"
+        setLocalError(message)
+        setError(message)
+        return
       }
-      setGoal(payload.data.goal);
+      setGoal(payload.data.goal)
+      setProfileGoal(payload.data.goal)
+      setPlan(null)
+      setRoadmap(null)
+      setDayPlan(null)
+      setDailyHistory([])
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Сетевая ошибка";
-      setLocalError(message);
-      setError(message);
+      const message = err instanceof Error ? err.message : "Сетевая ошибка"
+      setLocalError(message)
+      setError(message)
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
   return (
     <main className="flex min-h-[calc(100vh-3.5rem)] flex-1 items-center justify-center px-4 py-12 sm:px-6">
@@ -289,11 +387,20 @@ function GoalSetupFlow() {
         onSubmit={handleSubmit}
       />
     </main>
-  );
+  )
 }
 
-function GoalEmptyState() {
-  return <GoalSetupFlow />;
+function syncProgress(bundle: PlanBundle) {
+  const roadmapWeeks = bundle.roadmap?.weeks ?? []
+  const totalTasksPlanned = roadmapWeeks.reduce((sum, week) => sum + week.tasks.length, 0)
+  const completedTasks = bundle.history.reduce(
+    (sum, plan) => sum + plan.tasks.filter((task) => task.completed).length,
+    0,
+  )
+  const completionPercent = totalTasksPlanned > 0 ? Math.round((completedTasks / totalTasksPlanned) * 100) : 0
+  useCoachStore.getState().updateProgress({
+    totalTasksPlanned,
+    totalTasksCompleted: completedTasks,
+    roadmapCompletionPercent: completionPercent,
+  })
 }
-
-export type { CoachMessageType };

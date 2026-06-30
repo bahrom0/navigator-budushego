@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node scripts/dev-start.js",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -38,4 +38,5 @@
     "typescript": "^5",
     "vercel": "^54.14.0"
   }
+  
 }

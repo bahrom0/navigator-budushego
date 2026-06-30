@@ -30,7 +30,7 @@
   --color-border: var(--border);
   --color-border-hover: var(--border-hover);
   --color-card-bg: var(--card-bg);
-  --font-sans: var(--font-manrope);
+  --font-sans: "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
 body {

@@ -26,25 +26,34 @@ export async function POST(request: Request) {
       )
     }
 
-    const { nctCode, nctTitle, level, goals, stages } = parsed.data
+    const { goalId, nctCode, nctTitle, level, university, profession, city, goals, stages, planType, roadmapId } = parsed.data
 
-    const { data: existing } = await supabase
+    const query = supabase
       .from("plans")
       .select("id, completed_steps, status")
       .eq("user_id", user.id)
-      .eq("nct_code", nctCode)
-      .maybeSingle()
+    const existingResult = goalId
+      ? await query.eq("goal_id", goalId).eq("plan_type", planType ?? "general").maybeSingle()
+      : await query.eq("nct_code", nctCode).maybeSingle()
+
+    const existing = existingResult.data
 
     let result
     if (existing) {
       result = await supabase
         .from("plans")
         .update({
+          goal_id: goalId ?? null,
           nct_code: nctCode,
           nct_title: nctTitle,
           level,
+          university: university ?? null,
+          profession: profession ?? null,
+          city: city ?? null,
           goals,
           stages,
+          plan_type: planType ?? "general",
+          roadmap_id: roadmapId ?? null,
         })
         .eq("id", existing.id)
         .select("id")
@@ -54,13 +63,19 @@ export async function POST(request: Request) {
         .from("plans")
         .insert({
           user_id: user.id,
+          goal_id: goalId ?? null,
           nct_code: nctCode,
           nct_title: nctTitle,
           level,
+          university: university ?? null,
+          profession: profession ?? null,
+          city: city ?? null,
           goals,
           stages,
           completed_steps: [],
           status: "active",
+          plan_type: planType ?? "general",
+          roadmap_id: roadmapId ?? null,
         })
         .select("id")
         .single()

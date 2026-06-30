@@ -8,6 +8,7 @@ import type {
   InterviewRecord,
   UserLevel,
 } from "@/types/profile"
+import type { CoachGoal } from "@/types/coach"
 import { cacheGet, cacheSet } from "@/lib/cache"
 
 const STORAGE_KEY = "profile"
@@ -50,6 +51,7 @@ function emptyProfile(sessionId: string): ProfileData {
   return {
     sessionId,
     level: "beginner",
+    goalHistory: [],
     lastNctCodes: [],
     recommendations: [],
     savedCodes: [],
@@ -71,6 +73,8 @@ interface ProfileStore extends ProfileData {
   hydrate: () => void
   logActivity: (type: string, label: string) => void
   setLevel: (level: UserLevel) => void
+  setActiveGoal: (goal: CoachGoal) => void
+  archiveActiveGoal: () => void
   updateLastCodes: (codes: string[]) => void
   setRecommendations: (items: any[]) => void
   toggleBookmark: (bookmark: Omit<BookmarkRecord, "id" | "savedAt">) => void
@@ -116,6 +120,40 @@ export const useProfileStore = create<ProfileStore>((set, get) => {
 
   setLevel: (level) => set({ level }),
 
+  setActiveGoal: (goal) =>
+    set((state) => {
+      const history = state.activeGoal
+        ? [state.activeGoal, ...state.goalHistory.filter((g) => g.id !== state.activeGoal?.id)]
+        : state.goalHistory
+      const nextGoal = {
+        ...goal,
+        status: "active" as const,
+      }
+      const next = {
+        activeGoal: nextGoal,
+        activeGoalId: nextGoal.id,
+        goalHistory: history,
+      }
+      persistProfile({ ...get(), ...next } as ProfileData)
+      return next
+    }),
+
+  archiveActiveGoal: () =>
+    set((state) => {
+      if (!state.activeGoal) return state
+      const archivedGoal: CoachGoal = { ...state.activeGoal, status: "archived" }
+      const next = {
+        activeGoal: null,
+        activeGoalId: undefined,
+        goalHistory: [
+          archivedGoal,
+          ...state.goalHistory.filter((g) => g.id !== archivedGoal.id),
+        ],
+      }
+      persistProfile({ ...get(), ...next } as ProfileData)
+      return next
+    }),
+
   updateLastCodes: (codes) =>
     set((state) => ({
       lastNctCodes: codes,
@@ -149,7 +187,9 @@ export const useProfileStore = create<ProfileStore>((set, get) => {
   },
 
   upsertPlan: (plan) => {
-    const existing = get().plans.find((p) => p.nctCode === plan.nctCode)
+    const existing = get().plans.find((p) =>
+      plan.goalId ? p.goalId === plan.goalId : p.nctCode === plan.nctCode,
+    )
     const id = existing?.id ?? generateId()
     const entry: PlanRecord = {
       id,
@@ -212,6 +252,7 @@ export const useProfileStore = create<ProfileStore>((set, get) => {
     set((state) => ({
       ...state,
       ...data,
+      goalHistory: data.goalHistory ?? state.goalHistory ?? [],
       sessionId: state.sessionId || getSessionId(),
     })),
   }

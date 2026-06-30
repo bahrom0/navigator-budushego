@@ -5,22 +5,23 @@ import { CoachRoadmap } from "@/components/coach/CoachRoadmap"
 import { CoachDailyPlan } from "@/components/coach/CoachDailyPlan"
 import { CoachProgress } from "@/components/coach/CoachProgress"
 import { CoachChat } from "./CoachChat"
-import type { CoachActiveTab } from "@/types/coach"
+import type { CoachActiveTab, RoadmapDurationWeeks } from "@/types/coach"
 
 export interface CoachTabContentProps {
   tab: CoachActiveTab
-  onGenerateRoadmap?: () => void
+  onGenerateRoadmap?: (durationWeeks?: RoadmapDurationWeeks) => void
   onGenerateDailyPlan?: () => void
   onRequestTaskDetail?: (taskId: string) => void
+  onNavigateDate?: (date: string) => void
 }
 
-export function CoachTabContent({ tab, onGenerateRoadmap, onGenerateDailyPlan, onRequestTaskDetail }: CoachTabContentProps) {
+export function CoachTabContent({ tab, onGenerateRoadmap, onGenerateDailyPlan, onRequestTaskDetail, onNavigateDate }: CoachTabContentProps) {
   if (tab === "roadmap") {
     return <CoachRoadmap onGenerate={onGenerateRoadmap} />
   }
 
   if (tab === "today") {
-    return <CoachDailyPlan onGenerate={onGenerateDailyPlan} onRequestTaskDetail={onRequestTaskDetail} />
+    return <CoachDailyPlan onGenerate={onGenerateDailyPlan} onRequestTaskDetail={onRequestTaskDetail} onNavigateDate={onNavigateDate} />
   }
 
   if (tab === "chat") {

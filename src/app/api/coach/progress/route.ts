@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import { createClient } from "@/lib/supabase/server"
 import type { CoachProgress } from "@/types/coach"
 
 export const dynamic = "force-dynamic"
@@ -33,6 +34,49 @@ const DayCompleteSchema = z.object({
   completedAt: z.number().int().positive(),
   currentProgress: CoachProgressSchema,
 })
+
+async function persistTaskToggle(
+  dayPlanId: string,
+  taskId: string,
+  completed: boolean,
+): Promise<void> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const now = new Date().toISOString()
+
+  await supabase
+    .from("daily_tasks")
+    .update({
+      completed,
+      status: completed ? "completed" : "pending",
+      completed_at: completed ? now : null,
+      updated_at: now,
+    })
+    .eq("task_id", taskId)
+    .eq("daily_plan_id", dayPlanId)
+    .eq("user_id", user.id)
+
+  const { data: tasks } = await supabase
+    .from("daily_tasks")
+    .select("task_id, completed")
+    .eq("daily_plan_id", dayPlanId)
+    .eq("user_id", user.id)
+
+  const completedIds = (tasks ?? [])
+    .filter((t) => t.completed === true)
+    .map((t) => t.task_id)
+
+  await supabase
+    .from("daily_plans")
+    .update({
+      completed_task_ids: completedIds,
+      updated_at: now,
+    })
+    .eq("id", dayPlanId)
+    .eq("user_id", user.id)
+}
 
 function updateStreak(progress: CoachProgress): CoachProgress {
   const today = new Date().toISOString().slice(0, 10)
@@ -77,7 +121,10 @@ export async function POST(request: Request) {
       )
     }
 
-    const { completed, currentProgress } = parsed.data
+    const { dayPlanId, taskId, completed, currentProgress } = parsed.data
+
+    await persistTaskToggle(dayPlanId, taskId, completed)
+
     const tasksDelta = completed ? 1 : -1
     const newCompleted = Math.max(
       0,

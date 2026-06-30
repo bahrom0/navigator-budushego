@@ -27,16 +27,10 @@ interface NCTSignalCardProps {
   }
   index?: number
   variant?: "default" | "compact"
+  onSelect?: () => void
 }
 
-const ACCENT_COLORS = [
-  "#2563EB",
-  "#059669",
-  "#D97706",
-  "#7C3AED",
-  "#DC2626",
-  "#0891B2",
-]
+const ACCENT_COLORS = ["#2563EB", "#059669", "#D97706", "#7C3AED", "#DC2626", "#0891B2"]
 
 export function NCTSignalCard({
   code,
@@ -60,21 +54,16 @@ export function NCTSignalCard({
   const clusterName = cluster !== undefined ? CLUSTER_NAMES[cluster] : taxonomy?.cluster_name_ru
   const exams = cluster !== undefined ? CLUSTER_EXAMS[cluster] : []
 
-  const competition = useMemo(
-    () => evaluateCompetitionForCode(code, confidence),
-    [code, confidence],
-  )
+  const competition = useMemo(() => evaluateCompetitionForCode(code, confidence), [code, confidence])
 
   const handleExplain = () => {
     logActivityEvent("view_recommendation", `Подробнее: ${code} - ${title_ru}`)
-    router.push(
-      `/explain?code=${encodeURIComponent(code)}&title=${encodeURIComponent(title_ru)}`,
-    )
+    router.push(`/explain?code=${encodeURIComponent(code)}&title=${encodeURIComponent(title_ru)}`)
   }
 
   const handleInterview = () => {
     logActivityEvent("start_interview", `Из карточки: ${code} - ${title_ru}`)
-    router.push(`/interview?code=${encodeURIComponent(code)}`)
+    router.push(`/interview?code=${encodeURIComponent(code)}&title=${encodeURIComponent(title_ru)}`)
   }
 
   const springHover = { type: "spring" as const, stiffness: 250, damping: 18 }
@@ -88,8 +77,7 @@ export function NCTSignalCard({
       transition={springHover}
       className="group relative overflow-hidden rounded-[20px] border border-border bg-card-bg"
       style={{
-        boxShadow:
-          "0 1px 3px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.04)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.04)",
         borderLeft: `3px solid ${accentColor}`,
       }}
     >
@@ -134,10 +122,7 @@ export function NCTSignalCard({
                       <ul className="mt-2 space-y-1">
                         {exams.map((exam) => (
                           <li key={exam} className="flex items-center gap-2 text-xs text-text-secondary">
-                            <span
-                              className="h-1.5 w-1.5 rounded-full"
-                              style={{ backgroundColor: accentColor }}
-                            />
+                            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: accentColor }} />
                             {exam}
                           </li>
                         ))}
@@ -151,7 +136,8 @@ export function NCTSignalCard({
           <div
             className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
             style={{
-              backgroundColor: confidencePercent >= 80 ? "#10B98114" : confidencePercent >= 60 ? "#F59E0B14" : "#EF444414",
+              backgroundColor:
+                confidencePercent >= 80 ? "#10B98114" : confidencePercent >= 60 ? "#F59E0B14" : "#EF444414",
               color: confidencePercent >= 80 ? "#10B981" : confidencePercent >= 60 ? "#F59E0B" : "#EF4444",
             }}
           >
@@ -161,9 +147,7 @@ export function NCTSignalCard({
         </header>
 
         <div className="mt-4">
-          <h3 className="text-lg font-semibold leading-snug text-foreground">
-            {title_ru}
-          </h3>
+          <h3 className="text-lg font-semibold leading-snug text-foreground">{title_ru}</h3>
           <div className="mt-1.5 flex items-center gap-2 text-sm text-text-secondary">
             <span className="font-medium">{institution}</span>
             <span className="text-text-muted">·</span>
@@ -174,31 +158,19 @@ export function NCTSignalCard({
         {career_matches.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-1.5">
             {career_matches.slice(0, 4).map((career) => (
-              <span
-                key={career}
-                className="rounded-[8px] border border-border bg-background px-2.5 py-1 text-xs text-text-secondary"
-              >
+              <span key={career} className="rounded-[8px] border border-border bg-background px-2.5 py-1 text-xs text-text-secondary">
                 {career}
               </span>
             ))}
-            {career_matches.length > 4 && (
-              <span className="rounded-[8px] px-2.5 py-1 text-xs text-text-muted">
-                +{career_matches.length - 4}
-              </span>
-            )}
+            {career_matches.length > 4 && <span className="rounded-[8px] px-2.5 py-1 text-xs text-text-muted">+{career_matches.length - 4}</span>}
           </div>
         )}
 
         <CompetitionMeter level={competition.level} score={competition.score} reason={competition.reason} />
 
         {whyItFits && (
-          <div
-            className="mt-5 rounded-[12px] border border-border bg-background p-4"
-            style={{ backgroundColor: `${accentColor}06` }}
-          >
-            <p className="text-sm leading-relaxed text-text-secondary">
-              {whyItFits}
-            </p>
+          <div className="mt-5 rounded-[12px] border border-border bg-background p-4" style={{ backgroundColor: `${accentColor}06` }}>
+            <p className="text-sm leading-relaxed text-text-secondary">{whyItFits}</p>
             {matchedInterests.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {matchedInterests.map((interest) => (
@@ -216,12 +188,7 @@ export function NCTSignalCard({
         )}
 
         <footer className="mt-5 flex flex-wrap items-center gap-3 border-t border-border pt-4">
-          <BookmarkButton
-            nctCode={code}
-            nctTitle={title_ru}
-            institution={institution}
-            city={city}
-          />
+          <BookmarkButton nctCode={code} nctTitle={title_ru} institution={institution} city={city} />
           {variant === "default" && (
             <>
               <motion.button

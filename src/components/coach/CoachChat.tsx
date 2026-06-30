@@ -26,8 +26,10 @@ export function CoachChat() {
     messages,
     addMessage,
     goal,
+    plan,
     roadmap,
     dayPlan,
+    dailyHistory,
     diagnostics,
     miniTests,
     addMiniTest,
@@ -88,8 +90,10 @@ export function CoachChat() {
           message: text,
           history,
           goal,
+          plan,
           roadmap,
           dayPlan,
+          dailyHistory,
           diagnostics,
           miniTests,
           progress,
@@ -155,7 +159,7 @@ export function CoachChat() {
     } finally {
       setLoading(false)
     }
-  }, [input, isLoading, messages, addMessage, setLoading, setError, goal, roadmap, dayPlan, diagnostics, miniTests, progress])
+  }, [input, isLoading, messages, addMessage, setLoading, setError, goal, plan, roadmap, dayPlan, dailyHistory, diagnostics, miniTests, progress])
 
   const handleMiniTestComplete = useCallback(
     (results: { correct: number; total: number }) => {

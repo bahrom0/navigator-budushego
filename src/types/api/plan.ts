@@ -4,9 +4,21 @@ import type { SkillLevel } from "@/types/plan"
 export const SkillLevelSchema = z.enum(["beginner", "intermediate", "advanced"])
 
 export const GeneratePlanSchema = z.object({
+  goalId: z.string().optional(),
   nctCode: z.string(),
   nctTitle: z.string(),
+  university: z.string().optional(),
+  profession: z.string().optional(),
+  city: z.string().optional(),
   userInterests: z.array(z.string()).optional(),
+  diagnosticContext: z
+    .object({
+      source: z.enum(["interview", "plan-test"]).optional(),
+      summary: z.string().optional(),
+      level: SkillLevelSchema.optional(),
+      answers: z.array(z.object({ question: z.string(), answer: z.string() })).optional(),
+    })
+    .optional(),
   assessment: z
     .object({
       level: SkillLevelSchema,
@@ -47,12 +59,18 @@ export type GeneratePlanResponse = {
 }
 
 export const SavePlanSchema = z.object({
+  goalId: z.string().optional(),
   nctCode: z.string(),
   nctTitle: z.string(),
   level: SkillLevelSchema,
+  university: z.string().optional(),
+  profession: z.string().optional(),
+  city: z.string().optional(),
   goals: z.array(z.object({ title: z.string(), description: z.string() })),
   stages: z.array(PlanStageSchema),
   sessionId: z.string().optional(),
+  planType: z.enum(["general", "roadmap", "daily"]).optional(),
+  roadmapId: z.string().optional(),
 })
 
 export type SavePlanRequest = z.infer<typeof SavePlanSchema>

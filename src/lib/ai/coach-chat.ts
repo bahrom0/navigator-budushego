@@ -2,6 +2,8 @@ import { z } from "zod"
 import { deepseekChat, type DeepSeekMessage } from "@/lib/ai/deepseek"
 import { buildCoachContext } from "@/lib/ai/coach-context"
 import type { CoachGoal, CoachRoadmap, CoachDayPlan, CoachDiagnosticResult, CoachMiniTestResult, CoachProgress } from "@/types/coach"
+import type { DevelopmentPlan } from "@/types/plan"
+import type { DailyPlanRecord } from "@/types/admission"
 
 const MiniTestQuestionSchema = z.object({
   question: z.string(),
@@ -41,17 +43,25 @@ export async function chatWithCoach(
   history?: { role: "user" | "assistant"; content: string }[],
   context?: {
     goal?: CoachGoal | null
+    plan?: DevelopmentPlan | null
     roadmap?: CoachRoadmap | null
     dayPlan?: CoachDayPlan | null
+    dailyHistory?: DailyPlanRecord[] | null
     diagnostics?: CoachDiagnosticResult | null
     miniTests?: CoachMiniTestResult[] | null
     progress?: CoachProgress | null
   },
 ): Promise<CoachChatResponse> {
-  const systemPrompt = buildCoachContext(
-    context?.goal, context?.roadmap, context?.dayPlan,
-    context?.diagnostics, context?.miniTests, context?.progress,
-  )
+  const systemPrompt = buildCoachContext({
+    goal: context?.goal,
+    plan: context?.plan,
+    roadmap: context?.roadmap,
+    dayPlan: context?.dayPlan,
+    dailyHistory: context?.dailyHistory,
+    diagnostics: context?.diagnostics,
+    miniTests: context?.miniTests,
+    progress: context?.progress,
+  })
 
   const messages: DeepSeekMessage[] = [systemPrompt]
   if (history) {

@@ -11,6 +11,7 @@ import {
   persistCategories,
 } from "@/stores/category-store"
 import { useOnboardingStore } from "@/stores/onboarding-store"
+import { useProfileStore } from "@/stores/profile-store"
 import { CATEGORIES } from "@/constants/categories"
 import { NCTSignalCard } from "@/components/signal-cards/NCTSignalCard"
 import type { Category } from "@/types/categories"
@@ -42,6 +43,8 @@ export default function RecommendationsPage() {
   const cacheResults = useAnalysisStore((s) => s.cacheResults)
   const restoreFromCache = useAnalysisStore((s) => s.restoreFromCache)
   const [cacheRef, setCacheRef] = useState<CachedAnalysisData | null>(null)
+  const sessionId = useProfileStore((s) => s.sessionId)
+  const setActiveGoal = useProfileStore((s) => s.setActiveGoal)
 
   const categories = useMemo(() => selectedIds
     .map((id: string) => CATEGORIES.find((c: Category) => c.id === id))
@@ -198,9 +201,40 @@ const displayedResults = useMemo(() => {
   return sorted
 }, [results, sortBy, sortDir, cityFilter, studyFormFilter])
 
-const toggleSortDir = () => {
-  setSortDir((d) => (d === "asc" ? "desc" : "asc"))
-}
+  const toggleSortDir = () => {
+    setSortDir((d) => (d === "asc" ? "desc" : "asc"))
+  }
+
+  const handleSelectGoal = useCallback(
+    async (result: any) => {
+      try {
+        const res = await fetch("/api/goals/select", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId,
+            nctCode: result.code,
+            nctTitle: result.title_ru,
+            university: result.institution ?? "",
+            profession: Array.isArray(result.career_matches) ? result.career_matches[0] ?? "" : "",
+            city: result.city ?? "",
+            careerMatches: Array.isArray(result.career_matches) ? result.career_matches : [],
+            matchedInterests: Array.isArray(result.matchedInterests) ? result.matchedInterests : [],
+          }),
+        })
+        const payload = await res.json()
+        if (!res.ok || payload.status !== "success" || !payload.data?.goal) {
+          throw new Error(payload.error ?? "Не удалось выбрать цель")
+        }
+        setActiveGoal(payload.data.goal)
+        logActivityEvent("coach_goal_set", `Активная цель: ${result.code} - ${result.title_ru}`)
+        router.push("/plan")
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Не удалось выбрать цель")
+      }
+    },
+    [router, sessionId, setActiveGoal],
+  )
 
 function SkeletonCard() {
   return (
@@ -479,6 +513,7 @@ return (
                   study_type: result.study_type,
                 }}
                 index={idx}
+                onSelect={() => handleSelectGoal(result)}
               />
             </motion.div>
           ))}
