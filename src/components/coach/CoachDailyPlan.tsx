@@ -135,7 +135,7 @@ export function CoachDailyPlan({ onGenerate, onRequestTaskDetail, onNavigateDate
 function DayProgressBar({ pct }: { pct: number }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#E5E7EB]">
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-border/35">
         <motion.div
           className="h-full rounded-full bg-primary"
           initial={{ width: 0 }}
@@ -196,15 +196,15 @@ function DailyPlanSkeleton() {
         <div className="space-y-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="flex items-start gap-3">
-              <div className="h-5 w-5 animate-pulse rounded-md bg-[#E5E7EB]" />
+              <div className="h-5 w-5 animate-pulse rounded-md bg-border/35" />
               <div className="flex-1 space-y-1.5">
-                <div className="h-4 w-3/4 animate-pulse rounded bg-[#E5E7EB]" />
-                <div className="h-3 w-1/3 animate-pulse rounded bg-[#E5E7EB]" />
+                <div className="h-4 w-3/4 animate-pulse rounded bg-border/35" />
+                <div className="h-3 w-1/3 animate-pulse rounded bg-border/35" />
               </div>
             </div>
           ))}
         </div>
-        <div className="mt-4 h-1.5 animate-pulse rounded-full bg-[#E5E7EB]" />
+        <div className="mt-4 h-1.5 animate-pulse rounded-full bg-border/35" />
       </div>
     </div>
   )

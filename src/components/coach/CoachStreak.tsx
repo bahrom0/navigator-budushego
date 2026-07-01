@@ -73,7 +73,7 @@ export function CoachStreak({ currentStreak, longestStreak, lastActiveDate }: Co
                 className={`aspect-square rounded-[4px] ${
                   active
                     ? "bg-warning"
-                    : "bg-[#F1F5F9]"
+                    : "bg-border/35"
                 }`}
                 title={`${day.date.toLocaleDateString("ru-RU")}${active ? " — активно" : ""}`}
               />
@@ -83,7 +83,7 @@ export function CoachStreak({ currentStreak, longestStreak, lastActiveDate }: Co
         <div className="mt-2 flex items-center gap-2 text-[11px] text-text-muted">
           <span>Меньше</span>
           <div className="flex gap-0.5">
-            {["#F1F5F9", "#FDE68A", "#FCD34D", "#F59E0B"].map((color) => (
+            {["var(--border)", "#FDE68A", "#FCD34D", "#F59E0B"].map((color) => (
               <span
                 key={color}
                 className="h-3 w-3 rounded-[3px]"

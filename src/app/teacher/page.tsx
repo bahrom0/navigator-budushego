@@ -386,7 +386,7 @@ export default function TeacherPage() {
                   setMobileSidebarOpen(false)
                 }
               }}
-              className="absolute inset-y-0 left-0 z-50 w-[min(84vw,300px)] border-r border-border bg-[#F8F9FB] shadow-xl"
+              className="absolute inset-y-0 left-0 z-50 w-[min(84vw,300px)] border-r border-border bg-card-bg shadow-xl"
             >
               {sessionsLoadingState ? (
                 <SidebarSkeleton collapsed={false} />

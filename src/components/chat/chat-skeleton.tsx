@@ -3,17 +3,13 @@
 import { motion } from "framer-motion"
 
 function Pulse({ className }: { className?: string }) {
-  return (
-    <div
-      className={`animate-pulse rounded-xl bg-border/30 ${className ?? ""}`}
-    />
-  )
+  return <div className={`animate-pulse rounded-xl bg-border/30 ${className ?? ""}`} />
 }
 
 export function SidebarSkeleton({ collapsed }: { collapsed: boolean }) {
   return (
     <div
-      className={`h-full flex-shrink-0 overflow-hidden border-r border-border bg-[#F8F9FB] transition-[width] duration-200 ${
+      className={`h-full flex-shrink-0 overflow-hidden border-r border-border bg-card-bg transition-[width] duration-200 ${
         collapsed ? "w-0" : "w-[260px]"
       }`}
     >

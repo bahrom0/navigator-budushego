@@ -20,7 +20,7 @@ export function PlanTodoItem({ id, label, completed, onToggle, disabled }: PlanT
       className={`group flex w-full items-start gap-3 rounded-[14px] border px-4 py-3 text-left transition-all ${
         completed
           ? "border-success/30 bg-success/[0.04]"
-          : "border-border bg-card-bg hover:bg-black/[.02]"
+          : "border-border bg-card-bg hover:bg-foreground/5"
       } ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
     >
       <span

@@ -37,7 +37,7 @@ export function RouteSimulation({ simulation }: RouteSimulationProps) {
 
           <div className="space-y-3">
             {simulation.primaryCodes.map((code, idx) => (
-              <div key={code.code} className="rounded-[12px] bg-white/60 p-3">
+              <div key={code.code} className="rounded-[12px] bg-background/70 p-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <span className="font-mono text-xs text-primary">{code.code}</span>
@@ -72,7 +72,7 @@ export function RouteSimulation({ simulation }: RouteSimulationProps) {
 
           <div className="space-y-3">
             {simulation.backupCodes.map((code, idx) => (
-              <div key={code.code} className="rounded-[12px] bg-white/60 p-3">
+              <div key={code.code} className="rounded-[12px] bg-background/70 p-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <span className="font-mono text-xs text-warning">{code.code}</span>

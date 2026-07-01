@@ -11,11 +11,10 @@ import {
   ProfilePlansList,
   ProfileInterviewsList,
 } from "@/components/profile";
-import { ProfileButton } from "@/components/profile/ProfileButton";
 import { SyncAccountFlow } from "@/features/auth/SyncAccountFlow";
 import { cacheRemove } from "@/lib/cache";
-import { useProfileStore } from "@/stores/profile-store";
 import { useAuthStore } from "@/stores/auth-store";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 interface ProfileDrawerProps {
   open: boolean;
@@ -23,11 +22,6 @@ interface ProfileDrawerProps {
 }
 
 export function ProfileDrawer({ open, onClose }: ProfileDrawerProps) {
-  const bookmarks = useProfileStore((s) => s.bookmarks);
-  const plans = useProfileStore((s) => s.plans);
-  const interviews = useProfileStore((s) => s.interviews);
-  const activityLog = useProfileStore((s) => s.activityLog);
-  const achievements = useProfileStore((s) => s.achievements);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const authUser = useAuthStore((s) => s.user);
   const router = useRouter();
@@ -83,7 +77,7 @@ export function ProfileDrawer({ open, onClose }: ProfileDrawerProps) {
                 <span className="text-base font-semibold text-foreground">
                   Профиль
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs text-text-muted">
                     {isAuthenticated && authUser ? authUser.email : "Анонимный"}
                   </span>
@@ -97,11 +91,12 @@ export function ProfileDrawer({ open, onClose }: ProfileDrawerProps) {
                     <LayoutDashboard className="h-3 w-3" />
                     Дешборд
                   </motion.button>
+                  <ThemeToggle />
                 </div>
               </div>
               <button
                 onClick={onClose}
-                className="rounded-full p-2 transition-colors hover:bg-black/5"
+                className="rounded-full p-2 transition-colors hover:bg-foreground/5"
                 aria-label="Закрыть"
               >
                 <X className="h-4 w-4 text-text-secondary" />

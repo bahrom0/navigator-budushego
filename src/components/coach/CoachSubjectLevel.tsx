@@ -63,7 +63,7 @@ export function CoachSubjectLevel({ subjects, strengths, weaknesses }: CoachSubj
                     {meta.label}
                   </span>
                 </div>
-                <div className="flex h-2 gap-0.5 overflow-hidden rounded-full bg-[#F1F5F9]">
+                <div className="flex h-2 gap-0.5 overflow-hidden rounded-full bg-border/35">
                   {LEVEL_ORDER.map((_, segIndex) => (
                     <div
                       key={segIndex}

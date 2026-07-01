@@ -17,7 +17,7 @@ const variantStyles: Record<ButtonVariant, string> = {
     "bg-primary text-white hover:bg-primary-hover border border-transparent",
   secondary:
     "bg-card-bg text-foreground border border-border hover:border-border-hover",
-  ghost: "bg-transparent text-foreground border border-transparent hover:bg-black/[.04]",
+  ghost: "bg-transparent text-foreground border border-transparent hover:bg-foreground/5",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {

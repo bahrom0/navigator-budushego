@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
+import type { ReactNode } from "react"
 import { Shield, Scale, Target } from "lucide-react"
 import type { StrategyOption } from "@/types/strategy"
 
@@ -8,7 +9,7 @@ interface StrategyCardsProps {
   strategies: StrategyOption[]
 }
 
-const strategyIcons: Record<string, React.ReactNode> = {
+const strategyIcons: Record<string, ReactNode> = {
   safe: <Shield className="h-5 w-5" />,
   balanced: <Scale className="h-5 w-5" />,
   ambitious: <Target className="h-5 w-5" />,
@@ -37,12 +38,12 @@ export function StrategyCards({ strategies }: StrategyCardsProps) {
             className={`rounded-[20px] border-2 ${colors.border} ${colors.bg} p-6`}
           >
             <div className="flex items-center gap-3">
-              <span className={`flex h-10 w-10 items-center justify-center rounded-full bg-white ${colors.icon}`}>
+              <span className={`flex h-10 w-10 items-center justify-center rounded-full bg-background/80 ${colors.icon}`}>
                 {strategyIcons[strategy.type]}
               </span>
               <div>
                 <h3 className="text-base font-semibold text-foreground">{strategy.title}</h3>
-                <span className={`inline-block mt-0.5 text-xs font-medium px-2 py-0.5 rounded-full bg-white ${colors.icon}`}>
+                <span className={`inline-block mt-0.5 rounded-full bg-background/80 px-2 py-0.5 text-xs font-medium ${colors.icon}`}>
                   {strategy.risk} риск
                 </span>
               </div>
@@ -53,30 +54,30 @@ export function StrategyCards({ strategies }: StrategyCardsProps) {
             </p>
 
             <div className="mt-4">
-              <div className="flex items-center justify-between text-xs text-text-muted mb-2">
+              <div className="mb-2 flex items-center justify-between text-xs text-text-muted">
                 <span>Вероятность успеха</span>
                 <span className={`font-semibold ${colors.icon}`}>{strategy.successProbability}</span>
               </div>
             </div>
 
             <div className="mt-4">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">
+              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
                 Рекомендуемые направления
               </h4>
               <div className="space-y-2">
                 {strategy.recommendedCodes.map((code) => (
-                  <div key={code.code} className="rounded-[12px] bg-white/60 px-3 py-2 text-sm">
+                  <div key={code.code} className="rounded-[12px] bg-background/70 px-3 py-2 text-sm">
                     <span className="font-mono text-xs text-primary">{code.code}</span>
-                    <p className="mt-0.5 font-medium text-foreground truncate">{code.title}</p>
-                    <p className="text-xs text-text-muted truncate">{code.institution}</p>
+                    <p className="mt-0.5 truncate font-medium text-foreground">{code.title}</p>
+                    <p className="truncate text-xs text-text-muted">{code.institution}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {strategy.fallbackCodes.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-border">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">
+              <div className="mt-4 border-t border-border pt-4">
+                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
                   Запасные варианты
                 </h4>
                 <div className="space-y-1.5">

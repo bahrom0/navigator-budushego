@@ -21,7 +21,7 @@ export function ReplyPreview({ reply, onCancel, own = false }: ReplyPreviewProps
       className={`flex items-stretch gap-0 overflow-hidden rounded-xl border ${
         own
           ? "border-white/20 bg-white/10"
-          : "border-border bg-white"
+          : "border-border bg-card-bg"
       }`}
     >
       <span

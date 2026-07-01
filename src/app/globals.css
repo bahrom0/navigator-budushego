@@ -1,19 +1,49 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FAFAFA;
-  --foreground: #0F172A;
-  --primary: #2563EB;
-  --primary-hover: #1D4ED8;
-  --primary-light: #DBEAFE;
-  --success: #10B981;
-  --warning: #F59E0B;
-  --error: #EF4444;
-  --text-secondary: #64748B;
-  --text-muted: #94A3B8;
-  --border: #E2E8F0;
-  --border-hover: #CBD5E1;
-  --card-bg: #FFFFFF;
+  color-scheme: light;
+  --background: #f6f8fc;
+  --foreground: #0f172a;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-light: #dbeafe;
+  --success: #059669;
+  --warning: #d97706;
+  --error: #dc2626;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border: #d7dfea;
+  --border-hover: #bcc8d7;
+  --card-bg: #ffffff;
+  --surface-soft: #eef3fb;
+  --surface-raised: #ffffff;
+  --app-background:
+    radial-gradient(circle at top left, rgb(37 99 235 / 0.08), transparent 28%),
+    radial-gradient(circle at 85% 20%, rgb(14 165 233 / 0.08), transparent 22%),
+    linear-gradient(180deg, #f8fbff 0%, #f6f8fc 42%, #eef3fa 100%);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #070b14;
+  --foreground: #f8fafc;
+  --primary: #60a5fa;
+  --primary-hover: #3b82f6;
+  --primary-light: #172554;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #f87171;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border: #233044;
+  --border-hover: #314055;
+  --card-bg: #0f172a;
+  --surface-soft: #111827;
+  --surface-raised: #182033;
+  --app-background:
+    radial-gradient(circle at top left, rgb(37 99 235 / 0.2), transparent 26%),
+    radial-gradient(circle at 80% 15%, rgb(14 165 233 / 0.14), transparent 22%),
+    linear-gradient(180deg, #08101d 0%, #070b14 48%, #0d1425 100%);
 }
 
 @theme inline {
@@ -30,11 +60,16 @@
   --color-border: var(--border);
   --color-border-hover: var(--border-hover);
   --color-card-bg: var(--card-bg);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-raised: var(--surface-raised);
   --font-sans: "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
 body {
   background: var(--background);
+  background-image: var(--app-background);
+  background-attachment: fixed;
+  background-size: cover;
   color: var(--foreground);
   font-family: var(--font-sans), sans-serif;
 }

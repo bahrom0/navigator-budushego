@@ -22,18 +22,18 @@ export function ChatSidebar({
 }: ChatSidebarProps) {
   return (
     <div
-      className={`h-full flex-shrink-0 overflow-hidden border-r border-border bg-[#F8F9FB] transition-[width] duration-200 ${
+      className={`h-full flex-shrink-0 overflow-hidden border-r border-border bg-card-bg transition-[width] duration-200 ${
         collapsed ? "w-0" : "w-[260px]"
       }`}
     >
       <div className="flex h-full w-[260px] flex-col">
         <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-4">
           <span className="text-sm font-semibold tracking-tight text-foreground">
-          История чатов
+            История чатов
           </span>
           <button
             onClick={onToggle}
-            className="flex h-11 w-11 items-center justify-center rounded-xl text-text-muted transition-colors hover:bg-border/40 hover:text-foreground"
+            className="flex h-11 w-11 items-center justify-center rounded-xl text-text-muted transition-colors hover:bg-foreground/5 hover:text-foreground"
             aria-label="Свернуть историю чатов"
           >
             <PanelLeftClose className="h-4 w-4" />
@@ -67,7 +67,7 @@ export function ChatSidebar({
                       className={`flex min-h-11 w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                         isActive
                           ? "bg-border/50 font-medium text-foreground"
-                          : "text-text-secondary hover:bg-border/30 hover:text-foreground"
+                          : "text-text-secondary hover:bg-foreground/5 hover:text-foreground"
                       }`}
                     >
                       <MessageSquare className="h-3.5 w-3.5 flex-shrink-0 text-text-muted" />

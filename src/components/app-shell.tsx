@@ -12,6 +12,7 @@ import { useProfileSync } from "@/lib/chat/use-profile-sync";
 import { useMobileChatNavStore } from "@/stores/mobile-chat-nav-store";
 import { useUserChatStore } from "@/lib/user-chat/store";
 import { AnimatedShellTitle } from "@/components/animated-shell-title";
+import { ThemeSync } from "@/components/theme/ThemeSync";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -43,6 +44,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <>
+      <ThemeSync />
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-2">

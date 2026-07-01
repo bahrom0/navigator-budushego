@@ -101,7 +101,7 @@ export function ChatHeader({
         {isOnline ? (
           <span
             aria-label="В сети"
-            className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card-bg bg-[#22C55E]"
+            className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card-bg bg-success"
           />
         ) : null}
       </button>
@@ -126,7 +126,7 @@ export function ChatHeader({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -2 }}
                 transition={{ duration: 0.15 }}
-                className="flex items-center gap-1.5 text-[#3B82F6]"
+                className="flex items-center gap-1.5 text-primary"
               >
                 <TypingDots />
                 {isTyping.username} печатает…
@@ -137,9 +137,9 @@ export function ChatHeader({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex items-center gap-1 text-[#22C55E]"
+                className="flex items-center gap-1 text-success"
               >
-                <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-success" />
                 В сети
               </motion.span>
             ) : (
@@ -223,17 +223,17 @@ function TypingDots() {
       <motion.span
         animate={{ opacity: [0.3, 1, 0.3] }}
         transition={{ duration: 0.9, repeat: Infinity, delay: 0 }}
-        className="h-1 w-1 rounded-full bg-[#3B82F6]"
+        className="h-1 w-1 rounded-full bg-primary"
       />
       <motion.span
         animate={{ opacity: [0.3, 1, 0.3] }}
         transition={{ duration: 0.9, repeat: Infinity, delay: 0.15 }}
-        className="h-1 w-1 rounded-full bg-[#3B82F6]"
+        className="h-1 w-1 rounded-full bg-primary"
       />
       <motion.span
         animate={{ opacity: [0.3, 1, 0.3] }}
         transition={{ duration: 0.9, repeat: Infinity, delay: 0.3 }}
-        className="h-1 w-1 rounded-full bg-[#3B82F6]"
+        className="h-1 w-1 rounded-full bg-primary"
       />
     </span>
   )

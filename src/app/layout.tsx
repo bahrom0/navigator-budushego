@@ -14,17 +14,40 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" className="h-full antialiased">
-      <body className="min-h-full flex flex-col font-sans">
+    <html lang="ru" className="h-full antialiased" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (() => {
+                const key = "mmt-theme-mode";
+                const system = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+                let mode = "system";
+                try {
+                  const stored = localStorage.getItem(key);
+                  if (stored === "light" || stored === "dark" || stored === "system") {
+                    mode = stored;
+                  }
+                } catch (error) {}
+                const theme = mode === "system" ? system : mode;
+                const root = document.documentElement;
+                root.dataset.theme = theme;
+                root.style.colorScheme = theme;
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-full flex flex-col bg-background font-sans text-foreground">
         <AppShell>{children}</AppShell>
         <Toaster
           position="bottom-right"
           toastOptions={{
             style: {
-              background: "#FFFFFF",
-              border: "1px solid #E2E8F0",
+              background: "var(--card-bg)",
+              border: "1px solid var(--border)",
               borderRadius: "12px",
-              color: "#0F172A",
+              color: "var(--foreground)",
               fontSize: "14px",
             },
             duration: 2000,

@@ -130,7 +130,7 @@ export function LoginModal() {
               <h2 className="text-lg font-semibold text-foreground">
                 {syncState === "synced" ? "Готово" : mode === "login" ? "Войти" : "Создать аккаунт"}
               </h2>
-              <button onClick={() => setOpen(false)} className="rounded-full p-1 transition-colors hover:bg-black/5" aria-label="Закрыть">
+              <button onClick={() => setOpen(false)} className="rounded-full p-1 transition-colors hover:bg-foreground/5" aria-label="Закрыть">
                 <X className="h-4 w-4 text-text-secondary" />
               </button>
             </div>
@@ -191,7 +191,7 @@ export function LoginModal() {
                   transition={{ duration: 0.15 }}
                   onClick={handleGoogle}
                   disabled={submitting}
-                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[14px] border border-border bg-background text-sm font-medium text-foreground transition-colors hover:bg-black/[.04] disabled:opacity-60"
+                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[14px] border border-border bg-background text-sm font-medium text-foreground transition-colors hover:bg-foreground/5 disabled:opacity-60"
                 >
                   <Globe className="h-4 w-4" />
                   Продолжить с Google

@@ -142,7 +142,7 @@ function Conversations({ conversations, activeId, presence, onSelect }: Conversa
                   {avatarInitial(displayName)}
                 </div>
                 {isOnline ? (
-                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card-bg bg-[#22C55E]" />
+                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card-bg bg-success" />
                 ) : null}
               </div>
 

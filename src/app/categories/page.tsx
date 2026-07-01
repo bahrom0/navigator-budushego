@@ -160,7 +160,7 @@ export default function CategoriesPage() {
                 <h2 className="text-xl font-semibold text-foreground">Новое направление</h2>
                 <button
                   onClick={() => setShowModal(false)}
-                  className="rounded-full p-1 hover:bg-black/5"
+                  className="rounded-full p-1 hover:bg-foreground/5"
                 >
                   <X className="h-5 w-5 text-text-secondary" />
                 </button>

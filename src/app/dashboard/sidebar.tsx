@@ -56,7 +56,7 @@ export function DashboardSidebar() {
         <div className="flex h-14 items-center justify-between border-b border-border px-3">
           <Link
             href="/"
-            className="flex items-center gap-2 rounded-[10px] px-2 py-1.5 text-sm font-medium text-text-muted transition-colors hover:bg-black/[.04] hover:text-foreground"
+            className="flex items-center gap-2 rounded-[10px] px-2 py-1.5 text-sm font-medium text-text-muted transition-colors hover:bg-foreground/5 hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             На главную
@@ -76,7 +76,7 @@ export function DashboardSidebar() {
                 onClick={() => setMobileOpen(false)}
                 className={`
                   flex items-center gap-3 rounded-[12px] px-3 py-2.5 text-sm font-medium transition-colors
-                  ${isActive ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-black/[.04] hover:text-foreground"}
+                  ${isActive ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-foreground/5 hover:text-foreground"}
                 `}
               >
                 <item.icon className="h-4 w-4 shrink-0" />

@@ -99,7 +99,7 @@ function SelectField({
                       setQuery("")
                     }}
                     className={`w-full text-left px-4 py-2.5 text-sm transition-colors
-                      ${value === opt ? "bg-primary-light text-primary font-medium" : "text-foreground hover:bg-black/[.04]"}`}
+                      ${value === opt ? "bg-primary-light text-primary font-medium" : "text-foreground hover:bg-foreground/5"}`}
                   >
                     {opt}
                   </button>

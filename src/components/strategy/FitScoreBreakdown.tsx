@@ -25,11 +25,17 @@ export function FitScoreBreakdown({ result }: FitScoreBreakdownProps) {
       >
         <div className="relative mx-auto flex h-28 w-28 items-center justify-center">
           <svg className="h-28 w-28 -rotate-90" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="52" fill="none" stroke="#E5E7EB" strokeWidth="8" />
+            <circle cx="60" cy="60" r="52" fill="none" stroke="var(--border)" strokeWidth="8" />
             <motion.circle
               cx="60" cy="60" r="52"
               fill="none"
-              stroke={result.overallScore >= 80 ? "#10B981" : result.overallScore >= 60 ? "#F59E0B" : "#EF4444"}
+              stroke={
+                result.overallScore >= 80
+                  ? "var(--success)"
+                  : result.overallScore >= 60
+                  ? "var(--warning)"
+                  : "var(--error)"
+              }
               strokeWidth="8"
               strokeLinecap="round"
               strokeDasharray={`${2 * Math.PI * 52}`}
