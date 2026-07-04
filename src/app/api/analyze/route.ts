@@ -27,7 +27,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { categories, topK, minConfidence, onboarding }: AnalyzeRequest = parsed.data
+    const { categories, keywords, topK, minConfidence, onboarding }: AnalyzeRequest = parsed.data
 
     const analysisResult = await analyzeCategories(categories, {
       userCity: onboarding?.userCity,
@@ -42,6 +42,7 @@ export async function POST(request: Request) {
 
     const combinedInterests = [
       ...(onboarding?.interests ?? []),
+      ...(keywords ?? []),
       ...analysisResult.keywords,
     ]
 
@@ -57,6 +58,7 @@ export async function POST(request: Request) {
     const matchOptions = {
       topK: topK * 2,
       minScore: 0.05,
+      keywords: combinedInterests,
       prefilter: prefilterOptions,
     }
 

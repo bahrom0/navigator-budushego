@@ -5,6 +5,7 @@ import { useProfileStore, getSessionId } from "@/stores/profile-store"
 import { useAuthStore } from "@/stores/auth-store"
 import { loadProfile, saveProfile } from "@/lib/chat/db"
 import type { ProfileData, ActivityEvent } from "@/types/profile"
+import { isPriorityActivityEventType } from "@/types/activity"
 
 function parseJSONArray(value: unknown): unknown[] {
   if (Array.isArray(value)) return value
@@ -86,8 +87,30 @@ function profileToPayload(state: ProfileData) {
     activityEvents: state.activityLog.map((e: ActivityEvent) => ({
       event_type: e.type,
       label: e.label,
+      is_priority: typeof e.isPriority === "boolean" ? e.isPriority : isPriorityActivityEventType(e.type),
+      priority_rank: typeof e.priorityRank === "number" ? e.priorityRank : (isPriorityActivityEventType(e.type) ? 1 : 0),
       metadata: { timestamp: e.timestamp },
     })),
+  }
+}
+
+function normalizeActivityEvent(event: any): ActivityEvent {
+  const isPriority =
+    typeof event.is_priority === "boolean"
+      ? event.is_priority
+      : isPriorityActivityEventType(String(event.event_type ?? event.type ?? ""))
+  const rawTimestamp =
+    event.created_at ??
+    event.timestamp ??
+    event.metadata?.timestamp ??
+    Date.now()
+  return {
+    id: String(event.id ?? ""),
+    type: String(event.event_type ?? event.type ?? ""),
+    label: String(event.label ?? ""),
+    timestamp: new Date(rawTimestamp).getTime(),
+    isPriority,
+    priorityRank: typeof event.priority_rank === "number" ? event.priority_rank : (isPriority ? 1 : 0),
   }
 }
 
@@ -173,12 +196,7 @@ export function useProfileSync() {
             level: i.level || undefined,
             createdAt: new Date(i.created_at).getTime(),
           })),
-          activityLog: json.data.activityEvents.map((e: any) => ({
-            id: e.id,
-            type: e.event_type,
-            label: e.label ?? "",
-            timestamp: new Date(e.created_at).getTime(),
-          })),
+          activityLog: json.data.activityEvents.map(normalizeActivityEvent),
         }
 
         const merged = mergeProfile(

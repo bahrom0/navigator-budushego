@@ -37,6 +37,17 @@ export interface NCTMatchResult {
   cluster_name_ru?: string
   study_form?: string[]
   study_type?: string[]
+  taxonomyPath?: string[]
+  matchedTaxonomyNodeIds?: string[]
+  primaryTaxonomyNodeId?: string
+  rootTaxonomyNodeIds?: string[]
+  branchKey?: string
+  lexicalScore?: number
+  semanticScore?: number
+  taxonomyScore?: number
+  facetScore?: number
+  qualityScore?: number
+  searchIntent?: "broad" | "narrow" | "facet" | "code" | "comparison"
 }
 
 export interface RankedNCT extends NCTMatchResult {

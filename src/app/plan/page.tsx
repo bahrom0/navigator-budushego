@@ -77,9 +77,17 @@ function PlanContent() {
       const nextBundle = (payload.data?.bundle ?? null) as PlanBundle | null
       setBundle(nextBundle)
 
-      if (nextBundle?.goal) {
-        setProfileGoal(nextBundle.goal)
-        setCoachGoal(nextBundle.goal)
+      const resolvedGoal =
+        nextBundle?.goal ??
+        (nextBundle?.plan?.nctCode
+          ? toGoalFallback(nextBundle.plan.nctCode, nextBundle.plan.nctTitle)
+          : queryCode
+            ? toGoalFallback(queryCode, queryTitle || "Выбранное направление")
+            : null)
+
+      if (resolvedGoal) {
+        setProfileGoal(resolvedGoal)
+        setCoachGoal(resolvedGoal)
       }
 
       if (nextBundle?.plan) {
@@ -89,7 +97,7 @@ function PlanContent() {
         }
         setCoachPlan(nextBundle.plan)
         upsertPlan({
-          goalId: nextBundle.goal?.id,
+          goalId: resolvedGoal?.id,
           nctCode: nextBundle.plan.nctCode,
           nctTitle: nextBundle.plan.nctTitle,
           level: nextBundle.plan.level,

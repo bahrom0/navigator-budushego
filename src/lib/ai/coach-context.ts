@@ -1,5 +1,12 @@
 import type { DeepSeekMessage } from "@/lib/ai/deepseek"
-import type { CoachGoal, CoachRoadmap, CoachDayPlan, CoachDiagnosticResult, CoachMiniTestResult, CoachProgress } from "@/types/coach"
+import type {
+  CoachGoal,
+  CoachRoadmap,
+  CoachDayPlan,
+  CoachDiagnosticResult,
+  CoachMiniTestResult,
+  CoachProgress,
+} from "@/types/coach"
 import type { DevelopmentPlan } from "@/types/plan"
 import type { DailyPlanRecord } from "@/types/admission"
 
@@ -99,6 +106,8 @@ export function buildCoachContext(options: CoachContextOptions = {}): DeepSeekMe
     "=== ИНСТРУКЦИИ ===",
     "Отвечай только в контексте подготовки к поступлению.",
     "Учитывай цель, план, roadmap, today и прогресс как единую систему.",
+    "Если цель уже передана, не проси повторно вводить код НЦТ, университет или профессию.",
+    "Если какого-то атрибута не хватает, не запрашивай все данные заново - используй текущий контекст и продолжай помощь.",
     "Если уместно, предлагай короткие практические шаги на сегодня.",
     "Мини-тесты предлагай только по изученным темам.",
     "Всегда возвращай валидный JSON без markdown.",

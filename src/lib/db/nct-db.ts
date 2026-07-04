@@ -1,5 +1,7 @@
 import type { NewDbRecord, PrefilterParams } from "./types"
 import { buildIndexes, type NCTIndexes } from "./indexer"
+import { CLUSTER_NAMES } from "./types"
+import { tokenize, uniqueTokens } from "@/lib/search/normalize"
 
 let _records: NewDbRecord[] | null = null
 let _indexes: NCTIndexes | null = null
@@ -12,6 +14,37 @@ function cityMatch(recordCity: string, queryCity: string): boolean {
   const normalized = normalizeCity(recordCity).toLowerCase()
   const query = queryCity.toLowerCase()
   return normalized === query || normalized.includes(query) || query.includes(normalized)
+}
+
+function buildRecordTokens(record: NewDbRecord): Set<string> {
+  return new Set(
+    tokenize(
+      [
+        record.code,
+        record.specialty_name,
+        record.university_name,
+        record.location,
+        CLUSTER_NAMES[record.cluster] ?? "",
+      ]
+        .filter(Boolean)
+        .join(" "),
+    ),
+  )
+}
+
+function tokenOverlap(recordTokens: Set<string>, queryTokens: string[]): boolean {
+  if (queryTokens.length === 0) return true
+
+  for (const queryToken of queryTokens) {
+    for (const recordToken of recordTokens) {
+      if (recordToken === queryToken) return true
+      if (recordToken.startsWith(queryToken) || queryToken.startsWith(recordToken)) {
+        return true
+      }
+    }
+  }
+
+  return false
 }
 
 export async function loadDatabase(): Promise<NewDbRecord[]> {
@@ -52,21 +85,19 @@ export async function prefilter(params: PrefilterParams): Promise<NewDbRecord[]>
   }
 
   if (params.interests && params.interests.length > 0) {
-    const keywords = params.interests.map((i) => i.toLowerCase())
+    const keywords = uniqueTokens(params.interests.flatMap((interest) => tokenize(interest)))
     candidates = candidates.filter((r) => {
-      const text = `${r.specialty_name} ${r.university_name}`.toLowerCase()
-      return keywords.some((kw) => text.includes(kw))
+      return tokenOverlap(buildRecordTokens(r), keywords)
     })
   }
 
   if (params.query) {
-    const q = params.query.toLowerCase()
+    const queryTokens = uniqueTokens(tokenize(params.query))
     candidates = candidates.filter((r) => {
-      return (
-        r.code.toLowerCase().includes(q) ||
-        r.specialty_name.toLowerCase().includes(q) ||
-        r.university_name.toLowerCase().includes(q)
-      )
+      if (normalizeTextForQuery(r.code).includes(normalizeTextForQuery(params.query ?? ""))) {
+        return true
+      }
+      return tokenOverlap(buildRecordTokens(r), queryTokens)
     })
   }
 
@@ -90,4 +121,8 @@ export function getByLocation(city: string): NewDbRecord[] {
 
 export function getRecords(): NewDbRecord[] {
   return _records ?? []
+}
+
+function normalizeTextForQuery(value: string): string {
+  return (value ?? "").toLowerCase().replace(/[^a-zа-я0-9.]+/gi, "")
 }

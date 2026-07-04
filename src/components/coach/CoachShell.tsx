@@ -11,6 +11,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useCoachStore } from "@/stores/coach-store";
+import { useProfileStore } from "@/stores/profile-store";
 import type { CoachActiveTab } from "@/types/coach";
 
 interface TabConfig {
@@ -32,10 +33,12 @@ interface CoachShellProps {
 
 export function CoachShell({ children }: CoachShellProps) {
   const goal = useCoachStore((s) => s.goal);
+  const profileGoal = useProfileStore((s) => s.activeGoal);
   const streak = useCoachStore((s) => s.progress.currentStreak);
   const activeTab = useCoachStore((s) => s.activeTab);
   const setActiveTab = useCoachStore((s) => s.setActiveTab);
   const archiveGoal = useCoachStore((s) => s.archiveGoal);
+  const resolvedGoal = goal ?? profileGoal;
 
   return (
     <div className={`bg-background ${
@@ -45,16 +48,16 @@ export function CoachShell({ children }: CoachShellProps) {
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-3 px-4 sm:px-6">
           <div className="min-w-0 flex-1">
             <p className="truncate text-[15px] font-semibold text-foreground">
-              {goal?.nctTitle ?? "Цель не выбрана"}
-           </p>
+              {resolvedGoal?.nctTitle ?? "Цель не выбрана"}
+            </p>
             <p className="truncate text-xs text-text-secondary">
-              {goal?.nctCode ? `${goal.nctCode} · ` : ""}
-              {goal?.university ?? "Coach поможет выбрать цель"}
-           </p>
-         </div>
+              {resolvedGoal?.nctCode ? `${resolvedGoal.nctCode} · ` : ""}
+              {resolvedGoal?.university ?? "Coach поможет выбрать цель"}
+            </p>
+          </div>
           <div className="flex shrink-0 items-center gap-2">
             <StreakBadge value={streak} />
-            {goal ? (
+            {resolvedGoal ? (
               <button
                 type="button"
                 onClick={archiveGoal}
@@ -63,14 +66,14 @@ export function CoachShell({ children }: CoachShellProps) {
                 className="inline-flex h-9 w-9 items-center justify-center rounded-[12px] border border-border bg-background text-text-secondary transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               >
                 <Settings2 className="h-4 w-4" />
-             </button>
+              </button>
             ) : null}
-         </div>
-       </div>
+          </div>
+        </div>
         <div className="hidden md:block">
           <DesktopTabs activeTab={activeTab} onChange={setActiveTab} />
-       </div>
-     </header>
+        </div>
+      </header>
 
       <main className={`mx-auto w-full ${
         activeTab === "chat"
@@ -92,7 +95,7 @@ export function CoachShell({ children }: CoachShellProps) {
       </main>
 
       <MobileTabs activeTab={activeTab} onChange={setActiveTab} />
-   </div>
+    </div>
   );
 }
 
@@ -105,8 +108,8 @@ function StreakBadge({ value }: { value: number }) {
       <Flame className="h-4 w-4" aria-hidden="true" />
       <span className="text-sm font-semibold tabular-nums">
         {value}
-     </span>
-   </div>
+      </span>
+    </div>
   );
 }
 
@@ -133,9 +136,7 @@ function TabButton({
       }`}
     >
       <Icon className="h-4 w-4" aria-hidden="true" />
-      <span>
-        {tab.label}
-     </span>
+      <span>{tab.label}</span>
       {active ? (
         <motion.span
           layoutId="coach-tab-underline"
@@ -143,7 +144,7 @@ function TabButton({
           transition={{ type: "spring", stiffness: 400, damping: 30 }}
         />
       ) : null}
-   </button>
+    </button>
   );
 }
 
@@ -168,7 +169,7 @@ function DesktopTabs({
           onClick={onChange}
         />
       ))}
-   </div>
+    </div>
   );
 }
 
@@ -193,7 +194,7 @@ function MobileTabs({
           onClick={onChange}
         />
       ))}
-   </nav>
+    </nav>
   );
 }
 
@@ -201,7 +202,6 @@ function pluralDays(n: number): string {
   const mod10 = n % 10;
   const mod100 = n % 100;
   if (mod10 === 1 && mod100 !== 11) return "день";
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20))
-    return "дня";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "дня";
   return "дней";
 }

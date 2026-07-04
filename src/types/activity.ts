@@ -26,6 +26,36 @@ export const ACTIVITY_EVENT_TYPES = [
 
 export type ActivityEventType = (typeof ACTIVITY_EVENT_TYPES)[number]
 
+export const PRIORITY_ACTIVITY_EVENT_TYPES = [
+  "choose_category",
+  "start_analysis",
+  "start_interview",
+  "finish_interview",
+  "generate_plan",
+  "save_plan",
+  "complete_plan_step",
+  "test_plan",
+  "complete_plan",
+  "regenerate_plan",
+  "use_teacher",
+  "coach_goal_set",
+  "coach_diagnostic_taken",
+  "coach_roadmap_created",
+  "coach_day_completed",
+  "coach_task_completed",
+  "coach_mini_test_taken",
+  "coach_streak_milestone",
+  "coach_goal_achieved",
+] as const
+
+export type PriorityActivityEventType = (typeof PRIORITY_ACTIVITY_EVENT_TYPES)[number]
+
+const PRIORITY_ACTIVITY_EVENT_SET = new Set<string>(PRIORITY_ACTIVITY_EVENT_TYPES)
+
+export function isPriorityActivityEventType(type: string): type is PriorityActivityEventType {
+  return PRIORITY_ACTIVITY_EVENT_SET.has(type)
+}
+
 export const ACTIVITY_EVENT_LABELS: Record<ActivityEventType, string> = {
   open_app: "Запуск приложения",
   choose_category: "Выбор направления",

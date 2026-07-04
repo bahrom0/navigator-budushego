@@ -83,6 +83,8 @@ const SyncProfileSchema = z.object({
   activityEvents: z.array(z.object({
     event_type: z.string(),
     label: z.string().optional(),
+    is_priority: z.boolean().optional(),
+    priority_rank: z.number().int().optional(),
     metadata: z.any().optional(),
   })),
   sessionId: z.string(),
@@ -183,6 +185,8 @@ export async function POST(request: Request) {
       const { error } = await supabase.from("activity_events").insert({
         user_id: user.id,
         ...event,
+        is_priority: event.is_priority ?? false,
+        priority_rank: event.priority_rank ?? 0,
         metadata: event.metadata ? JSON.stringify(event.metadata) : "{}",
       })
       if (error) results.activityEvents.errors++

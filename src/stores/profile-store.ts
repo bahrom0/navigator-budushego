@@ -9,6 +9,7 @@ import type {
   UserLevel,
 } from "@/types/profile"
 import type { CoachGoal } from "@/types/coach"
+import { isPriorityActivityEventType } from "@/types/activity"
 import { cacheGet, cacheSet } from "@/lib/cache"
 
 const STORAGE_KEY = "profile"
@@ -69,9 +70,23 @@ function persistProfile(store: ProfileData): void {
   cacheSet(STORAGE_KEY, store)
 }
 
+function normalizeActivityLog(activityLog: ActivityEvent[]): ActivityEvent[] {
+  return activityLog.map((event) => {
+    const resolvedPriority =
+      typeof event.isPriority === "boolean"
+        ? event.isPriority
+        : isPriorityActivityEventType(event.type)
+    return {
+      ...event,
+      isPriority: resolvedPriority,
+      priorityRank: typeof event.priorityRank === "number" ? event.priorityRank : (resolvedPriority ? 1 : 0),
+    }
+  })
+}
+
 interface ProfileStore extends ProfileData {
   hydrate: () => void
-  logActivity: (type: string, label: string) => void
+  logActivity: (type: string, label: string, isPriority?: boolean) => void
   setLevel: (level: UserLevel) => void
   setActiveGoal: (goal: CoachGoal) => void
   archiveActiveGoal: () => void
@@ -94,7 +109,9 @@ export const useProfileStore = create<ProfileStore>((set, get) => {
     const saved = cacheGet<ProfileData>(STORAGE_KEY)
     if (saved && saved.sessionId) {
       sessionIdState = saved.sessionId
-      Object.assign(base, saved)
+      Object.assign(base, saved, {
+        activityLog: normalizeActivityLog(saved.activityLog ?? []),
+      })
     }
   }
 
@@ -105,12 +122,15 @@ export const useProfileStore = create<ProfileStore>((set, get) => {
       // no-op — hydration happens synchronously at store creation
     },
 
-  logActivity: (type, label) => {
+  logActivity: (type, label, isPriority) => {
+    const resolvedPriority = typeof isPriority === "boolean" ? isPriority : isPriorityActivityEventType(type)
     const event: ActivityEvent = {
       id: generateId(),
       type,
       label,
       timestamp: Date.now(),
+      isPriority: resolvedPriority,
+      priorityRank: resolvedPriority ? 1 : 0,
     }
     set((state) => ({
       activityLog: [event, ...state.activityLog].slice(0, 500),
@@ -252,6 +272,7 @@ export const useProfileStore = create<ProfileStore>((set, get) => {
     set((state) => ({
       ...state,
       ...data,
+      activityLog: normalizeActivityLog((data.activityLog ?? state.activityLog ?? []) as ActivityEvent[]),
       goalHistory: data.goalHistory ?? state.goalHistory ?? [],
       sessionId: state.sessionId || getSessionId(),
     })),

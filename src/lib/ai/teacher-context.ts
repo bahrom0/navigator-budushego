@@ -1,9 +1,10 @@
 import type { ProfileData, PlanRecord } from "@/types/profile"
 import type { DeepSeekMessage } from "@/lib/ai/deepseek"
+import { isPriorityActivityEventType } from "@/types/activity"
 
 function getCompletedStepIds(profile: ProfileData): string[] {
   return profile.activityLog
-    .filter((e) => e.type === "complete_plan_step")
+    .filter((e) => (typeof e.isPriority === "boolean" ? e.isPriority : isPriorityActivityEventType(e.type)) && e.type === "complete_plan_step")
     .map((e) => e.label)
 }
 
@@ -39,8 +40,10 @@ function formatAchievements(profile: ProfileData): string {
 }
 
 function formatActivity(profile: ProfileData): string {
-  if (profile.activityLog.length === 0) return "Активность: пока нет"
-  const recent = profile.activityLog.slice(0, 10)
+  const recent = profile.activityLog.filter((e) =>
+    typeof e.isPriority === "boolean" ? e.isPriority : isPriorityActivityEventType(e.type),
+  )
+  if (recent.length === 0) return "Активность: пока нет"
   return recent
     .map((e) => `- ${e.label} (${new Date(e.timestamp).toLocaleDateString("ru-RU")})`)
     .join("\n")

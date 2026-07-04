@@ -1,7 +1,9 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { useProfileStore } from "@/stores/profile-store"
 import { Target, Bookmark, FileText, ClipboardList } from "lucide-react"
+import { isPriorityActivityEventType } from "@/types/activity"
 
 export function ProfileStats() {
   const level = useProfileStore((s) => s.level)
@@ -9,13 +11,24 @@ export function ProfileStats() {
   const bookmarks = useProfileStore((s) => s.bookmarks.length)
   const plans = useProfileStore((s) => s.plans.length)
   const interviews = useProfileStore((s) => s.interviews.length)
-  const streak = useProfileStore((s) => s.activityLog.length)
+  const activityLog = useProfileStore((s) => s.activityLog)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const streak = activityLog.filter((event) =>
+    typeof event.isPriority === "boolean"
+      ? event.isPriority
+      : isPriorityActivityEventType(event.type),
+  ).length
 
   const items = [
     { label: "Анализов", value: analyses, icon: FileText },
     { label: "Закладок", value: bookmarks, icon: Bookmark },
     { label: "Планов", value: plans, icon: ClipboardList },
-    { label: "Активность", value: streak, icon: Target },
+    { label: "Активность", value: mounted ? streak : 0, icon: Target },
   ]
 
   return (

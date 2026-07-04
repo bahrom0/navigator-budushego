@@ -47,6 +47,8 @@ export interface ActivityEvent {
   type: string
   label: string
   timestamp: number
+  isPriority?: boolean
+  priorityRank?: number
 }
 
 export interface BookmarkRecord {

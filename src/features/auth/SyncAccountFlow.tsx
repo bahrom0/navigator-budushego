@@ -50,6 +50,8 @@ export function SyncAccountFlow() {
           activityEvents: profile.activityLog.map((a) => ({
             event_type: a.type,
             label: a.label,
+            is_priority: a.isPriority ?? false,
+            priority_rank: a.priorityRank ?? (a.isPriority ? 1 : 0),
             metadata: { timestamp: a.timestamp },
           })),
           sessionId: profile.sessionId,

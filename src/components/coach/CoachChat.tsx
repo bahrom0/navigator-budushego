@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react"
 import { useCoachStore } from "@/stores/coach-store"
+import { useProfileStore } from "@/stores/profile-store"
 import { ChatMessages } from "@/components/chat/chat-messages"
 import { ChatComposer } from "@/components/chat/chat-composer"
 import { CoachChatHistory } from "./CoachChatHistory"
@@ -40,6 +41,8 @@ export function CoachChat() {
     error,
     setError,
   } = useCoachStore()
+  const profileGoal = useProfileStore((s) => s.activeGoal)
+  const resolvedGoal = goal ?? profileGoal
 
   const [input, setInput] = useState("")
   const [streamingId, setStreamingId] = useState<string | null>(null)
@@ -89,7 +92,7 @@ export function CoachChat() {
         body: JSON.stringify({
           message: text,
           history,
-          goal,
+          goal: resolvedGoal,
           plan,
           roadmap,
           dayPlan,
@@ -159,7 +162,7 @@ export function CoachChat() {
     } finally {
       setLoading(false)
     }
-  }, [input, isLoading, messages, addMessage, setLoading, setError, goal, plan, roadmap, dayPlan, dailyHistory, diagnostics, miniTests, progress])
+  }, [input, isLoading, messages, addMessage, setLoading, setError, resolvedGoal, plan, roadmap, dayPlan, dailyHistory, diagnostics, miniTests, progress])
 
   const handleMiniTestComplete = useCallback(
     (results: { correct: number; total: number }) => {

@@ -54,7 +54,13 @@ export function LoginModal() {
           bookmarks: profile.bookmarks.map((b) => ({ nct_code: b.nctCode, nct_title: b.nctTitle, institution: b.institution, city: b.city })),
           achievements: profile.achievements.map((a) => ({ achievement_id: a.id, title: a.title, description: a.description })),
           interviews: profile.interviews.map((i) => ({ nct_code: i.nctCode, nct_title: i.nctTitle, questions: i.questions, summary: i.summary, level: i.level })),
-          activityEvents: profile.activityLog.map((a) => ({ event_type: a.type, label: a.label, metadata: { timestamp: a.timestamp } })),
+          activityEvents: profile.activityLog.map((a) => ({
+            event_type: a.type,
+            label: a.label,
+            is_priority: a.isPriority ?? false,
+            priority_rank: a.priorityRank ?? (a.isPriority ? 1 : 0),
+            metadata: { timestamp: a.timestamp },
+          })),
           sessionId: profile.sessionId,
         }),
       })

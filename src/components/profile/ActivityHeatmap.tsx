@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { useProfileStore } from "@/stores/profile-store"
 import { Flame } from "lucide-react"
+import { isPriorityActivityEventType } from "@/types/activity"
 
 const DAY_LABELS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
 const MONTH_LABELS = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"]
@@ -68,12 +69,21 @@ interface ActivityHeatmapProps {
 export function ActivityHeatmap({ large = false }: ActivityHeatmapProps) {
   const activityLog = useProfileStore((s) => s.activityLog)
   const [tooltip, setTooltip] = useState<{ date: string; count: number; x: number; y: number } | null>(null)
+  const priorityLog = useMemo(
+    () =>
+      activityLog.filter((event) =>
+        typeof event.isPriority === "boolean"
+          ? event.isPriority
+          : isPriorityActivityEventType(event.type),
+      ),
+    [activityLog],
+  )
 
-  const weeks = useMemo(() => buildWeeks(activityLog), [activityLog])
+  const weeks = useMemo(() => buildWeeks(priorityLog), [priorityLog])
 
-  const totalActions = activityLog.length
+  const totalActions = priorityLog.length
   const uniqueDays = new Set(
-    activityLog.map((e) => new Date(e.timestamp).toISOString().slice(0, 10))
+    priorityLog.map((e) => new Date(e.timestamp).toISOString().slice(0, 10))
   ).size
 
   const cellSize = large ? "h-5 w-5 lg:h-7 lg:w-7" : "h-3 w-3"

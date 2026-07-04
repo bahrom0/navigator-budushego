@@ -7,6 +7,7 @@ interface OnboardingState {
   currentStep: OnboardingStep
   data: OnboardingData
   _loaded: boolean
+  hydrate: () => void
   setData: (data: Partial<OnboardingData>) => void
   setInterests: (interests: string[]) => void
   nextStep: () => void
@@ -42,12 +43,19 @@ function removeFromStorage(): void {
   } catch {}
 }
 
-const saved = loadFromStorage()
-
 export const useOnboardingStore = create<OnboardingState>((set, get) => ({
-  currentStep: saved?.currentStep ?? ONBOARDING_STEPS[0],
-  data: { ...DEFAULT_ONBOARDING_DATA, ...saved?.data },
-  _loaded: true,
+  currentStep: ONBOARDING_STEPS[0],
+  data: { ...DEFAULT_ONBOARDING_DATA },
+  _loaded: false,
+
+  hydrate: () => {
+    const saved = loadFromStorage()
+    set((state) => ({
+      currentStep: saved?.currentStep ?? state.currentStep ?? ONBOARDING_STEPS[0],
+      data: { ...DEFAULT_ONBOARDING_DATA, ...saved?.data },
+      _loaded: true,
+    }))
+  },
 
   setData: (data) => {
     set((state) => {
@@ -94,12 +102,14 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     set({
       currentStep: ONBOARDING_STEPS[0],
       data: DEFAULT_ONBOARDING_DATA,
+      _loaded: true,
     })
   },
 }))
 
 export function hydrateOnboardingStore(): boolean {
-  return !!loadFromStorage()
+  useOnboardingStore.getState().hydrate()
+  return true
 }
 
 export function resetOnboarding(): void {

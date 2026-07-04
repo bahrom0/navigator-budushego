@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Toaster } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import "./globals.css";
@@ -16,27 +17,25 @@ export default function RootLayout({
   return (
     <html lang="ru" className="h-full antialiased" suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (() => {
-                const key = "mmt-theme-mode";
-                const system = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-                let mode = "system";
-                try {
-                  const stored = localStorage.getItem(key);
-                  if (stored === "light" || stored === "dark" || stored === "system") {
-                    mode = stored;
-                  }
-                } catch (error) {}
-                const theme = mode === "system" ? system : mode;
-                const root = document.documentElement;
-                root.dataset.theme = theme;
-                root.style.colorScheme = theme;
-              })();
-            `,
-          }}
-        />
+        <Script id="theme-bootstrap" strategy="beforeInteractive">
+          {`
+            (() => {
+              const key = "mmt-theme-mode";
+              const system = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+              let mode = "system";
+              try {
+                const stored = localStorage.getItem(key);
+                if (stored === "light" || stored === "dark" || stored === "system") {
+                  mode = stored;
+                }
+              } catch (error) {}
+              const theme = mode === "system" ? system : mode;
+              const root = document.documentElement;
+              root.dataset.theme = theme;
+              root.style.colorScheme = theme;
+            })();
+          `}
+        </Script>
       </head>
       <body className="min-h-full flex flex-col bg-background font-sans text-foreground">
         <AppShell>{children}</AppShell>

@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { motion } from "framer-motion"
 import { Search, Flame, Eye } from "lucide-react"
 import { useProfileStore } from "@/stores/profile-store"
 import { ActivityHeatmap } from "@/components/profile/ActivityHeatmap"
 import { ACTIVITY_EVENT_LABELS, type ActivityEventType } from "@/types/activity"
+import { isPriorityActivityEventType } from "@/types/activity"
 
 function formatGroupDate(timestamp: number): string {
   const date = new Date(timestamp)
@@ -34,33 +35,49 @@ function groupByDate(events: { timestamp: number }[]): Map<string, { timestamp: 
 export default function DashboardActivity() {
   const activityLog = useProfileStore((s) => s.activityLog)
   const [search, setSearch] = useState("")
+  const [mounted, setMounted] = useState(false)
+  const priorityActivityLog = useMemo(
+    () =>
+      activityLog.filter((event) =>
+        typeof event.isPriority === "boolean"
+          ? event.isPriority
+          : isPriorityActivityEventType(event.type),
+    ),
+    [activityLog],
+  )
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
-    if (!q) return activityLog
-    return activityLog.filter(
+    if (!q) return priorityActivityLog
+    return priorityActivityLog.filter(
       (e) => e.label.toLowerCase().includes(q) || e.type.toLowerCase().includes(q)
     )
-  }, [activityLog, search])
+  }, [priorityActivityLog, search])
 
   const grouped = useMemo(() => groupByDate(filtered), [filtered])
 
   return (
     <div>
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Активность</h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          {activityLog.length === 0
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Активность</h1>
+          <p className="mt-1 text-sm text-text-secondary">
+          {!mounted
+            ? "История действий"
+            : priorityActivityLog.length === 0
             ? "История действий пуста"
-            : `${activityLog.length} действий`}
+            : `${priorityActivityLog.length} действий`}
         </p>
       </motion.div>
 
       <div className="mt-6">
-        <ActivityHeatmap large />
+        {mounted ? <ActivityHeatmap large /> : null}
       </div>
 
-      {activityLog.length > 0 && (
+      {mounted && priorityActivityLog.length > 0 && (
         <div className="mt-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
@@ -75,7 +92,7 @@ export default function DashboardActivity() {
         </div>
       )}
 
-      {activityLog.length === 0 && (
+      {mounted && priorityActivityLog.length === 0 && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -91,7 +108,7 @@ export default function DashboardActivity() {
         </motion.div>
       )}
 
-      {filtered.length === 0 && activityLog.length > 0 && (
+      {mounted && filtered.length === 0 && priorityActivityLog.length > 0 && (
         <div className="mt-8 rounded-[18px] border border-border bg-background p-8 text-center">
           <p className="text-sm text-text-muted">Ничего не найдено. Попробуйте изменить запрос.</p>
         </div>

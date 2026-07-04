@@ -2,10 +2,15 @@
 
 import { useProfileStore } from "@/stores/profile-store"
 import { ActivityHeatmap } from "@/components/profile/ActivityHeatmap"
+import { isPriorityActivityEventType } from "@/types/activity"
 
 export function ProfileActivity() {
   const activityLog = useProfileStore((s) => s.activityLog)
-  const recent = activityLog.slice(0, 10)
+  const recent = activityLog.filter((event) =>
+    typeof event.isPriority === "boolean"
+      ? event.isPriority
+      : isPriorityActivityEventType(event.type),
+  ).slice(0, 10)
 
   return (
     <div className="flex flex-col gap-3">

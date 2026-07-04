@@ -1,4 +1,5 @@
 import { useProfileStore } from "@/stores/profile-store"
+import { isPriorityActivityEventType } from "@/types/activity"
 
 export interface AchievementDef {
   id: string
@@ -7,12 +8,17 @@ export interface AchievementDef {
   check: () => boolean
 }
 
+function isPriorityEvent(event: { type: string; isPriority?: boolean }): boolean {
+  return typeof event.isPriority === "boolean" ? event.isPriority : isPriorityActivityEventType(event.type)
+}
+
 export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   {
     id: "first_analysis",
     title: "Первый анализ",
     description: "Запустили первый анализ направлений",
-    check: () => useProfileStore.getState().activityLog.some((e) => e.type === "start_analysis"),
+    check: () =>
+      useProfileStore.getState().activityLog.some((e) => isPriorityEvent(e) && e.type === "start_analysis"),
   },
   {
     id: "first_bookmarks",
@@ -44,7 +50,10 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     description: "Возвращались в приложение 5 дней",
     check: () => {
       const days = new Set(
-        useProfileStore.getState().activityLog.map((e) => new Date(e.timestamp).toDateString()),
+        useProfileStore
+          .getState()
+          .activityLog.filter((e) => isPriorityEvent(e))
+          .map((e) => new Date(e.timestamp).toDateString()),
       )
       return days.size >= 5
     },
@@ -53,7 +62,10 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "ten_actions",
     title: "10 действий",
     description: "Выполнили 10 действий в профиле",
-    check: () => useProfileStore.getState().activityLog.length >= 10,
+    check: () =>
+      useProfileStore
+        .getState()
+        .activityLog.filter((e) => isPriorityEvent(e)).length >= 10,
   },
   {
     id: "three_interviews",
@@ -65,20 +77,24 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "coach_first_goal",
     title: "Первая цель Coach",
     description: "Установили первую цель в Coach",
-    check: () => useProfileStore.getState().activityLog.some((e) => e.type === "coach_goal_set"),
+    check: () =>
+      useProfileStore.getState().activityLog.some((e) => isPriorityEvent(e) && e.type === "coach_goal_set"),
   },
   {
     id: "coach_first_diagnostic",
     title: "Первая диагностика",
     description: "Прошли первую диагностику знаний",
-    check: () => useProfileStore.getState().activityLog.some((e) => e.type === "coach_diagnostic_taken"),
+    check: () =>
+      useProfileStore.getState().activityLog.some((e) => isPriorityEvent(e) && e.type === "coach_diagnostic_taken"),
   },
   {
     id: "coach_50_tasks",
     title: "50 задач",
     description: "Выполнили 50 задач в Coach",
     check: () => {
-      const count = useProfileStore.getState().activityLog.filter((e) => e.type === "coach_task_completed").length
+      const count = useProfileStore
+        .getState()
+        .activityLog.filter((e) => isPriorityEvent(e) && e.type === "coach_task_completed").length
       return count >= 50
     },
   },
@@ -86,7 +102,8 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "coach_goal_achieved",
     title: "Цель достигнута",
     description: "Достигли цели подготовки в Coach",
-    check: () => useProfileStore.getState().activityLog.some((e) => e.type === "coach_goal_achieved"),
+    check: () =>
+      useProfileStore.getState().activityLog.some((e) => isPriorityEvent(e) && e.type === "coach_goal_achieved"),
   },
 ]
 

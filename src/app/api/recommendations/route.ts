@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { categories, topK, minConfidence, onboarding }: RecommendationsRequest =
+    const { categories, keywords, topK, minConfidence, onboarding }: RecommendationsRequest =
       parsed.data
 
     const edLevel = onboarding?.educationLevel === "applicant"
@@ -33,13 +33,14 @@ export async function POST(request: Request) {
           categoryNames: categories.map((c) => c.name),
           educationLevel: edLevel,
           studyCity: onboarding.studyCity,
-          interests: onboarding.interests,
+          interests: [...(onboarding.interests ?? []), ...(keywords ?? [])],
         }
       : undefined
 
     const matchOptions = {
       topK: topK * 2,
       minScore: 0.1,
+      keywords: [...(onboarding?.interests ?? []), ...(keywords ?? [])],
       prefilter: prefilterOptions,
     }
 

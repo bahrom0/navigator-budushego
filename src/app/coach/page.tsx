@@ -6,10 +6,40 @@ import { useProfileStore } from "@/stores/profile-store"
 import { CoachShell } from "@/components/coach/CoachShell"
 import { CoachErrorBanner } from "@/components/coach/CoachErrorBanner"
 import { CoachTabContent } from "@/components/coach/CoachTabContent"
-import { CoachGoalSetup, type CoachGoalDraft, type CoachRecommendation } from "@/components/coach/CoachGoalSetup"
-import type { CoachGoal, CoachDayPlan, CoachDayTask, CoachRoadmap, CoachTaskStep, RoadmapDurationWeeks } from "@/types/coach"
+import {
+  CoachGoalSetup,
+  type CoachGoalDraft,
+  type CoachRecommendation,
+} from "@/components/coach/CoachGoalSetup"
+import type {
+  CoachGoal,
+  CoachDayPlan,
+  CoachDayTask,
+  CoachRoadmap,
+  CoachTaskStep,
+  RoadmapDurationWeeks,
+} from "@/types/coach"
 import type { DevelopmentPlan } from "@/types/plan"
 import type { DailyPlanRecord, PlanBundle } from "@/types/admission"
+
+function buildFallbackGoal(
+  nctCode: string,
+  nctTitle: string,
+  overrides: Partial<CoachGoal> = {},
+): CoachGoal {
+  return {
+    id: overrides.id ?? `local-${nctCode}`,
+    nctCode,
+    nctTitle,
+    university: overrides.university,
+    profession: overrides.profession,
+    city: overrides.city,
+    setAt: overrides.setAt ?? Date.now(),
+    status: overrides.status ?? "active",
+    planId: overrides.planId,
+    roadmapId: overrides.roadmapId,
+  }
+}
 
 export default function CoachPage() {
   const goal = useCoachStore((s) => s.goal)
@@ -38,9 +68,13 @@ export default function CoachPage() {
   const sessionId = useProfileStore((s) => s.sessionId)
   const setProfileActiveGoal = useProfileStore((s) => s.setActiveGoal)
   const [mounted, setMounted] = useState(false)
-  const hasGoal = !!goal || !!profileActiveGoal
 
-  useEffect(() => { setMounted(true) }, [])
+  const effectiveGoal = goal ?? profileActiveGoal ?? null
+  const hasGoal = !!effectiveGoal
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (profileActiveGoal && !goal) {
@@ -67,8 +101,21 @@ export default function CoachPage() {
 
         if (payload.status === "success" && payload.data?.bundle) {
           const bundle = payload.data.bundle
-          if (bundle.goal) setGoal(bundle.goal as CoachGoal)
-          if (bundle.plan) setPlan(bundle.plan as DevelopmentPlan)
+          const bundleGoal =
+            bundle.goal ??
+            (bundle.plan
+              ? buildFallbackGoal(bundle.plan.nctCode, bundle.plan.nctTitle)
+              : null)
+
+          if (bundleGoal) {
+            setGoal(bundleGoal)
+            setProfileActiveGoal(bundleGoal)
+          }
+
+          if (bundle.plan) {
+            setPlan(bundle.plan as DevelopmentPlan)
+          }
+
           if (bundle.roadmap) {
             const rm = bundle.roadmap as CoachRoadmap
             setRoadmap(rm)
@@ -76,6 +123,7 @@ export default function CoachPage() {
               setActiveTab("today")
             }
           }
+
           if (bundle.today) {
             setDayPlan({
               date: bundle.today.planDate,
@@ -91,6 +139,7 @@ export default function CoachPage() {
               completedAt: bundle.today.updatedAt,
             })
           }
+
           setDailyHistory(bundle.history ?? [])
           syncProgress(bundle)
         }
@@ -107,7 +156,7 @@ export default function CoachPage() {
     return () => {
       cancelled = true
     }
-  }, [setDayPlan, setDailyHistory, setError, setGoal, setLoading, setPlan, setProgress, setRoadmap, setActiveTab])
+  }, [setActiveTab, setDailyHistory, setDayPlan, setError, setGoal, setLoading, setPlan, setProfileActiveGoal, setRoadmap, setProgress])
 
   const recommendations = useMemo<CoachRecommendation[]>(() => {
     if (!Array.isArray(profileRecommendations)) return []
@@ -135,7 +184,7 @@ export default function CoachPage() {
   }, [profileRecommendations])
 
   const handleGenerateRoadmap = async (durationWeeks?: RoadmapDurationWeeks) => {
-    if (!goal) return
+    if (!effectiveGoal) return
     setLoading(true)
     setError(null)
     try {
@@ -143,19 +192,23 @@ export default function CoachPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          goalId: goal.id,
-          planId: plan ? `${goal.id}:${plan.nctCode}` : undefined,
-          nctCode: goal.nctCode,
-          nctTitle: goal.nctTitle,
-          university: goal.university ?? "",
-          profession: goal.profession ?? "",
-          city: goal.city ?? "",
+          goalId: effectiveGoal.id,
+          planId: plan ? `${effectiveGoal.id}:${plan.nctCode}` : undefined,
+          nctCode: effectiveGoal.nctCode,
+          nctTitle: effectiveGoal.nctTitle,
+          university: effectiveGoal.university ?? "",
+          profession: effectiveGoal.profession ?? "",
+          city: effectiveGoal.city ?? "",
           durationWeeks: durationWeeks ?? 12,
           generalPlan: plan ?? null,
           diagnosticResult: diagnostics.length > 0 ? diagnostics[0] : null,
         }),
       })
-      const payload = (await res.json()) as { status?: string; data?: { roadmap?: unknown }; error?: string }
+      const payload = (await res.json()) as {
+        status?: string
+        data?: { roadmap?: unknown }
+        error?: string
+      }
       if (!res.ok || payload.status !== "success" || !payload.data?.roadmap) {
         throw new Error(payload.error ?? "Не удалось создать Roadmap")
       }
@@ -169,7 +222,7 @@ export default function CoachPage() {
   }
 
   const handleGenerateDailyPlan = async () => {
-    if (!goal || !roadmap) return
+    if (!effectiveGoal || !roadmap) return
     if (!roadmap.id) {
       setError("Roadmap ID отсутствует. Создайте Roadmap заново.")
       return
@@ -183,12 +236,12 @@ export default function CoachPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          goalId: goal.id,
+          goalId: effectiveGoal.id,
           roadmapId: roadmap.id,
-          planId: plan ? `${goal.id}:${plan.nctCode}` : undefined,
+          planId: plan ? `${effectiveGoal.id}:${plan.nctCode}` : undefined,
           weekId: activeWeek.id,
-          nctCode: goal.nctCode,
-          nctTitle: goal.nctTitle,
+          nctCode: effectiveGoal.nctCode,
+          nctTitle: effectiveGoal.nctTitle,
           weekTitle: activeWeek.title,
           weekSubjects: activeWeek.subjects,
           weekTasks: activeWeek.tasks,
@@ -239,7 +292,7 @@ export default function CoachPage() {
   }
 
   const handleTaskDetail = async (taskId: string) => {
-    if (!goal || !roadmap || !dayPlan) return
+    if (!effectiveGoal || !roadmap || !dayPlan) return
     const task = dayPlan.tasks.find((t) => t.id === taskId)
     if (!task) return
     const activeWeek = roadmap.weeks.find((w) => w.id === dayPlan.weekId) ?? roadmap.weeks[0]
@@ -252,11 +305,15 @@ export default function CoachPage() {
           taskTitle: task.title,
           taskType: task.type,
           taskDescription: task.description,
-          nctTitle: goal.nctTitle,
+          nctTitle: effectiveGoal.nctTitle,
           weekTitle: activeWeek.title,
         }),
       })
-      const payload = (await res.json()) as { status?: string; data?: { steps?: CoachTaskStep[] }; error?: string }
+      const payload = (await res.json()) as {
+        status?: string
+        data?: { steps?: CoachTaskStep[] }
+        error?: string
+      }
       if (!res.ok || payload.status !== "success" || !payload.data?.steps) {
         throw new Error(payload.error ?? "Не удалось загрузить план")
       }
@@ -266,32 +323,35 @@ export default function CoachPage() {
     }
   }
 
-  const handleNavigateDate = useCallback(async (date: string) => {
-    if (!goal) return
-    setNavigateDate(date)
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/coach/daily-plan?planDate=${date}&goalId=${goal.id}`, {
-        method: "GET",
-      })
-      const payload = (await res.json()) as {
-        status?: string
-        data?: { dayPlan?: CoachDayPlan | null }
-        error?: string
-      }
-      if (res.ok && payload.status === "success") {
-        if (payload.data?.dayPlan) {
-          setDayPlan(payload.data.dayPlan)
-        } else {
-          setDayPlan(null)
+  const handleNavigateDate = useCallback(
+    async (date: string) => {
+      if (!effectiveGoal) return
+      setNavigateDate(date)
+      setLoading(true)
+      try {
+        const res = await fetch(`/api/coach/daily-plan?planDate=${date}&goalId=${effectiveGoal.id}`, {
+          method: "GET",
+        })
+        const payload = (await res.json()) as {
+          status?: string
+          data?: { dayPlan?: CoachDayPlan | null }
+          error?: string
         }
+        if (res.ok && payload.status === "success") {
+          if (payload.data?.dayPlan) {
+            setDayPlan(payload.data.dayPlan)
+          } else {
+            setDayPlan(null)
+          }
+        }
+      } catch (err) {
+        console.error("[coach] navigate date error:", err)
+      } finally {
+        setLoading(false)
       }
-    } catch (err) {
-      console.error("[coach] navigate date error:", err)
-    } finally {
-      setLoading(false)
-    }
-  }, [goal, setNavigateDate, setDayPlan, setLoading])
+    },
+    [effectiveGoal, setNavigateDate, setDayPlan, setLoading],
+  )
 
   if (!mounted) {
     return (
@@ -356,7 +416,11 @@ function GoalSetupFlow({
           matchedInterests: [],
         }),
       })
-      const payload = (await res.json()) as { status?: string; data?: { goal?: CoachGoal; persisted?: boolean }; error?: string }
+      const payload = (await res.json()) as {
+        status?: string
+        data?: { goal?: CoachGoal; persisted?: boolean }
+        error?: string
+      }
       if (!res.ok || payload.status !== "success" || !payload.data?.goal) {
         const message = payload.error ?? "Не удалось сохранить цель"
         setLocalError(message)

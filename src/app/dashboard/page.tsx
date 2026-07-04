@@ -1,21 +1,35 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { ClipboardList, Mic, Bookmark, Activity } from "lucide-react"
 import Link from "next/link"
 import { useProfileStore } from "@/stores/profile-store"
+import { isPriorityActivityEventType } from "@/types/activity"
 
 export default function DashboardOverview() {
   const plans = useProfileStore((s) => s.plans)
   const interviews = useProfileStore((s) => s.interviews)
   const bookmarks = useProfileStore((s) => s.bookmarks)
   const activityLog = useProfileStore((s) => s.activityLog)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const priorityActivityCount = activityLog.filter((event) =>
+    typeof event.isPriority === "boolean"
+      ? event.isPriority
+      : isPriorityActivityEventType(event.type),
+  ).length
+  const safePriorityActivityCount = mounted ? priorityActivityCount : 0
 
   const stats = [
     { label: "Планы", value: plans.length, icon: ClipboardList, href: "/dashboard/plans", color: "text-primary" },
     { label: "Интервью", value: interviews.length, icon: Mic, href: "/dashboard/interviews", color: "text-success" },
     { label: "Закладки", value: bookmarks.length, icon: Bookmark, href: "/dashboard/bookmarks", color: "text-warning" },
-    { label: "Действия", value: activityLog.length, icon: Activity, href: "/dashboard/activity", color: "text-primary" },
+    { label: "Действия", value: safePriorityActivityCount, icon: Activity, href: "/dashboard/activity", color: "text-primary" },
   ]
 
   return (

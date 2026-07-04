@@ -11,6 +11,25 @@ function extractCluster(match: NCTMatchResult): number {
   return (match as unknown as Record<string, number>).cluster ?? 0
 }
 
+function extractDiversificationKey(match: NCTMatchResult): string {
+  const branchKey = (match as unknown as { branchKey?: string }).branchKey
+  if (branchKey && branchKey.length > 0) {
+    return branchKey
+  }
+
+  const taxonomyPath = (match as unknown as { taxonomyPath?: string[] }).taxonomyPath
+  if (taxonomyPath && taxonomyPath.length > 0) {
+    return taxonomyPath.join(" > ")
+  }
+
+  const primaryTaxonomyNodeId = (match as unknown as { primaryTaxonomyNodeId?: string }).primaryTaxonomyNodeId
+  if (primaryTaxonomyNodeId && primaryTaxonomyNodeId.length > 0) {
+    return primaryTaxonomyNodeId
+  }
+
+  return `cluster:${extractCluster(match)}`
+}
+
 export function rankNCTResults(
   matches: NCTMatchResult[],
   options: RankingOptions = {},
@@ -45,11 +64,11 @@ function diversifyByCluster(
   matches: NCTMatchResult[],
   maxPerCluster: number,
 ): NCTMatchResult[] {
-  const clusterCount = new Map<number, number>()
+  const clusterCount = new Map<string, number>()
   const result: NCTMatchResult[] = []
 
   for (const match of matches) {
-    const cluster = extractCluster(match)
+    const cluster = extractDiversificationKey(match)
     const count = clusterCount.get(cluster) ?? 0
 
     if (count < maxPerCluster) {
@@ -62,16 +81,30 @@ function diversifyByCluster(
 }
 
 function buildReasoning(match: NCTMatchResult, rank: number): string {
+  const taxonomyPath = (match as unknown as { taxonomyPath?: string[] }).taxonomyPath ?? []
+  const taxonomyHint = taxonomyPath.slice(0, 2).join(" → ")
+  const careerHint = match.career_matches.slice(0, 2).join(", ")
+
   if (rank === 0) {
-    return `Наилучшее совпадение: ${match.matchedKeywords.length} ключевых слов из ваших интересов, степень уверенности ${(match.confidence * 100).toFixed(0)}%`
+    const details = [
+      `${match.matchedKeywords.length} ключевых слов`,
+      `степень уверенности ${(match.confidence * 100).toFixed(0)}%`,
+    ]
+    if (taxonomyHint) {
+      details.push(`таксономия ${taxonomyHint}`)
+    } else if (careerHint) {
+      details.push(careerHint)
+    }
+
+    return `Наилучшее совпадение: ${details.join(", ")}`
   }
 
   const keywordCount = match.matchedKeywords.length
   if (keywordCount > 0) {
-    return `Совпадение по ${keywordCount} ключевым словам; ${match.career_matches.slice(0, 2).join(", ")}`
+    return `Совпадение по ${keywordCount} ключевым словам; ${taxonomyHint || careerHint}`
   }
 
-  return `Уровень уверенности ${(match.confidence * 100).toFixed(0)}%`
+  return `Уровень уверенности ${(match.confidence * 100).toFixed(0)}%${taxonomyHint ? `; ${taxonomyHint}` : ""}`
 }
 
 export function getTopMatchesByCluster(
