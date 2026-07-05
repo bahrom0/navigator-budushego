@@ -49,6 +49,7 @@ function PlanContent() {
     ? bundle.goal
     : profileGoal ?? (queryCode ? toGoalFallback(queryCode, queryTitle || "Выбранное направление") : null)
   const plan = bundle ? bundle.generalPlan : cachedPlan
+  const recommendationSnapshot = bundle?.recommendationSnapshot ?? null
   const saveState: "idle" | "saved" = plan ? "saved" : "idle"
 
   useEffect(() => {
@@ -178,6 +179,37 @@ function PlanContent() {
             </button>
           </div>
         </div>
+
+        {recommendationSnapshot && goal ? (
+          <section className="mb-6 rounded-[18px] border border-border bg-card-bg p-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="max-w-3xl">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                  Почему выбрана эта цель · рекомендация №{recommendationSnapshot.selection.rank}
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+                  {recommendationSnapshot.selection.explanation}
+                </p>
+                {recommendationSnapshot.selection.matchedInterests.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {recommendationSnapshot.selection.matchedInterests.map((interest) => (
+                      <span key={interest} className="rounded-[8px] border border-border bg-background px-2.5 py-1 text-xs text-text-secondary">
+                        {interest}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                onClick={() => router.push(`/explain?code=${encodeURIComponent(goal.nctCode)}`)}
+                className="inline-flex min-h-11 items-center rounded-[12px] border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-card-bg"
+              >
+                Открыть детали
+              </button>
+            </div>
+          </section>
+        ) : null}
 
         {plan ? (
           <section>

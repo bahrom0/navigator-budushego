@@ -16,15 +16,15 @@ import { CATEGORIES } from "@/constants/categories"
 import { NCTSignalCard } from "@/components/signal-cards/NCTSignalCard"
 import type { Category } from "@/types/categories"
 import { useAnalysisStore } from "@/stores/analysis-store"
+import { selectRecommendationGoal } from "@/lib/recommendations/selection-client"
+import type {
+  CanonicalRecommendation,
+  RecommendationCacheData,
+  RecommendationResultSet,
+} from "@/types/recommendations"
 
 type SortField = "confidence" | "institution"
 type SortDir = "asc" | "desc"
-
-interface CachedAnalysisData {
-  ranked: any[];
-  overallConfidence: number | null;
-  categories: { id: string; name: string; description?: string }[];
-}
 
 export default function RecommendationsPage() {
   const router = useRouter()
@@ -33,7 +33,7 @@ export default function RecommendationsPage() {
   const selectedIds = useCategoryStore((s) => s.selected)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [results, setResults] = useState<any[]>([])
+  const [results, setResults] = useState<CanonicalRecommendation[]>([])
   const [overallConfidence, setOverallConfidence] = useState<number | null>(null)
   const [sortBy, setSortBy] = useState<SortField>("confidence")
   const [sortDir, setSortDir] = useState<SortDir>("desc")
@@ -42,7 +42,7 @@ export default function RecommendationsPage() {
   const [showFilters, setShowFilters] = useState(false)
   const cacheResults = useAnalysisStore((s) => s.cacheResults)
   const restoreFromCache = useAnalysisStore((s) => s.restoreFromCache)
-  const [cacheRef, setCacheRef] = useState<CachedAnalysisData | null>(null)
+  const [cacheRef, setCacheRef] = useState<RecommendationCacheData | null>(null)
   const onboardingLoaded = useOnboardingStore((s) => s._loaded)
   const sessionId = useProfileStore((s) => s.sessionId)
   const setActiveGoal = useProfileStore((s) => s.setActiveGoal)
@@ -61,7 +61,7 @@ export default function RecommendationsPage() {
       try {
         if (!skipCache) {
           const cached = restoreFromCache()
-          if (cached && Array.isArray(cached.ranked)) {
+          if (cached?.decisionContext && Array.isArray(cached.ranked)) {
             setResults(cached.ranked)
             setOverallConfidence(cached.overallConfidence ?? null)
             setCacheRef(cached)
@@ -72,7 +72,7 @@ export default function RecommendationsPage() {
         }
 
         const onboardingData = useOnboardingStore.getState().data
-        const res = await fetch("/api/analyze", {
+        const res = await fetch("/api/recommendations", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -96,7 +96,9 @@ export default function RecommendationsPage() {
           return
         }
 
-      const payload: CachedAnalysisData = {
+      const resultSet = data.data as RecommendationResultSet
+      const payload: RecommendationCacheData = {
+        ...resultSet,
         ranked: data.data.ranked || [],
         overallConfidence: data.data.overallConfidence ?? null,
         categories: categories.map((c): { id: string; name: string; description?: string } => ({ id: c.id, name: c.name, description: c.description ?? "" })),
@@ -186,7 +188,7 @@ const displayedResults = useMemo(() => {
   }
   if (studyFormFilter) {
     filtered = filtered.filter((r) => {
-      const raw = (r as any).study_form
+      const raw = r.study_form
       const forms = Array.isArray(raw) ? raw : raw ? [raw] : []
       return forms.includes(studyFormFilter)
     })
@@ -213,34 +215,30 @@ const displayedResults = useMemo(() => {
   }
 
   const handleSelectGoal = useCallback(
-    async (result: any) => {
+    async (result: CanonicalRecommendation) => {
       try {
-        const res = await fetch("/api/goals/select", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sessionId,
-            nctCode: result.code,
-            nctTitle: result.title_ru,
-            university: result.institution ?? "",
-            profession: Array.isArray(result.career_matches) ? result.career_matches[0] ?? "" : "",
-            city: result.city ?? "",
-            careerMatches: Array.isArray(result.career_matches) ? result.career_matches : [],
-            matchedInterests: Array.isArray(result.matchedInterests) ? result.matchedInterests : [],
-          }),
-        })
-        const payload = await res.json()
-        if (!res.ok || payload.status !== "success" || !payload.data?.goal) {
-          throw new Error(payload.error ?? "Не удалось выбрать цель")
+        if (!cacheRef?.decisionContext) {
+          throw new Error("Контекст рекомендации устарел. Обновите список и выберите цель снова.")
         }
-        setActiveGoal(payload.data.goal)
+        const goal = await selectRecommendationGoal({
+          recommendation: result,
+          resultSet: cacheRef,
+          sessionId,
+          filters: {
+            city: cityFilter || undefined,
+            studyForm: studyFormFilter || undefined,
+            sortBy,
+            sortDir,
+          },
+        })
+        setActiveGoal(goal)
         logActivityEvent("coach_goal_set", `Активная цель: ${result.code} - ${result.title_ru}`)
         router.push("/plan")
       } catch (err) {
         setError(err instanceof Error ? err.message : "Не удалось выбрать цель")
       }
     },
-    [router, sessionId, setActiveGoal],
+    [cacheRef, cityFilter, router, sessionId, setActiveGoal, sortBy, sortDir, studyFormFilter],
   )
 
 function SkeletonCard() {

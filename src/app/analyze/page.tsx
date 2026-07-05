@@ -2,14 +2,13 @@
 
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, useSpring, useTransform } from "framer-motion";
+import { motion, useSpring } from "framer-motion";
 import { useAnalysisStore } from "@/stores/analysis-store";
 import { hydrateOnboardingStore, useOnboardingStore } from "@/stores/onboarding-store";
 import { AnalysisTimeline } from "@/components/analysis/AnalysisProgress";
 import { Stethoscope } from "lucide-react";
 import { hydrateCategoryStore, persistCategories, useCategoryStore } from "@/stores/category-store";
 import type { AnalysisStep } from "@/types/analysis";
-import { STEPS as STEP_LIST } from "@/types/analysis";
 import { CATEGORIES } from "@/constants/categories";
 import type { Category } from "@/types/categories";
 import { logActivityEvent } from "@/lib/activity-logger";
@@ -23,8 +22,6 @@ const STEP_ORDER: AnalysisStep[] = [
 
 function ProgressBar({ progress }: { progress: number }) {
   const scaleX = useSpring(progress, { stiffness: 60, damping: 20 })
-  const width = useTransform(scaleX, [0, 1], ["0%", "100%"])
-
   return (
     <div className="h-1 w-full overflow-hidden rounded-full bg-black/[.06]">
       <motion.div
@@ -102,7 +99,7 @@ export default function AnalyzePage() {
 
       const onboardingData = useOnboardingStore.getState().data
 
-      const res = await fetch("/api/analyze", {
+      const res = await fetch("/api/recommendations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -131,8 +128,7 @@ export default function AnalyzePage() {
       advanceStep(2)
 
       useAnalysisStore.getState().cacheResults({
-        ranked: data.data.ranked || [],
-        overallConfidence: data.data.overallConfidence ?? null,
+        ...data.data,
         categories: categories.map((c) => ({ id: c.id, name: c.name, description: c.description ?? "" })),
       })
 

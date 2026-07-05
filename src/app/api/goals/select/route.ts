@@ -5,6 +5,40 @@ import { getByCode } from "@/lib/db/nct-db"
 
 export const dynamic = "force-dynamic"
 
+const RecommendationSnapshotSchema = z.object({
+  version: z.literal(1),
+  selectedAt: z.string(),
+  inputs: z.object({
+    categories: z.array(z.object({ id: z.string(), name: z.string() })),
+    keywords: z.array(z.string()),
+    onboarding: z.object({
+      userCity: z.string().optional(),
+      studyCity: z.string().optional(),
+      userType: z.string().optional(),
+      educationLevel: z.enum(["after_9", "after_11", "applicant", ""]).optional(),
+      interests: z.array(z.string()).optional(),
+    }).nullable(),
+  }),
+  selection: z.object({
+    code: z.string(),
+    title: z.string(),
+    rank: z.number().int().positive(),
+    confidence: z.number().min(0).max(1),
+    finalScore: z.number(),
+    explanation: z.string(),
+    matchedInterests: z.array(z.string()),
+    matchedCareers: z.array(z.string()),
+    relatedCodes: z.array(z.string()),
+  }),
+  filters: z.object({
+    city: z.string().optional(),
+    studyForm: z.string().optional(),
+    sortBy: z.enum(["confidence", "institution"]).optional(),
+    sortDir: z.enum(["asc", "desc"]).optional(),
+  }),
+  overallConfidence: z.number().min(0).max(1),
+})
+
 const SelectGoalSchema = z.object({
   sessionId: z.string().optional(),
   nctCode: z.string().trim().min(1).max(20),
@@ -14,6 +48,7 @@ const SelectGoalSchema = z.object({
   city: z.string().trim().max(200).optional().or(z.literal("")),
   matchedInterests: z.array(z.string()).optional(),
   careerMatches: z.array(z.string()).optional(),
+  recommendationSnapshot: RecommendationSnapshotSchema.optional(),
 })
 
 function generateId(): string {
@@ -88,10 +123,9 @@ export async function POST(request: Request) {
           profession: goal.profession,
           city: goal.city,
           status: "active",
-          goal_context: {
-            matchedInterests: raw.matchedInterests ?? [],
-            careerMatches: raw.careerMatches ?? [],
-          },
+          goal_context: raw.recommendationSnapshot
+            ? { recommendationSnapshot: raw.recommendationSnapshot }
+            : {},
         })
         .select("*")
         .single()
@@ -120,6 +154,7 @@ export async function POST(request: Request) {
             ...goal,
             id: inserted.id,
           },
+          recommendationSnapshot: raw.recommendationSnapshot,
           persisted: true,
         },
       })
@@ -130,6 +165,7 @@ export async function POST(request: Request) {
       data: {
         goal,
         persisted: false,
+        recommendationSnapshot: raw.recommendationSnapshot,
       },
     })
   } catch (error) {

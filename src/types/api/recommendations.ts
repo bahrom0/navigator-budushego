@@ -10,9 +10,10 @@ const OnboardingSchema = z.object({
 
 export const RecommendationsRequestSchema = z.object({
   categories: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        description: z.string().optional(),
     }),
   ),
   keywords: z.array(z.string()).optional(),
@@ -88,9 +89,18 @@ export const RecommendationsResponseSchema = z.object({
         searchIntent: z
           .enum(["broad", "narrow", "facet", "code", "comparison"])
           .optional(),
+        matchedInterests: z.array(z.string()).optional(),
+        matchedCareers: z.array(z.string()).optional(),
       }),
     ),
     overallConfidence: z.number(),
+    decisionContext: z.object({
+      categories: z.array(z.object({ id: z.string(), name: z.string() })),
+      keywords: z.array(z.string()),
+      onboarding: OnboardingSchema.nullable(),
+      overallConfidence: z.number(),
+      generatedAt: z.string(),
+    }),
   }),
   error: z.string().optional(),
 })

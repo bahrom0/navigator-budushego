@@ -58,7 +58,7 @@ export function NCTSignalCard({
   const competition = useMemo(() => evaluateCompetitionForCode(code, confidence), [code, confidence])
 
   const handleExplain = () => {
-    logActivityEvent("view_recommendation", `РџРѕРґСЂРѕР±РЅРµРµ: ${code} - ${title_ru}`)
+    logActivityEvent("view_recommendation", `Подробнее: ${code} - ${title_ru}`)
     router.push(`/explain?code=${encodeURIComponent(code)}&title=${encodeURIComponent(title_ru)}`)
   }
 
@@ -110,7 +110,7 @@ export function NCTSignalCard({
                   className="inline-flex cursor-default items-center gap-1 rounded-[8px] bg-black/[.04] px-2.5 py-1 text-xs font-medium text-text-secondary"
                 >
                   <GraduationCap className="h-3 w-3" />
-                  РљР»Р°СЃС‚РµСЂ {cluster}
+                  Кластер {cluster}
                 </motion.span>
 
                 <AnimatePresence>
@@ -122,7 +122,7 @@ export function NCTSignalCard({
                       transition={{ type: "spring", stiffness: 300, damping: 25 }}
                       className="absolute left-0 top-full z-20 mt-2 w-56 rounded-[12px] border border-border bg-card-bg p-3 shadow-lg"
                     >
-                      <p className="text-xs font-semibold text-foreground">Р’СЃС‚СѓРїРёС‚РµР»СЊРЅС‹Рµ СЌРєР·Р°РјРµРЅС‹</p>
+                      <p className="text-xs font-semibold text-foreground">Вступительные экзамены</p>
                       <ul className="mt-2 space-y-1">
                         {exams.map((exam) => (
                           <li key={exam} className="flex items-center gap-2 text-xs text-text-secondary">
@@ -146,7 +146,7 @@ export function NCTSignalCard({
             }}
           >
             <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "currentColor" }} />
-            {confidencePercent}% СЃРѕРІРїР°РґРµРЅРёРµ
+            {confidencePercent}% совпадение
           </div>
         </header>
 
@@ -154,7 +154,7 @@ export function NCTSignalCard({
           <h3 className="text-lg font-semibold leading-snug text-foreground">{title_ru}</h3>
           <div className="mt-1.5 flex items-center gap-2 text-sm text-text-secondary">
             <span className="font-medium">{institution}</span>
-            <span className="text-text-muted">В·</span>
+            <span className="text-text-muted">·</span>
             <span>{city}</span>
           </div>
         </div>
@@ -202,7 +202,7 @@ export function NCTSignalCard({
                 className="inline-flex h-10 items-center gap-2 rounded-[12px] border border-border bg-card-bg px-4 text-sm font-medium text-foreground transition-colors hover:bg-background"
               >
                 <ExternalLink className="h-4 w-4 text-text-muted" />
-                РџРѕРґСЂРѕР±РЅРµРµ
+                Подробнее
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.03 }}
@@ -211,7 +211,7 @@ export function NCTSignalCard({
                 className="inline-flex h-10 items-center gap-2 rounded-[12px] bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
               >
                 <FlaskConical className="h-4 w-4" />
-                Р’С‹Р±СЂР°С‚СЊ С†РµР»СЊ
+                Выбрать цель
               </motion.button>
             </>
           )}

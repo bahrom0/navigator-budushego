@@ -1,12 +1,7 @@
 import { create } from "zustand"
 import type { AnalysisStatus, AnalysisStep } from "@/types/analysis"
 import { cacheGet, cacheSet, cacheRemove } from "@/lib/cache"
-
-interface CachedAnalysisData {
-  ranked: any[]
-  overallConfidence: number | null
-  categories: { id: string; name: string; description?: string }[]
-}
+import type { RecommendationCacheData } from "@/types/recommendations"
 
 interface AnalysisStore {
   status: AnalysisStatus
@@ -20,8 +15,8 @@ interface AnalysisStore {
   setError: (error: string | null) => void
   startAnalysis: () => void
   reset: () => void
-  cacheResults: (payload: CachedAnalysisData) => void
-  restoreFromCache: () => CachedAnalysisData | null
+  cacheResults: (payload: RecommendationCacheData) => void
+  restoreFromCache: () => RecommendationCacheData | null
   clearCache: () => void
 }
 
@@ -72,7 +67,7 @@ export const useAnalysisStore = create<AnalysisStore>((set, get) => ({
 
   cacheResults: (payload) => cacheSet("analysisResults", payload),
 
-  restoreFromCache: () => cacheGet<CachedAnalysisData>("analysisResults"),
+  restoreFromCache: () => cacheGet<RecommendationCacheData>("analysisResults"),
 
   clearCache: () => cacheRemove("analysisResults"),
 }))

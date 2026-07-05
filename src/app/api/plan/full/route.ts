@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import type { ActiveGoalBundle, AdmissionGoalRecord, DailyPlanRecord } from "@/types/admission"
 import type { CoachDayTask, CoachRoadmap } from "@/types/coach"
 import type { DevelopmentPlan } from "@/types/plan"
+import type { RecommendationSnapshot } from "@/types/recommendations"
 
 export const dynamic = "force-dynamic"
 
@@ -299,8 +300,10 @@ export async function GET() {
     const bundle: ActiveGoalBundle = {
       goal,
       recommendationSnapshot:
-        typeof goalRes.data?.goal_context === "object" && goalRes.data.goal_context !== null
-          ? goalRes.data.goal_context as Record<string, unknown>
+        typeof goalRes.data?.goal_context === "object"
+        && goalRes.data.goal_context !== null
+        && typeof (goalRes.data.goal_context as Record<string, unknown>).recommendationSnapshot === "object"
+          ? (goalRes.data.goal_context as { recommendationSnapshot: RecommendationSnapshot }).recommendationSnapshot
           : null,
       generalPlan: toDevelopmentPlan(planRes.data),
       roadmap,

@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server"
-import { matchNCTByCluster } from "@/lib/ai/nct-match"
-import type { PrefilterOptions } from "@/lib/ai/nct-match"
-import { rankNCTResults, calculateOverallConfidence } from "@/lib/ai/rank-nct"
+import { buildRecommendations } from "@/lib/recommendations/service"
 import {
   RecommendationsRequestSchema,
   type RecommendationsRequest,
@@ -21,47 +19,12 @@ export async function POST(request: Request) {
       )
     }
 
-    const { categories, keywords, topK, minConfidence, onboarding }: RecommendationsRequest =
-      parsed.data
-
-    const edLevel = onboarding?.educationLevel === "applicant"
-      ? "after_11" as const
-      : onboarding?.educationLevel || ""
-
-    const prefilterOptions: PrefilterOptions | undefined = onboarding
-      ? {
-          categoryNames: categories.map((c) => c.name),
-          educationLevel: edLevel,
-          studyCity: onboarding.studyCity,
-          interests: [...(onboarding.interests ?? []), ...(keywords ?? [])],
-        }
-      : undefined
-
-    const matchOptions = {
-      topK: topK * 2,
-      minScore: 0.1,
-      keywords: [...(onboarding?.interests ?? []), ...(keywords ?? [])],
-      prefilter: prefilterOptions,
-    }
-
-    const rawMatches = await matchNCTByCluster(categories, matchOptions)
-
-    const ranked = rankNCTResults(rawMatches, {
-      topK,
-      minConfidence,
-      diversify: true,
-      maxPerCluster: 2,
-    })
-
-    const overallConfidence = calculateOverallConfidence(ranked)
+    const input: RecommendationsRequest = parsed.data
+    const result = await buildRecommendations(input)
 
     return NextResponse.json({
       status: "success",
-      data: {
-        matches: rawMatches,
-        ranked,
-        overallConfidence,
-      },
+      data: result,
     })
   } catch (error) {
     const message =

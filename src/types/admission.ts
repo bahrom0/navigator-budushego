@@ -1,5 +1,6 @@
 import type { CoachDayTask, CoachGoal, CoachRoadmap } from "@/types/coach"
 import type { DevelopmentPlan } from "@/types/plan"
+import type { RecommendationSnapshot } from "@/types/recommendations"
 
 export type AdmissionGoalStatus = "active" | "archived" | "completed"
 
@@ -56,7 +57,7 @@ export interface ActiveGoalCommunityContext {
 
 export interface ActiveGoalBundle {
   goal: CoachGoal | null
-  recommendationSnapshot: Record<string, unknown> | null
+  recommendationSnapshot: RecommendationSnapshot | null
   generalPlan: DevelopmentPlan | null
   roadmap: CoachRoadmap | null
   todayPlan: DailyPlanRecord | null
