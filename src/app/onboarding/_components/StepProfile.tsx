@@ -8,9 +8,9 @@ import type { EducationLevel } from "@/types/onboarding"
 import { Button } from "@/components/Button"
 
 const EDUCATION_LEVELS: { value: EducationLevel; label: string }[] = [
-  { value: "after_9", label: "РџРѕСЃР»Рµ 9 РєР»Р°СЃСЃР°" },
-  { value: "after_11", label: "РџРѕСЃР»Рµ 11 РєР»Р°СЃСЃР°" },
-  { value: "applicant", label: "РђР±РёС‚СѓСЂРёРµРЅС‚" },
+  { value: "after_9", label: "После 9 класса" },
+  { value: "after_11", label: "После 11 класса" },
+  { value: "applicant", label: "Абитуриент" },
 ]
 
 const USER_TYPE_TO_EDUCATION: Record<string, EducationLevel> = {
@@ -32,18 +32,18 @@ export function StepProfile() {
 
   const handleFinish = () => {
     if (!data.userType) {
-      setError("РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІС‹Р±РµСЂРёС‚Рµ РєС‚Рѕ РІС‹")
+      setError("Пожалуйста, выберите кто вы")
       return
     }
 
     const forcedEducation = USER_TYPE_TO_EDUCATION[data.userType]
     if (forcedEducation) {
       if (data.educationLevel !== forcedEducation) {
-        setError("РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РїРѕРґС‚РІРµСЂРґРёС‚Рµ СЃРІРѕР№ СЃС‚Р°С‚СѓСЃ")
+        setError("Пожалуйста, подтвердите свой статус")
         return
       }
     } else if (!data.educationLevel || !["after_9", "after_11"].includes(data.educationLevel)) {
-      setError("РџРѕР¶Р°Р»СѓР№СЃС‚Р°, СѓРєР°Р¶РёС‚Рµ СѓСЂРѕРІРµРЅСЊ РѕР±СЂР°Р·РѕРІР°РЅРёСЏ")
+      setError("Пожалуйста, укажите уровень образования")
       return
     }
 
@@ -56,13 +56,13 @@ export function StepProfile() {
     <div className="space-y-6">
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--marketing-muted)]">
-          РЁР°Рі 2
+          Шаг 2
         </p>
         <h2 className="text-xl font-semibold tracking-[-0.04em] text-[var(--marketing-foreground)] sm:text-[1.9rem]">
-          РљС‚Рѕ РІС‹?
+          Кто вы?
         </h2>
         <p className="max-w-xl text-sm leading-6 text-[var(--marketing-muted)]">
-          Р­С‚Рѕ РїРѕРјРѕР¶РµС‚ Р°РґР°РїС‚РёСЂРѕРІР°С‚СЊ СЂРµРєРѕРјРµРЅРґР°С†РёРё РїРѕРґ РІР°СЃ
+          Это поможет адаптировать рекомендации под вас
         </p>
       </div>
 
@@ -125,10 +125,10 @@ export function StepProfile() {
           >
             <div>
               <h3 className="text-sm font-semibold text-[var(--marketing-foreground)] sm:text-base">
-                РЈСЂРѕРІРµРЅСЊ РѕР±СЂР°Р·РѕРІР°РЅРёСЏ
+                Уровень образования
               </h3>
               <p className="mt-0.5 text-sm text-[var(--marketing-muted)]">
-                Р’С‹Р±РµСЂРёС‚Рµ, РїРѕСЃР»Рµ РєР°РєРѕРіРѕ РєР»Р°СЃСЃР° РїРѕСЃС‚СѓРїР°РµС‚Рµ
+                Выберите, после какого класса поступаете
               </p>
             </div>
             <div className="grid gap-2.5 sm:grid-cols-2">
@@ -177,14 +177,14 @@ export function StepProfile() {
           onClick={prevStep}
           className="!h-11 !rounded-[1.25rem] !border !border-[var(--marketing-border)] !bg-[var(--marketing-surface-muted)] !text-[var(--marketing-foreground)] !font-semibold hover:!border-[var(--marketing-border-strong)] hover:!bg-[var(--marketing-surface-strong)]"
         >
-          РќР°Р·Р°Рґ
+          Назад
         </Button>
         <Button
           onClick={handleFinish}
           size="lg"
           className="!h-11 !rounded-[1.25rem] !border-transparent !bg-[var(--marketing-foreground)] !px-6 !text-base !font-semibold !text-[var(--marketing-bg)] shadow-[0_18px_40px_rgba(48,99,232,0.22)] hover:!bg-[var(--marketing-accent)]"
         >
-          РќР°С‡Р°С‚СЊ РїРѕРёСЃРє
+          Начать поиск
         </Button>
       </div>
     </div>

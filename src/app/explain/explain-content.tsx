@@ -7,7 +7,52 @@ import { NCTSignalCard } from "@/components/signal-cards/NCTSignalCard"
 import { selectRecommendationGoal } from "@/lib/recommendations/selection-client"
 import { useAnalysisStore } from "@/stores/analysis-store"
 import { useProfileStore } from "@/stores/profile-store"
+import type { ActiveGoalBundle } from "@/types/admission"
 import type { RecommendationCacheData } from "@/types/recommendations"
+
+type PersistedRecommendationDetail = {
+  code: string
+  title: string
+  confidence: number
+  finalScore: number
+  explanation: string
+  matchedInterests: string[]
+  matchedCareers: string[]
+  relatedCodes: string[]
+  overallConfidence: number
+  institution?: string
+  city?: string
+}
+
+function normalizeCode(value: string) {
+  return value.replace(/[\s-]+/g, "").toUpperCase()
+}
+
+function toPersistedRecommendationDetail(bundle: ActiveGoalBundle | null, requestedCode: string): PersistedRecommendationDetail | null {
+  if (!bundle?.goal || !bundle.recommendationSnapshot) return null
+
+  const normalizedRequestedCode = normalizeCode(requestedCode)
+  const normalizedGoalCode = normalizeCode(bundle.goal.nctCode)
+  const normalizedSnapshotCode = normalizeCode(bundle.recommendationSnapshot.selection.code)
+
+  if (normalizedRequestedCode !== normalizedGoalCode || normalizedRequestedCode !== normalizedSnapshotCode) {
+    return null
+  }
+
+  return {
+    code: bundle.recommendationSnapshot.selection.code,
+    title: bundle.recommendationSnapshot.selection.title,
+    confidence: bundle.recommendationSnapshot.selection.confidence,
+    finalScore: bundle.recommendationSnapshot.selection.finalScore,
+    explanation: bundle.recommendationSnapshot.selection.explanation,
+    matchedInterests: bundle.recommendationSnapshot.selection.matchedInterests,
+    matchedCareers: bundle.recommendationSnapshot.selection.matchedCareers,
+    relatedCodes: bundle.recommendationSnapshot.selection.relatedCodes,
+    overallConfidence: bundle.recommendationSnapshot.overallConfidence,
+    institution: bundle.goal.university,
+    city: bundle.goal.city,
+  }
+}
 
 export default function ExplainContent() {
   const router = useRouter()
@@ -16,21 +61,73 @@ export default function ExplainContent() {
   const setActiveGoal = useProfileStore((state) => state.setActiveGoal)
   const restoreFromCache = useAnalysisStore((state) => state.restoreFromCache)
   const [cache, setCache] = useState<RecommendationCacheData | null>(null)
+  const [cacheResolved, setCacheResolved] = useState(false)
+  const [persistedDetail, setPersistedDetail] = useState<PersistedRecommendationDetail | null>(null)
+  const [persistedResolved, setPersistedResolved] = useState(false)
   const [selecting, setSelecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const code = searchParams.get("code")?.replace(/[\s-]+/g, "").toUpperCase() ?? ""
+  const code = normalizeCode(searchParams.get("code") ?? "")
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => setCache(restoreFromCache()), 0)
+    const timeoutId = window.setTimeout(() => {
+      setCache(restoreFromCache())
+      setCacheResolved(true)
+    }, 0)
+
     return () => window.clearTimeout(timeoutId)
   }, [restoreFromCache])
 
+  useEffect(() => {
+    let cancelled = false
+
+    if (!code) {
+      setPersistedDetail(null)
+      setPersistedResolved(true)
+      return () => {
+        cancelled = true
+      }
+    }
+
+    async function loadPersistedDetail() {
+      setPersistedResolved(false)
+
+      try {
+        const res = await fetch("/api/plan/full", { cache: "no-store" })
+        const payload = await res.json()
+        if (!res.ok || payload.status !== "success") {
+          throw new Error(payload.error ?? "Failed to load active goal bundle")
+        }
+
+        const bundle = (payload.data?.bundle ?? null) as ActiveGoalBundle | null
+        if (!cancelled) {
+          setPersistedDetail(toPersistedRecommendationDetail(bundle, code))
+        }
+      } catch {
+        if (!cancelled) {
+          setPersistedDetail(null)
+        }
+      } finally {
+        if (!cancelled) {
+          setPersistedResolved(true)
+        }
+      }
+    }
+
+    void loadPersistedDetail()
+
+    return () => {
+      cancelled = true
+    }
+  }, [code])
+
   const recommendation = useMemo(
-    () => cache?.ranked.find((item) => item.code.replace(/[\s-]+/g, "").toUpperCase() === code) ?? null,
+    () => cache?.ranked.find((item) => normalizeCode(item.code) === code) ?? null,
     [cache, code],
   )
+
   const related = useMemo(() => {
     if (!cache || !recommendation) return []
+
     return cache.ranked
       .filter((item) => item.code !== recommendation.code && (
         item.branchKey === recommendation.branchKey || item.cluster === recommendation.cluster
@@ -45,8 +142,10 @@ export default function ExplainContent() {
 
   const handleSelect = async () => {
     if (!cache || !recommendation || selecting) return
+
     setSelecting(true)
     setError(null)
+
     try {
       const goal = await selectRecommendationGoal({
         recommendation,
@@ -61,11 +160,11 @@ export default function ExplainContent() {
     }
   }
 
-  if (!cache) {
+  if (!cacheResolved || (!recommendation && !persistedResolved)) {
     return <DetailSkeleton />
   }
 
-  if (!recommendation) {
+  if (!recommendation && !persistedDetail) {
     return (
       <main className="flex flex-1 items-center justify-center px-6 py-24">
         <div className="max-w-md text-center">
@@ -84,11 +183,17 @@ export default function ExplainContent() {
     )
   }
 
-  const scoreSignals = [
-    { label: "Общая уверенность", value: recommendation.confidence },
-    { label: "Смысловое совпадение", value: recommendation.semanticScore },
-    { label: "Совпадение по направлению", value: recommendation.taxonomyScore },
-  ].filter((signal): signal is { label: string; value: number } => typeof signal.value === "number")
+  const scoreSignals = recommendation
+    ? [
+      { label: "Общая уверенность", value: recommendation.confidence },
+      { label: "Смысловое совпадение", value: recommendation.semanticScore },
+      { label: "Совпадение по направлению", value: recommendation.taxonomyScore },
+    ].filter((signal): signal is { label: string; value: number } => typeof signal.value === "number")
+    : [
+      { label: "Общая уверенность", value: persistedDetail!.confidence },
+      { label: "Итоговый score", value: persistedDetail!.finalScore },
+      { label: "Уверенность выдачи", value: persistedDetail!.overallConfidence },
+    ]
 
   return (
     <main className="flex flex-1 flex-col px-6 sm:px-8">
@@ -103,29 +208,31 @@ export default function ExplainContent() {
 
         <header>
           <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-            Рекомендация №{recommendation.rank}
+            {recommendation ? `Рекомендация №${recommendation.rank}` : "Сохраненный выбор"}
           </p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground">Почему это направление подходит</h1>
           <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-            Детали рассчитаны тем же анализом, который сформировал список рекомендаций.
+            {recommendation
+              ? "Детали рассчитаны тем же анализом, который сформировал список рекомендаций."
+              : "Эти детали восстановлены из сохраненного snapshot выбора цели."}
           </p>
         </header>
 
         <NCTSignalCard
-          code={recommendation.code}
-          title_ru={recommendation.title_ru}
-          institution={recommendation.institution}
-          city={recommendation.city}
-          confidence={recommendation.confidence}
-          career_matches={recommendation.matchedCareers ?? recommendation.career_matches}
-          whyItFits={recommendation.reasoning}
-          matchedInterests={recommendation.matchedInterests ?? []}
-          cluster={recommendation.cluster}
-          taxonomy={{
+          code={recommendation?.code ?? persistedDetail!.code}
+          title_ru={recommendation?.title_ru ?? persistedDetail!.title}
+          institution={recommendation?.institution ?? persistedDetail?.institution ?? "Выбранное учебное заведение"}
+          city={recommendation?.city ?? persistedDetail?.city ?? "Город уточняется"}
+          confidence={recommendation?.confidence ?? persistedDetail!.confidence}
+          career_matches={recommendation?.matchedCareers ?? recommendation?.career_matches ?? persistedDetail!.matchedCareers}
+          whyItFits={recommendation?.reasoning ?? persistedDetail!.explanation}
+          matchedInterests={recommendation?.matchedInterests ?? persistedDetail!.matchedInterests}
+          cluster={recommendation?.cluster}
+          taxonomy={recommendation ? {
             cluster_name_ru: recommendation.cluster_name_ru,
             study_form: recommendation.study_form,
             study_type: recommendation.study_type,
-          }}
+          } : undefined}
           variant="compact"
         />
 
@@ -141,7 +248,8 @@ export default function ExplainContent() {
               </div>
             ))}
           </div>
-          {recommendation.matchedKeywords.length > 0 ? (
+
+          {recommendation?.matchedKeywords.length ? (
             <div className="mt-5 flex flex-wrap gap-2">
               {recommendation.matchedKeywords.slice(0, 6).map((keyword) => (
                 <span key={keyword} className="rounded-[8px] border border-border bg-background px-2.5 py-1 text-xs text-text-secondary">
@@ -149,10 +257,18 @@ export default function ExplainContent() {
                 </span>
               ))}
             </div>
+          ) : persistedDetail?.relatedCodes.length ? (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {persistedDetail.relatedCodes.map((relatedCode) => (
+                <span key={relatedCode} className="rounded-[8px] border border-border bg-background px-2.5 py-1 text-xs text-text-secondary">
+                  {relatedCode}
+                </span>
+              ))}
+            </div>
           ) : null}
         </section>
 
-        {related.length > 0 ? (
+        {recommendation && related.length > 0 ? (
           <section className="rounded-[20px] border border-border bg-card-bg p-6">
             <h2 className="text-base font-semibold text-foreground">Близкие варианты из этой выдачи</h2>
             <div className="mt-4 space-y-3">
@@ -174,14 +290,25 @@ export default function ExplainContent() {
         ) : null}
 
         {error ? <p role="alert" className="text-sm font-medium text-error">{error}</p> : null}
-        <button
-          onClick={handleSelect}
-          disabled={selecting}
-          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-primary px-6 text-base font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          {selecting ? <CheckCircle2 className="h-5 w-5 animate-pulse" /> : <Target className="h-5 w-5" />}
-          {selecting ? "Сохраняем цель..." : "Выбрать эту цель"}
-        </button>
+
+        {recommendation ? (
+          <button
+            onClick={handleSelect}
+            disabled={selecting}
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-primary px-6 text-base font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            {selecting ? <CheckCircle2 className="h-5 w-5 animate-pulse" /> : <Target className="h-5 w-5" />}
+            {selecting ? "Сохраняем цель..." : "Выбрать эту цель"}
+          </button>
+        ) : (
+          <button
+            onClick={() => router.push("/plan")}
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-primary px-6 text-base font-semibold text-white transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            <Target className="h-5 w-5" />
+            Вернуться к плану
+          </button>
+        )}
       </div>
     </main>
   )
