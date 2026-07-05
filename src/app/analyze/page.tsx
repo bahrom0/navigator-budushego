@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useSpring, useTransform } from "framer-motion";
 import { useAnalysisStore } from "@/stores/analysis-store";
-import { useOnboardingStore } from "@/stores/onboarding-store";
+import { hydrateOnboardingStore, useOnboardingStore } from "@/stores/onboarding-store";
 import { AnalysisTimeline } from "@/components/analysis/AnalysisProgress";
 import { Stethoscope } from "lucide-react";
 import { hydrateCategoryStore, persistCategories, useCategoryStore } from "@/stores/category-store";
@@ -43,6 +43,7 @@ export default function AnalyzePage() {
   const setStep = useAnalysisStore((s) => s.setStep);
   const setError = useAnalysisStore((s) => s.setError);
   const [progress, setProgress] = useState(0);
+  const onboardingLoaded = useOnboardingStore((s) => s._loaded);
 
   const selectedIds = useCategoryStore((s) => s.selected);
   const analysisFiredRef = useRef(false);
@@ -56,6 +57,10 @@ export default function AnalyzePage() {
   const reset = useAnalysisStore((s) => s.reset);
 
   useEffect(() => {
+    hydrateOnboardingStore();
+  }, []);
+
+  useEffect(() => {
     return () => {
       reset();
       analysisFiredRef.current = false;
@@ -64,6 +69,7 @@ export default function AnalyzePage() {
 
   useEffect(() => {
     if (analysisFiredRef.current) return;
+    if (!onboardingLoaded) return;
 
     const restored = hydrateCategoryStore();
     const hasData = categories.length > 0;
@@ -79,7 +85,7 @@ export default function AnalyzePage() {
     persistCategories();
     runAnalysis();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categories.length]);
+  }, [categories.length, onboardingLoaded]);
 
   function advanceStep(index: number) {
     if (index < STEP_ORDER.length) {
@@ -137,6 +143,14 @@ export default function AnalyzePage() {
       const message = err instanceof Error ? err.message : "Ошибка сети";
       setError(message);
     }
+  }
+
+  if (!onboardingLoaded) {
+    return (
+      <main className="flex flex-1 items-center justify-center px-6 py-24">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </main>
+    );
   }
 
   if (status === "error") {

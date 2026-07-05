@@ -6,7 +6,7 @@ import { useProfileStore } from "@/stores/profile-store"
 import { CoachShell } from "@/components/coach/CoachShell"
 import { CoachErrorBanner } from "@/components/coach/CoachErrorBanner"
 import { CoachTabContent } from "@/components/coach/CoachTabContent"
-import { applyPlanBundle, getPlanId } from "@/lib/coach/bundle-client"
+import { applyActiveGoalBundle, getPlanId } from "@/lib/coach/bundle-client"
 import {
   CoachGoalSetup,
   type CoachGoalDraft,
@@ -20,7 +20,7 @@ import type {
   CoachTaskStep,
   RoadmapDurationWeeks,
 } from "@/types/coach"
-import type { DailyPlanRecord, PlanBundle } from "@/types/admission"
+import type { ActiveGoalBundle } from "@/types/admission"
 
 export default function CoachPage() {
   const goal = useCoachStore((s) => s.goal)
@@ -74,7 +74,7 @@ export default function CoachPage() {
         const res = await fetch("/api/plan/full", { method: "GET" })
         const payload = (await res.json()) as {
           status?: string
-          data?: { activeGoalId?: string | null; bundle?: PlanBundle | null }
+          data?: { activeGoalId?: string | null; bundle?: ActiveGoalBundle | null }
           error?: string
         }
 
@@ -82,7 +82,7 @@ export default function CoachPage() {
 
         if (payload.status === "success" && payload.data?.bundle) {
           const bundle = payload.data.bundle
-          applyPlanBundle(bundle)
+          applyActiveGoalBundle(bundle)
           if (bundle.roadmap?.goalId) {
             setActiveTab("today")
           }
@@ -450,7 +450,7 @@ function GoalSetupFlow({
   )
 }
 
-function syncProgress(bundle: PlanBundle) {
+function syncProgress(bundle: ActiveGoalBundle) {
   const roadmapWeeks = bundle.roadmap?.weeks ?? []
   const totalTasksPlanned = roadmapWeeks.reduce((sum, week) => sum + week.tasks.length, 0)
   const completedTasks = bundle.history.reduce(

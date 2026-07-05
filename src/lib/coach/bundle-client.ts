@@ -2,7 +2,7 @@
 
 import { useCoachStore } from "@/stores/coach-store"
 import { useProfileStore } from "@/stores/profile-store"
-import type { DailyPlanRecord, PlanBundle } from "@/types/admission"
+import type { ActiveGoalBundle, DailyPlanRecord } from "@/types/admission"
 import type { CoachDayPlan, CoachGoal } from "@/types/coach"
 import type { DevelopmentPlan } from "@/types/plan"
 
@@ -31,21 +31,21 @@ export function buildFallbackGoal(
   }
 }
 
-export function toPersistedPlan(plan: PlanBundle["plan"] | null | undefined): PersistedDevelopmentPlan | null {
+export function toPersistedPlan(plan: ActiveGoalBundle["generalPlan"] | null | undefined): PersistedDevelopmentPlan | null {
   if (!plan) return null
   return plan as PersistedDevelopmentPlan
 }
 
-export function goalFromBundle(bundle: PlanBundle): CoachGoal | null {
+export function goalFromBundle(bundle: ActiveGoalBundle): CoachGoal | null {
   if (bundle.goal) {
     return {
       ...bundle.goal,
-      planId: toPersistedPlan(bundle.plan)?.id,
+      planId: toPersistedPlan(bundle.generalPlan)?.id,
       roadmapId: bundle.roadmap?.id,
     }
   }
 
-  const persistedPlan = toPersistedPlan(bundle.plan)
+  const persistedPlan = toPersistedPlan(bundle.generalPlan)
   if (!persistedPlan) return null
 
   return buildFallbackGoal(persistedPlan.nctCode, persistedPlan.nctTitle, {
@@ -76,24 +76,23 @@ export function toCoachDayPlan(record: DailyPlanRecord | null | undefined): Coac
   }
 }
 
-export function applyPlanBundle(bundle: PlanBundle): void {
+export function applyActiveGoalBundle(bundle: ActiveGoalBundle): void {
   const coach = useCoachStore.getState()
   const profile = useProfileStore.getState()
   const goal = goalFromBundle(bundle)
-  const plan = toPersistedPlan(bundle.plan)
+  const plan = toPersistedPlan(bundle.generalPlan)
 
   if (goal) {
-    coach.setGoal(goal)
     profile.setActiveGoal(goal)
+  } else {
+    profile.clearActiveGoal()
   }
 
-  if (plan) {
-    coach.setPlan(plan)
-  }
-
-  coach.setRoadmap(bundle.roadmap)
-  coach.setDayPlan(toCoachDayPlan(bundle.today))
-  coach.setDailyHistory(bundle.history ?? [])
+  coach.applyBundle({
+    ...bundle,
+    goal: goal ?? bundle.goal,
+    generalPlan: plan,
+  })
 }
 
 export function getPlanId(plan: DevelopmentPlan | null | undefined, fallback?: string): string | undefined {

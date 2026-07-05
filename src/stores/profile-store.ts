@@ -126,6 +126,7 @@ interface ProfileStore extends ProfileData {
   logActivity: (type: string, label: string, isPriority?: boolean) => void
   setLevel: (level: UserLevel) => void
   setActiveGoal: (goal: CoachGoal) => void
+  clearActiveGoal: () => void
   archiveActiveGoal: () => void
   updateLastCodes: (codes: string[]) => void
   setRecommendations: (items: any[]) => void
@@ -178,7 +179,7 @@ export const useProfileStore = create<ProfileStore>((set, get) => {
 
   setActiveGoal: (goal) =>
     set((state) => {
-      const history = state.activeGoal
+      const history = state.activeGoal && state.activeGoal.id !== goal.id
         ? [state.activeGoal, ...state.goalHistory.filter((g) => g.id !== state.activeGoal?.id)]
         : state.goalHistory
       const nextGoal = {
@@ -190,6 +191,13 @@ export const useProfileStore = create<ProfileStore>((set, get) => {
         activeGoalId: nextGoal.id,
         goalHistory: history,
       }
+      persistProfile({ ...get(), ...next } as ProfileData)
+      return next
+    }),
+
+  clearActiveGoal: () =>
+    set(() => {
+      const next = { activeGoal: null, activeGoalId: undefined }
       persistProfile({ ...get(), ...next } as ProfileData)
       return next
     }),

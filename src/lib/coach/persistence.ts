@@ -46,29 +46,33 @@ export async function resolveCoachContext(
   let plan: PlanRow | null = null
 
   if (isUuid(input.goalId)) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("admission_goals")
       .select("id, nct_code, nct_title, university, profession, city")
       .eq("user_id", userId)
       .eq("id", input.goalId)
+      .eq("status", "active")
       .maybeSingle()
+    if (error) throw error
     goal = (data as GoalRow | null) ?? null
   }
 
   if (!goal && normalizedCode) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("admission_goals")
       .select("id, nct_code, nct_title, university, profession, city")
       .eq("user_id", userId)
       .eq("nct_code", normalizedCode)
+      .eq("status", "active")
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle()
+    if (error) throw error
     goal = (data as GoalRow | null) ?? null
   }
 
   if (!goal && normalizedCode && input.nctTitle) {
-    await supabase
+    const { error: archiveError } = await supabase
       .from("admission_goals")
       .update({
         status: "archived",
@@ -77,8 +81,9 @@ export async function resolveCoachContext(
       })
       .eq("user_id", userId)
       .eq("status", "active")
+    if (archiveError) throw archiveError
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("admission_goals")
       .insert({
         user_id: userId,
@@ -91,12 +96,13 @@ export async function resolveCoachContext(
       })
       .select("id, nct_code, nct_title, university, profession, city")
       .single()
+    if (error) throw error
 
     goal = (data as GoalRow | null) ?? null
   }
 
   if (goal) {
-    await supabase
+    const { error } = await supabase
       .from("profiles")
       .upsert(
         {
@@ -106,20 +112,22 @@ export async function resolveCoachContext(
         },
         { onConflict: "user_id" },
       )
+    if (error) throw error
   }
 
   if (isUuid(input.planId)) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("plans")
       .select("id")
       .eq("user_id", userId)
       .eq("id", input.planId)
       .maybeSingle()
+    if (error) throw error
     plan = (data as PlanRow | null) ?? null
   }
 
   if (!plan && goal?.id) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("plans")
       .select("id")
       .eq("user_id", userId)
@@ -128,19 +136,7 @@ export async function resolveCoachContext(
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle()
-    plan = (data as PlanRow | null) ?? null
-  }
-
-  if (!plan && normalizedCode) {
-    const { data } = await supabase
-      .from("plans")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("nct_code", normalizedCode)
-      .eq("plan_type", "general")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle()
+    if (error) throw error
     plan = (data as PlanRow | null) ?? null
   }
 

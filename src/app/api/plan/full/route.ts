@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import type { AdmissionGoalRecord, PlanBundle, DailyPlanRecord } from "@/types/admission"
+import type { ActiveGoalBundle, AdmissionGoalRecord, DailyPlanRecord } from "@/types/admission"
 import type { CoachDayTask, CoachRoadmap } from "@/types/coach"
 import type { DevelopmentPlan } from "@/types/plan"
 
@@ -124,6 +124,7 @@ export async function GET() {
     }
 
     const profileRes = await supabase.from("profiles").select("active_goal_id").eq("user_id", user.id).maybeSingle()
+    if (profileRes.error) throw profileRes.error
 
     const profileGoalId =
       typeof profileRes.data?.active_goal_id === "string" && profileRes.data.active_goal_id.length > 0
@@ -131,7 +132,13 @@ export async function GET() {
         : null
 
     let goalRes = profileGoalId
-      ? await supabase.from("admission_goals").select("*").eq("user_id", user.id).eq("id", profileGoalId).maybeSingle()
+      ? await supabase
+          .from("admission_goals")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("id", profileGoalId)
+          .eq("status", "active")
+          .maybeSingle()
       : await supabase
           .from("admission_goals")
           .select("*")
@@ -140,6 +147,7 @@ export async function GET() {
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle()
+    if (goalRes.error) throw goalRes.error
 
     if (!goalRes.data) {
       goalRes = await supabase
@@ -150,14 +158,37 @@ export async function GET() {
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle()
+      if (goalRes.error) throw goalRes.error
     }
 
-    const activeGoalId =
-      profileGoalId
-        ? profileGoalId
-        : typeof goalRes.data?.id === "string"
-          ? goalRes.data.id
-          : null
+    const activeGoalId = typeof goalRes.data?.id === "string" ? goalRes.data.id : null
+
+    if (activeGoalId && activeGoalId !== profileGoalId) {
+      const { error: profileUpdateError } = await supabase
+        .from("profiles")
+        .update({ active_goal_id: activeGoalId, updated_at: new Date().toISOString() })
+        .eq("user_id", user.id)
+      if (profileUpdateError) throw profileUpdateError
+    }
+
+    if (!activeGoalId) {
+      const bundle: ActiveGoalBundle = {
+        goal: null,
+        recommendationSnapshot: null,
+        generalPlan: null,
+        roadmap: null,
+        todayPlan: null,
+        history: [],
+        historySummary: {
+          daysTracked: 0,
+          tasksCompleted: 0,
+          tasksTotal: 0,
+        },
+        communityContext: null,
+      }
+
+      return NextResponse.json({ status: "success", data: { activeGoalId: null, bundle } })
+    }
 
     let planQuery = supabase
       .from("plans")
@@ -167,23 +198,9 @@ export async function GET() {
       .order("created_at", { ascending: false })
       .limit(1)
 
-    if (activeGoalId) {
-      planQuery = planQuery.eq("goal_id", activeGoalId)
-    } else if (typeof goalRes.data?.nct_code === "string" && goalRes.data.nct_code.length > 0) {
-      planQuery = planQuery.eq("nct_code", goalRes.data.nct_code)
-    }
-
-    let planRes = await planQuery.maybeSingle()
-    if (!planRes.data) {
-      planRes = await supabase
-        .from("plans")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("plan_type", "general")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle()
-    }
+    planQuery = planQuery.eq("goal_id", activeGoalId)
+    const planRes = await planQuery.maybeSingle()
+    if (planRes.error) throw planRes.error
 
     let roadmapQuery = supabase
       .from("roadmaps")
@@ -200,24 +217,32 @@ export async function GET() {
       .order("plan_date", { ascending: false })
       .limit(14)
 
-    if (activeGoalId) {
-      roadmapQuery = roadmapQuery.eq("goal_id", activeGoalId)
-      dailyQuery = dailyQuery.eq("goal_id", activeGoalId)
-    }
+    roadmapQuery = roadmapQuery.eq("goal_id", activeGoalId)
+    dailyQuery = dailyQuery.eq("goal_id", activeGoalId)
 
     const [roadmapRes, dailyRes] = await Promise.all([
       roadmapQuery.maybeSingle(),
       dailyQuery,
     ])
+    if (roadmapRes.error) throw roadmapRes.error
+    if (dailyRes.error) throw dailyRes.error
 
     const dailyPlans = dailyRes.data ?? []
     const dailyPlanIds = dailyPlans.map((row) => row.id)
-    const tasksRes = dailyPlanIds.length > 0
-      ? await supabase.from("daily_tasks").select("*").eq("user_id", user.id).in("daily_plan_id", dailyPlanIds).order("position", { ascending: true })
-      : { data: [] as Record<string, unknown>[] }
+    let dailyTasks: Record<string, unknown>[] = []
+    if (dailyPlanIds.length > 0) {
+      const tasksRes = await supabase
+        .from("daily_tasks")
+        .select("*")
+        .eq("user_id", user.id)
+        .in("daily_plan_id", dailyPlanIds)
+        .order("position", { ascending: true })
+      if (tasksRes.error) throw tasksRes.error
+      dailyTasks = (tasksRes.data ?? []) as Record<string, unknown>[]
+    }
 
     const tasksByPlan = new Map<string, CoachDayTask[]>()
-    for (const task of tasksRes.data ?? []) {
+    for (const task of dailyTasks) {
       const planId = String(task.daily_plan_id)
       const list = tasksByPlan.get(planId) ?? []
       list.push({
@@ -262,12 +287,40 @@ export async function GET() {
         } as CoachRoadmap)
       : null
 
-    const bundle: PlanBundle = {
-      goal: toAdmissionGoalRecord(goalRes.data),
-      plan: toDevelopmentPlan(planRes.data),
+    const goal = toAdmissionGoalRecord(goalRes.data)
+    const tasksCompleted = history.reduce(
+      (sum, dailyPlan) => sum + dailyPlan.tasks.filter((task) => task.completed).length,
+      0,
+    )
+    const tasksTotal = history.reduce((sum, dailyPlan) => sum + dailyPlan.tasks.length, 0)
+    const currentWeekNumber = roadmap?.currentWeekNumber
+      ?? roadmap?.weeks.find((week) => week.status === "active")?.number
+
+    const bundle: ActiveGoalBundle = {
+      goal,
+      recommendationSnapshot:
+        typeof goalRes.data?.goal_context === "object" && goalRes.data.goal_context !== null
+          ? goalRes.data.goal_context as Record<string, unknown>
+          : null,
+      generalPlan: toDevelopmentPlan(planRes.data),
       roadmap,
-      today,
+      todayPlan: today,
       history,
+      historySummary: {
+        daysTracked: history.length,
+        tasksCompleted,
+        tasksTotal,
+        lastPlanDate: history[0]?.planDate,
+      },
+      communityContext: goal
+        ? {
+            goalId: goal.id,
+            nctCode: goal.nctCode,
+            university: goal.university,
+            city: goal.city,
+            currentWeekNumber,
+          }
+        : null,
     }
 
     return NextResponse.json({

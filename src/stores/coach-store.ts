@@ -14,8 +14,12 @@ import type {
 } from "@/types/coach"
 import type { DevelopmentPlan } from "@/types/plan"
 import type { DailyPlanRecord } from "@/types/admission"
+import type { ActiveGoalBundle } from "@/types/admission"
 
 interface CoachStore {
+  bundle: ActiveGoalBundle | null
+  applyBundle: (bundle: ActiveGoalBundle) => void
+
   goal: CoachGoal | null
   setGoal: (goal: CoachGoal) => void
   archiveGoal: () => void
@@ -83,6 +87,35 @@ const initialProgress: CoachProgress = {
 }
 
 export const useCoachStore = create<CoachStore>((set, get) => ({
+  bundle: null,
+  applyBundle: (bundle) =>
+    set({
+      bundle,
+      goal: bundle.goal,
+      plan: bundle.generalPlan,
+      roadmap: bundle.roadmap,
+      dayPlan: bundle.todayPlan
+        ? {
+            date: bundle.todayPlan.planDate,
+            weekId: bundle.todayPlan.weekId,
+            tasks: bundle.todayPlan.tasks,
+            dailyPlanId: bundle.todayPlan.id,
+            roadmapId: bundle.todayPlan.roadmapId,
+            goalId: bundle.todayPlan.goalId,
+            weekNumber: bundle.todayPlan.weekNumber,
+            title: bundle.todayPlan.title,
+            completedTaskIds: bundle.todayPlan.completedTaskIds,
+            skippedTaskIds: bundle.todayPlan.skippedTaskIds,
+            previousDate: bundle.todayPlan.previousDate,
+            nextDate: bundle.todayPlan.nextDate,
+            completedAt: bundle.todayPlan.updatedAt,
+            stats: bundle.todayPlan.stats,
+          }
+        : null,
+      dailyHistory: bundle.history,
+      error: null,
+    }),
+
   goal: null,
   setGoal: (goal) => set({ goal, error: null }),
   archiveGoal: () =>
@@ -191,6 +224,7 @@ export const useCoachStore = create<CoachStore>((set, get) => ({
 
     reset: () =>
     set({
+      bundle: null,
       goal: null,
       plan: null,
       roadmap: null,

@@ -65,20 +65,11 @@ export async function POST(request: Request) {
         const goalId = context.goal?.id ?? null
         persistedGoalId = goalId
 
-        if (goalId) {
-          await supabase
-            .from("profiles")
-            .update({ active_goal_id: goalId, updated_at: new Date().toISOString() })
-            .eq("user_id", user.id)
+        if (!goalId) {
+          throw new Error("Не удалось закрепить план за активной целью")
         }
 
-        const { data: existingPlan } = await supabase
-          .from("plans")
-          .select("id, created_at")
-          .eq("user_id", user.id)
-          .eq("goal_id", goalId ?? null)
-          .eq("plan_type", "general")
-          .maybeSingle()
+        const existingPlan = context.plan
 
         const payloadToSave = {
           user_id: user.id,
@@ -96,19 +87,21 @@ export async function POST(request: Request) {
         }
 
         if (existingPlan?.id) {
-          const { data: updatedPlan } = await supabase
+          const { data: updatedPlan, error: updateError } = await supabase
             .from("plans")
             .update(payloadToSave)
             .eq("id", existingPlan.id)
             .select("id")
             .single()
+          if (updateError) throw updateError
           persistedPlanId = updatedPlan?.id ?? existingPlan.id
         } else {
-          const { data: insertedPlan } = await supabase
+          const { data: insertedPlan, error: insertError } = await supabase
             .from("plans")
             .insert(payloadToSave)
             .select("id")
             .single()
+          if (insertError) throw insertError
           persistedPlanId = insertedPlan?.id ?? null
         }
       }

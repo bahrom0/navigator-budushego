@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BentoGrid } from "@/components/BentoGrid";
 import { BentoCard } from "@/components/BentoCard";
@@ -9,7 +9,7 @@ import { CategoryCard } from "@/components/CategoryCard";
 import { Button } from "@/components/Button";
 import { CATEGORIES } from "@/constants/categories";
 import { useCategoryStore } from "@/stores/category-store";
-import { useOnboardingStore } from "@/stores/onboarding-store";
+import { hydrateOnboardingStore, useOnboardingStore } from "@/stores/onboarding-store";
 import { Sparkles, GitCompare, BookOpen, Plus, X } from "lucide-react";
 import type { Category } from "@/types/categories";
 import { logActivityEvent } from "@/lib/activity-logger";
@@ -19,10 +19,15 @@ export default function CategoriesPage() {
   const selected = useCategoryStore((s) => s.selected);
   const toggle = useCategoryStore((s) => s.toggle);
   const addCustom = useCategoryStore((s) => s.addCustom);
+  const onboardingLoaded = useOnboardingStore((s) => s._loaded);
   const [showModal, setShowModal] = useState(false);
   const [customName, setCustomName] = useState("");
   const [customDesc, setCustomDesc] = useState("");
   const [customCategories, setCustomCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    hydrateOnboardingStore();
+  }, []);
 
   const allCategories = [...CATEGORIES, ...customCategories];
 
@@ -57,6 +62,14 @@ export default function CategoriesPage() {
       router.push("/analyze");
     }
   };
+
+  if (!onboardingLoaded) {
+    return (
+      <main className="flex min-h-[60vh] flex-1 items-center justify-center px-6 py-24">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </main>
+    );
+  }
 
   return (
     <main className="flex-1 px-6 py-24">

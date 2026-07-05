@@ -8,9 +8,9 @@ import type { EducationLevel } from "@/types/onboarding"
 import { Button } from "@/components/Button"
 
 const EDUCATION_LEVELS: { value: EducationLevel; label: string }[] = [
-  { value: "after_9", label: "После 9 класса" },
-  { value: "after_11", label: "После 11 класса" },
-  { value: "applicant", label: "Абитуриент" },
+  { value: "after_9", label: "РџРѕСЃР»Рµ 9 РєР»Р°СЃСЃР°" },
+  { value: "after_11", label: "РџРѕСЃР»Рµ 11 РєР»Р°СЃСЃР°" },
+  { value: "applicant", label: "РђР±РёС‚СѓСЂРёРµРЅС‚" },
 ]
 
 const USER_TYPE_TO_EDUCATION: Record<string, EducationLevel> = {
@@ -25,18 +25,28 @@ export function StepProfile() {
     const forced = USER_TYPE_TO_EDUCATION[data.userType]
     if (forced && data.educationLevel !== forced) {
       setData({ educationLevel: forced })
+    } else if (!forced && data.educationLevel === "applicant") {
+      setData({ educationLevel: "" })
     }
   }, [data.userType, data.educationLevel, setData])
 
   const handleFinish = () => {
     if (!data.userType) {
-      setError("Пожалуйста, выберите кто вы")
+      setError("РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІС‹Р±РµСЂРёС‚Рµ РєС‚Рѕ РІС‹")
       return
     }
-    if (!data.educationLevel) {
-      setError("Пожалуйста, укажите уровень образования")
+
+    const forcedEducation = USER_TYPE_TO_EDUCATION[data.userType]
+    if (forcedEducation) {
+      if (data.educationLevel !== forcedEducation) {
+        setError("РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РїРѕРґС‚РІРµСЂРґРёС‚Рµ СЃРІРѕР№ СЃС‚Р°С‚СѓСЃ")
+        return
+      }
+    } else if (!data.educationLevel || !["after_9", "after_11"].includes(data.educationLevel)) {
+      setError("РџРѕР¶Р°Р»СѓР№СЃС‚Р°, СѓРєР°Р¶РёС‚Рµ СѓСЂРѕРІРµРЅСЊ РѕР±СЂР°Р·РѕРІР°РЅРёСЏ")
       return
     }
+
     window.location.href = "/categories"
   }
 
@@ -46,13 +56,13 @@ export function StepProfile() {
     <div className="space-y-6">
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--marketing-muted)]">
-          Шаг 2
+          РЁР°Рі 2
         </p>
         <h2 className="text-xl font-semibold tracking-[-0.04em] text-[var(--marketing-foreground)] sm:text-[1.9rem]">
-          Кто вы?
+          РљС‚Рѕ РІС‹?
         </h2>
         <p className="max-w-xl text-sm leading-6 text-[var(--marketing-muted)]">
-          Это поможет адаптировать рекомендации под вас
+          Р­С‚Рѕ РїРѕРјРѕР¶РµС‚ Р°РґР°РїС‚РёСЂРѕРІР°С‚СЊ СЂРµРєРѕРјРµРЅРґР°С†РёРё РїРѕРґ РІР°СЃ
         </p>
       </div>
 
@@ -68,7 +78,18 @@ export function StepProfile() {
               transition={{ delay: idx * 0.05, duration: 0.2 }}
               whileTap={{ scale: 0.98 }}
               type="button"
-              onClick={() => setData({ userType: type.id })}
+              onClick={() => {
+                setError("")
+                setData({
+                  userType: type.id,
+                  educationLevel:
+                    type.id === "applicant"
+                      ? "applicant"
+                      : data.educationLevel === "applicant"
+                        ? ""
+                        : data.educationLevel,
+                })
+              }}
               className={`flex w-full items-center gap-3.5 rounded-[1.4rem] border px-4 py-3 text-left transition duration-200 ${
                 selected
                   ? "border-[var(--marketing-border-strong)] bg-[var(--marketing-surface-strong)] shadow-[0_18px_40px_rgba(31,27,22,0.08)]"
@@ -84,13 +105,7 @@ export function StepProfile() {
               >
                 <Icon className="h-4 w-4" />
               </div>
-              <span
-                className={`text-sm font-medium sm:text-base ${
-                  selected
-                    ? "text-[var(--marketing-foreground)]"
-                    : "text-[var(--marketing-foreground)]"
-                }`}
-              >
+              <span className="text-sm font-medium text-[var(--marketing-foreground)] sm:text-base">
                 {type.label}
               </span>
             </motion.button>
@@ -110,33 +125,34 @@ export function StepProfile() {
           >
             <div>
               <h3 className="text-sm font-semibold text-[var(--marketing-foreground)] sm:text-base">
-                Уровень образования
+                РЈСЂРѕРІРµРЅСЊ РѕР±СЂР°Р·РѕРІР°РЅРёСЏ
               </h3>
               <p className="mt-0.5 text-sm text-[var(--marketing-muted)]">
-                Выберите, после какого класса поступаете
+                Р’С‹Р±РµСЂРёС‚Рµ, РїРѕСЃР»Рµ РєР°РєРѕРіРѕ РєР»Р°СЃСЃР° РїРѕСЃС‚СѓРїР°РµС‚Рµ
               </p>
             </div>
             <div className="grid gap-2.5 sm:grid-cols-2">
-              {EDUCATION_LEVELS.filter((el) => el.value !== "applicant").map(
-                (level) => {
-                  const selected = data.educationLevel === level.value
-                  return (
-                    <motion.button
-                      key={level.value}
-                      whileTap={{ scale: 0.98 }}
-                      type="button"
-                      onClick={() => setData({ educationLevel: level.value })}
-                      className={`h-11 rounded-[1.2rem] border px-4 text-sm font-medium transition duration-200 ${
-                        selected
-                          ? "border-transparent bg-[var(--marketing-foreground)] text-[var(--marketing-bg)] shadow-[0_14px_30px_rgba(31,27,22,0.12)]"
-                          : "border-[var(--marketing-border)] bg-[var(--marketing-surface-muted)] text-[var(--marketing-foreground)] hover:border-[var(--marketing-border-strong)] hover:bg-[var(--marketing-surface-strong)]"
-                      }`}
-                    >
-                      {level.label}
-                    </motion.button>
-                  )
-                },
-              )}
+              {EDUCATION_LEVELS.filter((el) => el.value !== "applicant").map((level) => {
+                const selected = data.educationLevel === level.value
+                return (
+                  <motion.button
+                    key={level.value}
+                    whileTap={{ scale: 0.98 }}
+                    type="button"
+                    onClick={() => {
+                      setError("")
+                      setData({ educationLevel: level.value })
+                    }}
+                    className={`h-11 rounded-[1.2rem] border px-4 text-sm font-medium transition duration-200 ${
+                      selected
+                        ? "border-transparent bg-[var(--marketing-foreground)] text-[var(--marketing-bg)] shadow-[0_14px_30px_rgba(31,27,22,0.12)]"
+                        : "border-[var(--marketing-border)] bg-[var(--marketing-surface-muted)] text-[var(--marketing-foreground)] hover:border-[var(--marketing-border-strong)] hover:bg-[var(--marketing-surface-strong)]"
+                    }`}
+                  >
+                    {level.label}
+                  </motion.button>
+                )
+              })}
             </div>
           </motion.div>
         )}
@@ -161,14 +177,14 @@ export function StepProfile() {
           onClick={prevStep}
           className="!h-11 !rounded-[1.25rem] !border !border-[var(--marketing-border)] !bg-[var(--marketing-surface-muted)] !text-[var(--marketing-foreground)] !font-semibold hover:!border-[var(--marketing-border-strong)] hover:!bg-[var(--marketing-surface-strong)]"
         >
-          Назад
+          РќР°Р·Р°Рґ
         </Button>
         <Button
           onClick={handleFinish}
           size="lg"
           className="!h-11 !rounded-[1.25rem] !border-transparent !bg-[var(--marketing-foreground)] !px-6 !text-base !font-semibold !text-[var(--marketing-bg)] shadow-[0_18px_40px_rgba(48,99,232,0.22)] hover:!bg-[var(--marketing-accent)]"
         >
-          Начать поиск
+          РќР°С‡Р°С‚СЊ РїРѕРёСЃРє
         </Button>
       </div>
     </div>

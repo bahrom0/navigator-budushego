@@ -39,10 +39,31 @@ export interface DailyTaskRecord extends CoachDayTask {
   status: "pending" | "completed"
 }
 
-export interface PlanBundle {
-  goal: AdmissionGoalRecord | null
-  plan: DevelopmentPlan | null
-  roadmap: CoachRoadmap | null
-  today: DailyPlanRecord | null
-  history: DailyPlanRecord[]
+export interface ActiveGoalHistorySummary {
+  daysTracked: number
+  tasksCompleted: number
+  tasksTotal: number
+  lastPlanDate?: string
 }
+
+export interface ActiveGoalCommunityContext {
+  goalId: string
+  nctCode: string
+  university?: string
+  city?: string
+  currentWeekNumber?: number
+}
+
+export interface ActiveGoalBundle {
+  goal: CoachGoal | null
+  recommendationSnapshot: Record<string, unknown> | null
+  generalPlan: DevelopmentPlan | null
+  roadmap: CoachRoadmap | null
+  todayPlan: DailyPlanRecord | null
+  history: DailyPlanRecord[]
+  historySummary: ActiveGoalHistorySummary
+  communityContext: ActiveGoalCommunityContext | null
+}
+
+/** @deprecated Use ActiveGoalBundle. */
+export type PlanBundle = ActiveGoalBundle

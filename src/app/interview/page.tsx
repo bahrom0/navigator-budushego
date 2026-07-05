@@ -43,34 +43,12 @@ function InterviewContent() {
   const [textAnswer, setTextAnswer] = useState("")
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
 
-  const persistPlanContext = useCallback(
-    (payload: {
-      nctCode: string
-      nctTitle: string
-      summary?: string
-      level?: string
-      answers: { question: string; answer: string }[]
-    }) => {
-      if (typeof window === "undefined") return
-      window.sessionStorage.setItem("pending_plan_context_v1", JSON.stringify(payload))
-    },
-    [],
-  )
-
   const createPlanFromInterview = useCallback(async () => {
     if (!nctCode || !nctTitle || creatingPlan) return
     setCreatingPlan(true)
     setPlanError(null)
 
     const interviewAnswers = answers.map((item) => ({ question: item.question, answer: item.answer }))
-    persistPlanContext({
-      nctCode,
-      nctTitle,
-      summary: finalSummary || undefined,
-      level: finalLevel,
-      answers: interviewAnswers,
-    })
-
     try {
       const res = await fetch("/api/generate-plan", {
         method: "POST",
@@ -107,7 +85,7 @@ function InterviewContent() {
         window.sessionStorage.setItem(
           "pending_generated_plan_v1",
           JSON.stringify({
-            goalId: nctCode,
+            goalId: result.data.goal_id ?? null,
             nctCode,
             nctTitle,
             plan: result.data,
@@ -120,7 +98,7 @@ function InterviewContent() {
       setPlanError(err instanceof Error ? err.message : "Не удалось создать план развития")
       setCreatingPlan(false)
     }
-  }, [answers, categoryStore.selected, creatingPlan, finalLevel, finalSummary, nctCode, nctTitle, persistPlanContext, router])
+  }, [answers, categoryStore.selected, creatingPlan, finalLevel, finalSummary, nctCode, nctTitle, router])
 
   useEffect(() => {
     if (!nctCode) {

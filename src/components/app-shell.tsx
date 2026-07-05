@@ -7,6 +7,7 @@ import { ArrowLeft, Bot, GraduationCap, MessageCircle } from "lucide-react";
 import { ProfileButton, ProfileDrawer } from "@/components/profile";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { useAuthStore } from "@/stores/auth-store";
+import { useProfileStore } from "@/stores/profile-store";
 import { logActivityEvent } from "@/lib/activity-logger";
 import { useProfileSync } from "@/lib/chat/use-profile-sync";
 import { useMobileChatNavStore } from "@/stores/mobile-chat-nav-store";
@@ -18,6 +19,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const hydrate = useAuthStore((s) => s.hydrate);
+  const activeGoal = useProfileStore((s) => s.activeGoal);
   const pathname = usePathname();
   const activeConversationId = useUserChatStore((s) => s.activeConversationId);
   const openMobileChatNav = useMobileChatNavStore((s) => s.open);
@@ -45,6 +47,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     pathname === "/how-it-works" ||
     pathname === "/features" ||
     pathname === "/onboarding";
+  const isCoreFlowRoute =
+    pathname?.startsWith("/categories") ||
+    pathname?.startsWith("/analyze") ||
+    pathname?.startsWith("/recommendations") ||
+    pathname?.startsWith("/interview") ||
+    pathname?.startsWith("/plan") ||
+    pathname?.startsWith("/coach");
   const showBackButton = isChatRoute && !!activeConversationId;
 
   if (isMarketingRoute) {
@@ -84,34 +93,34 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-2">
             {isAuthenticated && (
               <Link
-                href="/teacher"
-                className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary/10 px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
-                aria-label="AI Teacher"
-              >
-                <Bot className="h-4 w-4" />
-                <span className="hidden sm:inline">AI Teacher</span>
-              </Link>
-            )}
-            {isAuthenticated && (
-              <Link
-                href="/chat"
-                className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary/10 px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
-                aria-label="User Chat"
-              >
-                <MessageCircle className="h-4 w-4" />
-                <span className="hidden sm:inline">Chat</span>
-              </Link>
-            )}
-            {isAuthenticated && (
-              <Link
                 href="/coach"
-                className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary/10 px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
-                aria-label="AI Coach"
+                className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+                aria-label={activeGoal ? "Coach" : "Основной путь"}
               >
                 <GraduationCap className="h-4 w-4" />
-                <span className="hidden sm:inline">Coach</span>
+                <span className="hidden sm:inline">{activeGoal ? "Coach" : "Основной путь"}</span>
               </Link>
             )}
+            {isAuthenticated && !isCoreFlowRoute ? (
+              <>
+                <Link
+                  href="/teacher"
+                  className="hidden h-10 items-center gap-1.5 rounded-full border border-border bg-card-bg px-3 text-sm font-medium text-text-secondary transition-colors hover:bg-background hover:text-foreground sm:inline-flex"
+                  aria-label="AI Teacher"
+                >
+                  <Bot className="h-4 w-4" />
+                  <span className="hidden lg:inline">AI Teacher</span>
+                </Link>
+                <Link
+                  href="/chat"
+                  className="hidden h-10 items-center gap-1.5 rounded-full border border-border bg-card-bg px-3 text-sm font-medium text-text-secondary transition-colors hover:bg-background hover:text-foreground sm:inline-flex"
+                  aria-label="User Chat"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  <span className="hidden lg:inline">Chat</span>
+                </Link>
+              </>
+            ) : null}
             <ProfileButton />
           </div>
         </div>

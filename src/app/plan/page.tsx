@@ -7,10 +7,9 @@ import { motion } from "framer-motion"
 import { ArrowLeft, ArrowRight, Check, Cloud, Loader2, Target } from "lucide-react"
 import { PlanCard } from "@/components/plans/PlanCard"
 import { useProfileStore } from "@/stores/profile-store"
-import { useCoachStore } from "@/stores/coach-store"
-import { getPlanId } from "@/lib/coach/bundle-client"
+import { applyActiveGoalBundle } from "@/lib/coach/bundle-client"
 import type { CoachGoal } from "@/types/coach"
-import type { PlanBundle } from "@/types/admission"
+import type { ActiveGoalBundle } from "@/types/admission"
 import type { DevelopmentPlan } from "@/types/plan"
 
 const SafePlanCard = typeof PlanCard === "function" ? PlanCard : FallbackPlanCard
@@ -40,16 +39,16 @@ function PlanContent() {
   const profileGoal = useProfileStore((s) => s.activeGoal)
   const setProfileGoal = useProfileStore((s) => s.setActiveGoal)
   const upsertPlan = useProfileStore((s) => s.upsertPlan)
-  const setCoachGoal = useCoachStore((s) => s.setGoal)
-  const setCoachPlan = useCoachStore((s) => s.setPlan)
 
-  const [bundle, setBundle] = useState<PlanBundle | null>(null)
+  const [bundle, setBundle] = useState<ActiveGoalBundle | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [cachedPlan, setCachedPlan] = useState<CachedPlan | null>(null)
 
-  const goal = bundle?.goal ?? profileGoal ?? (queryCode ? toGoalFallback(queryCode, queryTitle || "Выбранное направление") : null)
-  const plan = bundle?.plan ?? cachedPlan ?? null
+  const goal = bundle
+    ? bundle.goal
+    : profileGoal ?? (queryCode ? toGoalFallback(queryCode, queryTitle || "Выбранное направление") : null)
+  const plan = bundle ? bundle.generalPlan : cachedPlan
   const saveState: "idle" | "saved" = plan ? "saved" : "idle"
 
   useEffect(() => {
@@ -62,7 +61,7 @@ function PlanContent() {
         nctTitle?: string
         plan?: CachedPlan
       }
-      if (parsed?.plan && parsed.plan.nctCode) {
+      if (parsed?.plan && parsed.plan.nctCode && (!queryCode || parsed.plan.nctCode === queryCode)) {
         setCachedPlan(parsed.plan)
       }
     } catch {
@@ -81,35 +80,34 @@ function PlanContent() {
         throw new Error(payload.error ?? "Не удалось загрузить план")
       }
 
-      const nextBundle = (payload.data?.bundle ?? null) as PlanBundle | null
+      const nextBundle = (payload.data?.bundle ?? null) as ActiveGoalBundle | null
       setBundle(nextBundle)
 
-      const resolvedGoal =
-        nextBundle?.goal ??
-        (nextBundle?.plan?.nctCode
-          ? toGoalFallback(nextBundle.plan.nctCode, nextBundle.plan.nctTitle)
-          : queryCode
-            ? toGoalFallback(queryCode, queryTitle || "Выбранное направление")
-            : null)
-
-      if (resolvedGoal) {
-        setProfileGoal(resolvedGoal)
-        setCoachGoal(resolvedGoal)
+      if (nextBundle) {
+        applyActiveGoalBundle(nextBundle)
       }
 
-      if (nextBundle?.plan) {
-        setCachedPlan(nextBundle.plan)
+      const resolvedGoal = nextBundle?.goal
+        ?? (!nextBundle && queryCode
+          ? toGoalFallback(queryCode, queryTitle || "Выбранное направление")
+          : null)
+
+      if (!nextBundle && resolvedGoal) {
+        setProfileGoal(resolvedGoal)
+      }
+
+      if (nextBundle?.generalPlan) {
+        setCachedPlan(nextBundle.generalPlan)
         if (typeof window !== "undefined") {
           window.sessionStorage.removeItem("pending_generated_plan_v1")
         }
-        setCoachPlan(nextBundle.plan)
         upsertPlan({
           goalId: resolvedGoal?.id,
-          nctCode: nextBundle.plan.nctCode,
-          nctTitle: nextBundle.plan.nctTitle,
-          level: nextBundle.plan.level,
-          goals: nextBundle.plan.goals,
-          stages: nextBundle.plan.stages,
+          nctCode: nextBundle.generalPlan.nctCode,
+          nctTitle: nextBundle.generalPlan.nctTitle,
+          level: nextBundle.generalPlan.level,
+          goals: nextBundle.generalPlan.goals,
+          stages: nextBundle.generalPlan.stages,
           status: "active",
           completedSteps: [],
           planType: "general",
@@ -121,7 +119,7 @@ function PlanContent() {
     } finally {
       setLoading(false)
     }
-  }, [setCoachGoal, setCoachPlan, setProfileGoal, upsertPlan])
+  }, [queryCode, queryTitle, setProfileGoal, upsertPlan])
 
   useEffect(() => {
     void loadBundle()

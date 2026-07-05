@@ -10,7 +10,7 @@ import {
   hydrateCategoryStore,
   persistCategories,
 } from "@/stores/category-store"
-import { useOnboardingStore } from "@/stores/onboarding-store"
+import { hydrateOnboardingStore, useOnboardingStore } from "@/stores/onboarding-store"
 import { useProfileStore } from "@/stores/profile-store"
 import { CATEGORIES } from "@/constants/categories"
 import { NCTSignalCard } from "@/components/signal-cards/NCTSignalCard"
@@ -43,6 +43,7 @@ export default function RecommendationsPage() {
   const cacheResults = useAnalysisStore((s) => s.cacheResults)
   const restoreFromCache = useAnalysisStore((s) => s.restoreFromCache)
   const [cacheRef, setCacheRef] = useState<CachedAnalysisData | null>(null)
+  const onboardingLoaded = useOnboardingStore((s) => s._loaded)
   const sessionId = useProfileStore((s) => s.sessionId)
   const setActiveGoal = useProfileStore((s) => s.setActiveGoal)
 
@@ -117,6 +118,12 @@ export default function RecommendationsPage() {
   )
 
   useEffect(() => {
+    hydrateOnboardingStore()
+  }, [])
+
+  useEffect(() => {
+    if (!onboardingLoaded) return
+
     const restored = hydrateCategoryStore()
 
     if (categories.length === 0 && !restored) {
@@ -136,7 +143,7 @@ export default function RecommendationsPage() {
     }
 
     init()
-  }, [categories.length, router, fetchResults])
+  }, [categories.length, router, fetchResults, onboardingLoaded])
 
   useEffect(() => {
     persistCategories()
@@ -263,7 +270,7 @@ function SkeletonCard() {
   )
 }
 
-if (loading) {
+if (!onboardingLoaded || loading) {
     return (
       <main className="flex flex-1 flex-col px-6">
         <div className="mb-8 flex items-center gap-3">
@@ -275,7 +282,7 @@ if (loading) {
           </button>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">Рекомендации</h1>
-            <p className="mt-1 text-sm text-text-secondary">Подбираем специальности на основе выбранных направлений</p>
+            <p className="mt-1 text-sm text-text-secondary">Подбираем специальности на основе выбранных направлений. Следующий шаг здесь один: выбрать одну цель.</p>
           </div>
         </div>
 
@@ -361,7 +368,7 @@ return (
       <div className="flex-1">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Рекомендации</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          Подобрано {displayedResults.length}{cityFilter || studyFormFilter ? ` из ${results.length}` : ""} направлений
+          Подобрано {displayedResults.length}{cityFilter || studyFormFilter ? ` из ${results.length}` : ""} направлений. Сначала выберите одну цель, а детали можно открыть потом.
           {overallConfidence !== null && (
             <span className="ml-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary">
               общая уверенность {Math.round(overallConfidence * 100)}%

@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { ArrowRight, CalendarDays, CheckCircle2, GraduationCap, Map } from "lucide-react"
 import { useCoachStore } from "@/stores/coach-store"
-import { applyPlanBundle } from "@/lib/coach/bundle-client"
-import type { PlanBundle } from "@/types/admission"
+import { applyActiveGoalBundle } from "@/lib/coach/bundle-client"
+import type { ActiveGoalBundle } from "@/types/admission"
 
 interface CoachOverviewCardProps {
   compact?: boolean
@@ -29,11 +29,11 @@ export function CoachOverviewCard({ compact = false }: CoachOverviewCardProps) {
         const res = await fetch("/api/plan/full")
         const payload = (await res.json()) as {
           status?: string
-          data?: { bundle?: PlanBundle | null }
+          data?: { bundle?: ActiveGoalBundle | null }
         }
 
         if (!cancelled && payload.status === "success" && payload.data?.bundle) {
-          applyPlanBundle(payload.data.bundle)
+          applyActiveGoalBundle(payload.data.bundle)
         }
       } finally {
         if (!cancelled) {
