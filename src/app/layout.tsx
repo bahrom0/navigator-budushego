@@ -5,8 +5,9 @@ import { AppShell } from "@/components/app-shell";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "MMT Navigator",
-  description: "Интеллектуальный помощник для поиска кодов ММТ",
+  title: "NCT Navigator",
+  description:
+    "Подбор кодов НЦТ, объяснение выбора и план подготовки в одном спокойном интерфейсе.",
 };
 
 export default function RootLayout({
@@ -37,7 +38,7 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className="min-h-full flex flex-col bg-background font-sans text-foreground">
+      <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
         <AppShell>{children}</AppShell>
         <Toaster
           position="bottom-right"

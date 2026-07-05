@@ -40,19 +40,23 @@ export function StepProfile() {
     window.location.href = "/categories"
   }
 
-  const showEducationPicker =
-    data.userType && data.userType !== "applicant"
+  const showEducationPicker = data.userType && data.userType !== "applicant"
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-foreground">Кто вы?</h2>
-        <p className="mt-1 text-sm text-text-secondary">
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--marketing-muted)]">
+          Шаг 2
+        </p>
+        <h2 className="text-xl font-semibold tracking-[-0.04em] text-[var(--marketing-foreground)] sm:text-[1.9rem]">
+          Кто вы?
+        </h2>
+        <p className="max-w-xl text-sm leading-6 text-[var(--marketing-muted)]">
           Это поможет адаптировать рекомендации под вас
         </p>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         {USER_TYPES.map((type, idx) => {
           const Icon = type.icon
           const selected = data.userType === type.id
@@ -62,22 +66,30 @@ export function StepProfile() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05, duration: 0.2 }}
+              whileTap={{ scale: 0.98 }}
               type="button"
               onClick={() => setData({ userType: type.id })}
-              className={`w-full flex items-center gap-3 h-14 px-4 rounded-xl border transition-all
-                ${selected
-                  ? "border-primary bg-primary-light"
-                  : "border-border hover:border-border-hover bg-card-bg"
-                }`}
+              className={`flex w-full items-center gap-3.5 rounded-[1.4rem] border px-4 py-3 text-left transition duration-200 ${
+                selected
+                  ? "border-[var(--marketing-border-strong)] bg-[var(--marketing-surface-strong)] shadow-[0_18px_40px_rgba(31,27,22,0.08)]"
+                  : "border-[var(--marketing-border)] bg-[var(--marketing-surface-muted)] hover:border-[var(--marketing-border-strong)] hover:bg-[var(--marketing-surface-strong)]"
+              }`}
             >
-              <div className={`flex items-center justify-center w-9 h-9 rounded-lg
-                ${selected ? "bg-primary text-white" : "bg-black/[.04] text-text-secondary"}
-                transition-colors`}
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border shadow-[0_10px_20px_rgba(31,27,22,0.05)] transition-colors ${
+                  selected
+                    ? "border-transparent bg-[var(--marketing-foreground)] text-[var(--marketing-bg)]"
+                    : "border-[var(--marketing-border)] bg-[var(--marketing-surface-strong)] text-[var(--marketing-muted)]"
+                }`}
               >
                 <Icon className="h-4 w-4" />
               </div>
-              <span className={`text-sm font-medium
-                ${selected ? "text-primary" : "text-foreground"}`}
+              <span
+                className={`text-sm font-medium sm:text-base ${
+                  selected
+                    ? "text-[var(--marketing-foreground)]"
+                    : "text-[var(--marketing-foreground)]"
+                }`}
               >
                 {type.label}
               </span>
@@ -94,33 +106,37 @@ export function StepProfile() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="space-y-3 overflow-hidden"
+            className="space-y-2 overflow-hidden"
           >
             <div>
-              <h3 className="text-base font-semibold text-foreground">Уровень образования</h3>
-              <p className="text-sm text-text-secondary mt-0.5">
+              <h3 className="text-sm font-semibold text-[var(--marketing-foreground)] sm:text-base">
+                Уровень образования
+              </h3>
+              <p className="mt-0.5 text-sm text-[var(--marketing-muted)]">
                 Выберите, после какого класса поступаете
               </p>
             </div>
-            <div className="flex gap-2">
-              {EDUCATION_LEVELS.filter((el) => el.value !== "applicant").map((level) => {
-                const selected = data.educationLevel === level.value
-                return (
-                  <motion.button
-                    key={level.value}
-                    whileTap={{ scale: 0.97 }}
-                    type="button"
-                    onClick={() => setData({ educationLevel: level.value })}
-                    className={`flex-1 h-12 rounded-xl border text-sm font-medium transition-all
-                      ${selected
-                        ? "border-primary bg-primary-light text-primary"
-                        : "border-border hover:border-border-hover bg-card-bg text-foreground"
+            <div className="grid gap-2.5 sm:grid-cols-2">
+              {EDUCATION_LEVELS.filter((el) => el.value !== "applicant").map(
+                (level) => {
+                  const selected = data.educationLevel === level.value
+                  return (
+                    <motion.button
+                      key={level.value}
+                      whileTap={{ scale: 0.98 }}
+                      type="button"
+                      onClick={() => setData({ educationLevel: level.value })}
+                      className={`h-11 rounded-[1.2rem] border px-4 text-sm font-medium transition duration-200 ${
+                        selected
+                          ? "border-transparent bg-[var(--marketing-foreground)] text-[var(--marketing-bg)] shadow-[0_14px_30px_rgba(31,27,22,0.12)]"
+                          : "border-[var(--marketing-border)] bg-[var(--marketing-surface-muted)] text-[var(--marketing-foreground)] hover:border-[var(--marketing-border-strong)] hover:bg-[var(--marketing-surface-strong)]"
                       }`}
-                  >
-                    {level.label}
-                  </motion.button>
-                )
-              })}
+                    >
+                      {level.label}
+                    </motion.button>
+                  )
+                },
+              )}
             </div>
           </motion.div>
         )}
@@ -132,18 +148,26 @@ export function StepProfile() {
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="text-error text-sm"
+            className="text-sm text-error"
           >
             {error}
           </motion.p>
         )}
       </AnimatePresence>
 
-      <div className="flex gap-3">
-        <Button variant="secondary" onClick={prevStep} className="flex-1">
+      <div className="grid gap-2.5 sm:grid-cols-2">
+        <Button
+          variant="secondary"
+          onClick={prevStep}
+          className="!h-11 !rounded-[1.25rem] !border !border-[var(--marketing-border)] !bg-[var(--marketing-surface-muted)] !text-[var(--marketing-foreground)] !font-semibold hover:!border-[var(--marketing-border-strong)] hover:!bg-[var(--marketing-surface-strong)]"
+        >
           Назад
         </Button>
-        <Button onClick={handleFinish} className="flex-1" size="lg">
+        <Button
+          onClick={handleFinish}
+          size="lg"
+          className="!h-11 !rounded-[1.25rem] !border-transparent !bg-[var(--marketing-foreground)] !px-6 !text-base !font-semibold !text-[var(--marketing-bg)] shadow-[0_18px_40px_rgba(48,99,232,0.22)] hover:!bg-[var(--marketing-accent)]"
+        >
           Начать поиск
         </Button>
       </div>

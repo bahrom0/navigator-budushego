@@ -40,7 +40,22 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [hydrate]);
 
   const isChatRoute = pathname?.startsWith("/chat");
+  const isMarketingRoute =
+    pathname === "/" ||
+    pathname === "/how-it-works" ||
+    pathname === "/features" ||
+    pathname === "/onboarding";
   const showBackButton = isChatRoute && !!activeConversationId;
+
+  if (isMarketingRoute) {
+    return (
+      <>
+        <ThemeSync />
+        <main className="flex-1">{children}</main>
+        <LoginModal />
+      </>
+    );
+  }
 
   return (
     <>
