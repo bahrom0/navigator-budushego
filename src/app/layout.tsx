@@ -10,6 +10,22 @@ export const metadata: Metadata = {
     "Подбор кодов НЦТ, объяснение выбора и план подготовки в одном спокойном интерфейсе.",
 };
 
+const themeBootstrapScript = `(() => {
+  const key = "mmt-theme-mode";
+  const system = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  let mode = "system";
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored === "light" || stored === "dark" || stored === "system") {
+      mode = stored;
+    }
+  } catch (error) {}
+  const theme = mode === "system" ? system : mode;
+  const root = document.documentElement;
+  root.dataset.theme = theme;
+  root.style.colorScheme = theme;
+})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -19,23 +35,7 @@ export default function RootLayout({
     <html lang="ru" className="h-full antialiased" suppressHydrationWarning>
       <head>
         <Script id="theme-bootstrap" strategy="beforeInteractive">
-          {`
-            (() => {
-              const key = "mmt-theme-mode";
-              const system = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-              let mode = "system";
-              try {
-                const stored = localStorage.getItem(key);
-                if (stored === "light" || stored === "dark" || stored === "system") {
-                  mode = stored;
-                }
-              } catch (error) {}
-              const theme = mode === "system" ? system : mode;
-              const root = document.documentElement;
-              root.dataset.theme = theme;
-              root.style.colorScheme = theme;
-            })();
-          `}
+          {themeBootstrapScript}
         </Script>
       </head>
       <body className="flex min-h-full flex-col bg-background font-sans text-foreground">

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { ClipboardList, Mic, Bookmark, Activity } from "lucide-react"
 import Link from "next/link"
+import { CoachOverviewCard } from "@/components/coach/CoachOverviewCard"
 import { useProfileStore } from "@/stores/profile-store"
 import { isPriorityActivityEventType } from "@/types/activity"
 
@@ -18,17 +19,21 @@ export default function DashboardOverview() {
     setMounted(true)
   }, [])
 
-  const priorityActivityCount = activityLog.filter((event) =>
-    typeof event.isPriority === "boolean"
-      ? event.isPriority
-      : isPriorityActivityEventType(event.type),
-  ).length
-  const safePriorityActivityCount = mounted ? priorityActivityCount : 0
+  const safePlans = mounted ? plans : []
+  const safeInterviews = mounted ? interviews : []
+  const safeBookmarks = mounted ? bookmarks : []
+  const safePriorityActivityCount = mounted
+    ? activityLog.filter((event) =>
+        typeof event.isPriority === "boolean"
+          ? event.isPriority
+          : isPriorityActivityEventType(event.type),
+      ).length
+    : 0
 
   const stats = [
-    { label: "Планы", value: plans.length, icon: ClipboardList, href: "/dashboard/plans", color: "text-primary" },
-    { label: "Интервью", value: interviews.length, icon: Mic, href: "/dashboard/interviews", color: "text-success" },
-    { label: "Закладки", value: bookmarks.length, icon: Bookmark, href: "/dashboard/bookmarks", color: "text-warning" },
+    { label: "Планы", value: safePlans.length, icon: ClipboardList, href: "/dashboard/plans", color: "text-primary" },
+    { label: "Интервью", value: safeInterviews.length, icon: Mic, href: "/dashboard/interviews", color: "text-success" },
+    { label: "Закладки", value: safeBookmarks.length, icon: Bookmark, href: "/dashboard/bookmarks", color: "text-warning" },
     { label: "Действия", value: safePriorityActivityCount, icon: Activity, href: "/dashboard/activity", color: "text-primary" },
   ]
 
@@ -62,14 +67,18 @@ export default function DashboardOverview() {
       </div>
 
       <div className="mt-10">
+        <CoachOverviewCard />
+      </div>
+
+      <div className="mt-10">
         <h2 className="text-lg font-semibold text-foreground">Последние планы</h2>
-        {plans.length === 0 ? (
+        {safePlans.length === 0 ? (
           <div className="mt-4 rounded-[18px] border border-border bg-background p-8 text-center">
             <p className="text-sm text-text-muted">У вас пока нет сохранённых планов</p>
           </div>
         ) : (
           <div className="mt-4 flex flex-col gap-3">
-            {plans.slice(0, 5).map((plan, i) => (
+            {safePlans.slice(0, 5).map((plan, i) => (
               <motion.div
                 key={plan.id}
                 initial={{ opacity: 0, y: 8 }}

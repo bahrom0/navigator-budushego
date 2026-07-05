@@ -6,6 +6,7 @@ import { useAuthStore } from "@/stores/auth-store"
 import { loadProfile, saveProfile } from "@/lib/chat/db"
 import type { ProfileData, ActivityEvent } from "@/types/profile"
 import { isPriorityActivityEventType } from "@/types/activity"
+import type { CoachGoal } from "@/types/coach"
 
 function parseJSONArray(value: unknown): unknown[] {
   if (Array.isArray(value)) return value
@@ -15,44 +16,80 @@ function parseJSONArray(value: unknown): unknown[] {
   return []
 }
 
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0
+}
+
+function isValidGoal(goal: unknown): goal is CoachGoal {
+  if (!goal || typeof goal !== "object") return false
+  const candidate = goal as Partial<CoachGoal>
+  return isNonEmptyString(candidate.id)
+    && isNonEmptyString(candidate.nctCode)
+    && isNonEmptyString(candidate.nctTitle)
+}
+
+function isValidPlan(plan: unknown): boolean {
+  if (!plan || typeof plan !== "object") return false
+  const candidate = plan as { id?: unknown; nctCode?: unknown; nctTitle?: unknown }
+  return isNonEmptyString(candidate.id)
+    && isNonEmptyString(candidate.nctCode)
+    && isNonEmptyString(candidate.nctTitle)
+}
+
+function sanitizeProfile(profile: ProfileData): ProfileData {
+  const activeGoal = isValidGoal(profile.activeGoal) ? profile.activeGoal : null
+  return {
+    ...profile,
+    activeGoal,
+    activeGoalId: activeGoal?.id,
+    goalHistory: (profile.goalHistory ?? []).filter(isValidGoal),
+    plans: (profile.plans ?? []).filter(isValidPlan),
+    bookmarks: (profile.bookmarks ?? []).filter((bookmark) => isNonEmptyString(bookmark.nctCode) && isNonEmptyString(bookmark.nctTitle)),
+    interviews: (profile.interviews ?? []).filter((interview) => isNonEmptyString(interview.nctCode) && isNonEmptyString(interview.nctTitle)),
+  }
+}
+
 function mergeProfile(local: ProfileData, server: ProfileData): ProfileData {
-  const localIds = new Set(local.bookmarks.map((b) => b.nctCode))
+  const safeLocal = sanitizeProfile(local)
+  const safeServer = sanitizeProfile(server)
+  const localIds = new Set(safeLocal.bookmarks.map((b) => b.nctCode))
   const mergedBookmarks = [
-    ...local.bookmarks,
-    ...server.bookmarks.filter((b) => !localIds.has(b.nctCode)),
+    ...safeLocal.bookmarks,
+    ...safeServer.bookmarks.filter((b) => !localIds.has(b.nctCode)),
   ]
 
-  const planByCode = new Map<string, typeof local.plans[0]>()
-  for (const p of server.plans) planByCode.set(p.nctCode, p)
-  for (const p of local.plans) planByCode.set(p.nctCode, p)
+  const planByCode = new Map<string, typeof safeLocal.plans[0]>()
+  for (const p of safeServer.plans) planByCode.set(p.nctCode, p)
+  for (const p of safeLocal.plans) planByCode.set(p.nctCode, p)
   const mergedPlans = Array.from(planByCode.values())
 
-  const achievementIds = new Set(local.achievements.map((a) => a.id))
+  const achievementIds = new Set(safeLocal.achievements.map((a) => a.id))
   const mergedAchievements = [
-    ...local.achievements,
-    ...server.achievements.filter((a) => !achievementIds.has(a.id)),
+    ...safeLocal.achievements,
+    ...safeServer.achievements.filter((a) => !achievementIds.has(a.id)),
   ]
 
-  const interviewByCode = new Map<string, typeof local.interviews[0]>()
-  for (const i of server.interviews) interviewByCode.set(i.nctCode, i)
-  for (const i of local.interviews) interviewByCode.set(i.nctCode, i)
+  const interviewByCode = new Map<string, typeof safeLocal.interviews[0]>()
+  for (const i of safeServer.interviews) interviewByCode.set(i.nctCode, i)
+  for (const i of safeLocal.interviews) interviewByCode.set(i.nctCode, i)
   const mergedInterviews = Array.from(interviewByCode.values())
 
-  return {
-    ...server,
-    ...local,
+  return sanitizeProfile({
+    ...safeServer,
+    ...safeLocal,
     bookmarks: mergedBookmarks,
     plans: mergedPlans,
     achievements: mergedAchievements,
     interviews: mergedInterviews,
-    sessionId: local.sessionId || server.sessionId || getSessionId(),
-  }
+    sessionId: safeLocal.sessionId || safeServer.sessionId || getSessionId(),
+  })
 }
 
 function profileToPayload(state: ProfileData) {
+  const safeState = sanitizeProfile(state)
   return {
-    sessionId: state.sessionId,
-    plans: state.plans.map((p) => ({
+    sessionId: safeState.sessionId,
+    plans: safeState.plans.map((p) => ({
       id: p.id,
       goal_id: p.goalId,
       nct_code: p.nctCode,
@@ -66,18 +103,18 @@ function profileToPayload(state: ProfileData) {
       roadmap_id: p.roadmapId,
       updated_at: new Date().toISOString(),
     })),
-    bookmarks: state.bookmarks.map((b) => ({
+    bookmarks: safeState.bookmarks.map((b) => ({
       nct_code: b.nctCode,
       nct_title: b.nctTitle,
       institution: b.institution || undefined,
       city: b.city || undefined,
     })),
-    achievements: state.achievements.map((a) => ({
+    achievements: safeState.achievements.map((a) => ({
       achievement_id: a.id,
       title: a.title,
       description: a.description || undefined,
     })),
-    interviews: state.interviews.map((i) => ({
+    interviews: safeState.interviews.map((i) => ({
       nct_code: i.nctCode,
       nct_title: i.nctTitle,
       questions: i.questions,
@@ -115,7 +152,7 @@ function normalizeActivityEvent(event: any): ActivityEvent {
 }
 
 function extractProfile(state: Record<string, unknown>): ProfileData {
-  return {
+  return sanitizeProfile({
     sessionId: (state.sessionId as string) ?? "",
     level: (state.level as ProfileData["level"]) ?? "beginner",
     activeGoalId: state.activeGoalId as string | undefined,
@@ -131,7 +168,7 @@ function extractProfile(state: Record<string, unknown>): ProfileData {
     bookmarks: (state.bookmarks as ProfileData["bookmarks"]) ?? [],
     plans: (state.plans as ProfileData["plans"]) ?? [],
     interviews: (state.interviews as ProfileData["interviews"]) ?? [],
-  }
+  })
 }
 
 export function useProfileSync() {

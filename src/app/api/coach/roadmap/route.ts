@@ -4,6 +4,7 @@ import { generateRoadmap } from "@/lib/ai/coach-roadmap"
 import type { CoachDiagnosticResult, RoadmapDurationWeeks } from "@/types/coach"
 import type { DevelopmentPlan } from "@/types/plan"
 import { createClient } from "@/lib/supabase/server"
+import { resolveCoachContext } from "@/lib/coach/persistence"
 
 export const dynamic = "force-dynamic"
 
@@ -61,27 +62,30 @@ export async function POST(request: Request) {
     let persistedRoadmapId: string | null = null
 
     if (session && user) {
-      const { data: goal } = await supabase
-        .from("admission_goals")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("id", goalId)
-        .maybeSingle()
+      const context = await resolveCoachContext(supabase, user.id, {
+        goalId,
+        planId: planId ?? null,
+        nctCode,
+        nctTitle,
+        university: university ?? null,
+        profession: profession ?? null,
+        city: city ?? null,
+      })
 
-      if (goal) {
+      if (context.goal?.id) {
         const { data: existingRoadmap } = await supabase
           .from("roadmaps")
           .select("id")
           .eq("user_id", user.id)
-          .eq("goal_id", goalId)
+          .eq("goal_id", context.goal.id)
           .eq("status", "active")
           .maybeSingle()
 
         const basePayload: Record<string, unknown> = {
           user_id: user.id,
           session_id: null,
-          goal_id: goalId,
-          plan_id: planId ?? null,
+          goal_id: context.goal.id,
+          plan_id: context.plan?.id ?? null,
           weeks: roadmap.weeks,
           current_week_number: 1,
           status: "active",
@@ -96,8 +100,8 @@ export async function POST(request: Request) {
         if (generalPlan) maybeExtraPayload.plan_snapshot = generalPlan as Record<string, unknown>
         if (diagnosticResult) maybeExtraPayload.diagnostic_snapshot = diagnosticResult as Record<string, unknown>
         maybeExtraPayload.generation_context = {
-          goalId,
-          planId: planId ?? null,
+          goalId: context.goal.id,
+          planId: context.plan?.id ?? null,
           nctCode,
           nctTitle,
           university: university || undefined,
@@ -116,11 +120,11 @@ export async function POST(request: Request) {
           } catch {
             await supabase.from("roadmaps").update(basePayload).eq("id", existingRoadmap.id)
           }
-          if (planId) {
+          if (context.plan?.id) {
             await supabase
               .from("plans")
               .update({ roadmap_id: existingRoadmap.id, updated_at: new Date().toISOString() })
-              .eq("id", planId)
+              .eq("id", context.plan.id)
           }
         } else {
           const insertPayload = { ...basePayload, created_at: new Date().toISOString() }
@@ -145,8 +149,11 @@ export async function POST(request: Request) {
             } catch {} // columns may not exist before migration 015
           }
 
-          if (planId) {
-            await supabase.from("plans").update({ roadmap_id: insertedRoadmap.id, updated_at: new Date().toISOString() }).eq("id", planId)
+          if (context.plan?.id) {
+            await supabase
+              .from("plans")
+              .update({ roadmap_id: insertedRoadmap.id, updated_at: new Date().toISOString() })
+              .eq("id", context.plan.id)
           }
         }
       }

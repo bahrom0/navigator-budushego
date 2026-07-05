@@ -84,6 +84,43 @@ function normalizeActivityLog(activityLog: ActivityEvent[]): ActivityEvent[] {
   })
 }
 
+function isValidGoal(goal: unknown): goal is CoachGoal {
+  if (!goal || typeof goal !== "object") return false
+  const candidate = goal as Partial<CoachGoal>
+  return typeof candidate.id === "string"
+    && candidate.id.length > 0
+    && typeof candidate.nctCode === "string"
+    && candidate.nctCode.trim().length > 0
+    && typeof candidate.nctTitle === "string"
+    && candidate.nctTitle.trim().length > 0
+}
+
+function isValidPlan(plan: unknown): plan is PlanRecord {
+  if (!plan || typeof plan !== "object") return false
+  const candidate = plan as Partial<PlanRecord>
+  return typeof candidate.id === "string"
+    && candidate.id.length > 0
+    && typeof candidate.nctCode === "string"
+    && candidate.nctCode.trim().length > 0
+    && typeof candidate.nctTitle === "string"
+    && candidate.nctTitle.trim().length > 0
+}
+
+function normalizeProfileData(profile: ProfileData): ProfileData {
+  const activeGoal = isValidGoal(profile.activeGoal) ? profile.activeGoal : null
+  const goalHistory = (profile.goalHistory ?? []).filter(isValidGoal)
+  const plans = (profile.plans ?? []).filter(isValidPlan)
+
+  return {
+    ...profile,
+    activeGoal,
+    activeGoalId: activeGoal?.id,
+    goalHistory,
+    plans,
+    activityLog: normalizeActivityLog(profile.activityLog ?? []),
+  }
+}
+
 interface ProfileStore extends ProfileData {
   hydrate: () => void
   logActivity: (type: string, label: string, isPriority?: boolean) => void
@@ -108,10 +145,9 @@ export const useProfileStore = create<ProfileStore>((set, get) => {
   if (typeof window !== "undefined") {
     const saved = cacheGet<ProfileData>(STORAGE_KEY)
     if (saved && saved.sessionId) {
+      const normalized = normalizeProfileData(saved)
       sessionIdState = saved.sessionId
-      Object.assign(base, saved, {
-        activityLog: normalizeActivityLog(saved.activityLog ?? []),
-      })
+      Object.assign(base, normalized)
     }
   }
 
@@ -269,13 +305,12 @@ export const useProfileStore = create<ProfileStore>((set, get) => {
   },
 
   syncFromServer: (data) =>
-    set((state) => ({
+    set((state) => normalizeProfileData({
       ...state,
       ...data,
-      activityLog: normalizeActivityLog((data.activityLog ?? state.activityLog ?? []) as ActivityEvent[]),
       goalHistory: data.goalHistory ?? state.goalHistory ?? [],
       sessionId: state.sessionId || getSessionId(),
-    })),
+    } as ProfileData)),
   }
 })
 

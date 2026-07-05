@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import type { PlanBundle, DailyPlanRecord } from "@/types/admission"
+import type { AdmissionGoalRecord, PlanBundle, DailyPlanRecord } from "@/types/admission"
 import type { CoachDayTask, CoachRoadmap } from "@/types/coach"
+import type { DevelopmentPlan } from "@/types/plan"
 
 export const dynamic = "force-dynamic"
 
@@ -44,6 +45,71 @@ function toDailyPlanRecord(row: Record<string, unknown>, tasks: CoachDayTask[]):
   }
 }
 
+function toAdmissionGoalRecord(row: Record<string, unknown> | null | undefined): AdmissionGoalRecord | null {
+  if (!row) return null
+
+  const id = typeof row.id === "string" ? row.id : null
+  const nctCode = typeof row.nct_code === "string" ? row.nct_code : null
+  const nctTitle = typeof row.nct_title === "string" ? row.nct_title : null
+
+  if (!id || !nctCode || !nctTitle) return null
+
+  return {
+    id,
+    nctCode,
+    nctTitle,
+    university: typeof row.university === "string" ? row.university : undefined,
+    profession: typeof row.profession === "string" ? row.profession : undefined,
+    city: typeof row.city === "string" ? row.city : undefined,
+    setAt: row.created_at ? Date.parse(String(row.created_at)) : Date.now(),
+    status:
+      row.status === "archived" || row.status === "completed"
+        ? row.status
+        : "active",
+    userId: typeof row.user_id === "string" ? row.user_id : undefined,
+    sessionId: typeof row.session_id === "string" ? row.session_id : undefined,
+    archivedAt: row.archived_at ? Date.parse(String(row.archived_at)) : undefined,
+  }
+}
+
+function toDevelopmentPlan(row: Record<string, unknown> | null | undefined): (DevelopmentPlan & {
+  id?: string
+  goal_id?: string | null
+  roadmap_id?: string | null
+}) | null {
+  if (!row) return null
+
+  const nctCode = typeof row.nct_code === "string" ? row.nct_code : null
+  const nctTitle = typeof row.nct_title === "string" ? row.nct_title : null
+
+  if (!nctCode || !nctTitle) return null
+
+  const goals = Array.isArray(row.goals)
+    ? row.goals
+    : typeof row.goals === "string"
+      ? JSON.parse(row.goals)
+      : []
+  const stages = Array.isArray(row.stages)
+    ? row.stages
+    : typeof row.stages === "string"
+      ? JSON.parse(row.stages)
+      : []
+
+  return {
+    id: typeof row.id === "string" ? row.id : undefined,
+    goal_id: typeof row.goal_id === "string" ? row.goal_id : null,
+    roadmap_id: typeof row.roadmap_id === "string" ? row.roadmap_id : null,
+    nctCode,
+    nctTitle,
+    level:
+      row.level === "intermediate" || row.level === "advanced"
+        ? row.level
+        : "beginner",
+    goals: Array.isArray(goals) ? goals : [],
+    stages: Array.isArray(stages) ? stages : [],
+  }
+}
+
 export async function GET() {
   try {
     const supabase = await createClient()
@@ -57,18 +123,67 @@ export async function GET() {
       return NextResponse.json({ status: "success", data: null })
     }
 
-    const [profileRes, goalRes, planRes] = await Promise.all([
-      supabase.from("profiles").select("active_goal_id").eq("user_id", user.id).maybeSingle(),
-      supabase.from("admission_goals").select("*").eq("user_id", user.id).eq("status", "active").maybeSingle(),
-      supabase.from("plans").select("*").eq("user_id", user.id).eq("plan_type", "general").order("created_at", { ascending: false }).limit(1).maybeSingle(),
-    ])
+    const profileRes = await supabase.from("profiles").select("active_goal_id").eq("user_id", user.id).maybeSingle()
 
-    const activeGoalId =
+    const profileGoalId =
       typeof profileRes.data?.active_goal_id === "string" && profileRes.data.active_goal_id.length > 0
         ? profileRes.data.active_goal_id
+        : null
+
+    let goalRes = profileGoalId
+      ? await supabase.from("admission_goals").select("*").eq("user_id", user.id).eq("id", profileGoalId).maybeSingle()
+      : await supabase
+          .from("admission_goals")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+    if (!goalRes.data) {
+      goalRes = await supabase
+        .from("admission_goals")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    }
+
+    const activeGoalId =
+      profileGoalId
+        ? profileGoalId
         : typeof goalRes.data?.id === "string"
           ? goalRes.data.id
           : null
+
+    let planQuery = supabase
+      .from("plans")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("plan_type", "general")
+      .order("created_at", { ascending: false })
+      .limit(1)
+
+    if (activeGoalId) {
+      planQuery = planQuery.eq("goal_id", activeGoalId)
+    } else if (typeof goalRes.data?.nct_code === "string" && goalRes.data.nct_code.length > 0) {
+      planQuery = planQuery.eq("nct_code", goalRes.data.nct_code)
+    }
+
+    let planRes = await planQuery.maybeSingle()
+    if (!planRes.data) {
+      planRes = await supabase
+        .from("plans")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("plan_type", "general")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    }
 
     let roadmapQuery = supabase
       .from("roadmaps")
@@ -148,8 +263,8 @@ export async function GET() {
       : null
 
     const bundle: PlanBundle = {
-      goal: goalRes.data ?? null,
-      plan: planRes.data ?? null,
+      goal: toAdmissionGoalRecord(goalRes.data),
+      plan: toDevelopmentPlan(planRes.data),
       roadmap,
       today,
       history,

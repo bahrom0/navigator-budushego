@@ -5,6 +5,7 @@ import { generateDailyPlan } from "@/lib/ai/coach-daily-plan"
 import type { CoachDiagnosticResult, CoachDayTask, CoachRoadmap } from "@/types/coach"
 import type { DevelopmentPlan } from "@/types/plan"
 import type { DailyPlanRecord } from "@/types/admission"
+import { resolveCoachContext } from "@/lib/coach/persistence"
 
 export const dynamic = "force-dynamic"
 
@@ -119,9 +120,20 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser()
 
     const targetDate = planDate ?? new Date().toISOString().slice(0, 10)
+    let resolvedGoalId = goalId
+    let resolvedPlanId = planId ?? null
 
     if (session && user) {
-      const existing = await findDailyPlan(supabase, user.id, goalId, targetDate)
+      const context = await resolveCoachContext(supabase, user.id, {
+        goalId,
+        planId: planId ?? null,
+        nctCode,
+        nctTitle,
+      })
+      if (context.goal?.id) resolvedGoalId = context.goal.id
+      if (context.plan?.id) resolvedPlanId = context.plan.id
+
+      const existing = await findDailyPlan(supabase, user.id, resolvedGoalId, targetDate)
 
       if (existing) {
         const row = existing.planRow
@@ -153,9 +165,9 @@ export async function POST(request: Request) {
               stats: typeof row.stats === "object" && row.stats !== null ? row.stats as Record<string, unknown> : null,
             },
             dailyPlanId: row.id,
-            goalId,
+            goalId: resolvedGoalId,
             roadmapId,
-            planId: planId ?? null,
+            planId: resolvedPlanId,
             reused: true,
           },
         })
@@ -184,9 +196,9 @@ export async function POST(request: Request) {
 
     if (session && user) {
       const generationContext = {
-        goalId,
+        goalId: resolvedGoalId,
         roadmapId,
-        planId: planId ?? null,
+        planId: resolvedPlanId,
         weekId,
         nctCode,
         nctTitle,
@@ -200,9 +212,9 @@ export async function POST(request: Request) {
       const dayBasePayload: Record<string, unknown> = {
         user_id: user.id,
         session_id: null,
-        goal_id: goalId,
+        goal_id: resolvedGoalId,
         roadmap_id: roadmapId,
-        plan_id: planId ?? null,
+        plan_id: resolvedPlanId,
         plan_date: targetDate,
         week_id: weekId,
         week_number: Number(weekId.replace(/\D+/g, "")) || 1,
@@ -256,13 +268,13 @@ export async function POST(request: Request) {
             ...dayPlan,
             dailyPlanId: insertedDay.id,
             roadmapId,
-            goalId,
+            goalId: resolvedGoalId,
             previousDate: previousDateFor(targetDate),
           },
           dailyPlanId: insertedDay.id,
-          goalId,
+          goalId: resolvedGoalId,
           roadmapId,
-          planId: planId ?? null,
+          planId: resolvedPlanId,
           reused: false,
         },
       })
@@ -272,9 +284,9 @@ export async function POST(request: Request) {
       status: "success",
       data: {
         dayPlan,
-        goalId,
+        goalId: resolvedGoalId,
         roadmapId,
-        planId: planId ?? null,
+        planId: resolvedPlanId,
         reused: false,
       },
     })

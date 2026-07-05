@@ -8,6 +8,7 @@ import { ArrowLeft, ArrowRight, Check, Cloud, Loader2, Target } from "lucide-rea
 import { PlanCard } from "@/components/plans/PlanCard"
 import { useProfileStore } from "@/stores/profile-store"
 import { useCoachStore } from "@/stores/coach-store"
+import { getPlanId } from "@/lib/coach/bundle-client"
 import type { CoachGoal } from "@/types/coach"
 import type { PlanBundle } from "@/types/admission"
 import type { DevelopmentPlan } from "@/types/plan"
@@ -22,6 +23,12 @@ function toGoalFallback(code: string, title: string): CoachGoal {
     setAt: Date.now(),
     status: "active",
   }
+}
+
+type CachedPlan = DevelopmentPlan & {
+  id?: string
+  goal_id?: string | null
+  roadmap_id?: string | null
 }
 
 function PlanContent() {
@@ -39,7 +46,7 @@ function PlanContent() {
   const [bundle, setBundle] = useState<PlanBundle | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [cachedPlan, setCachedPlan] = useState<DevelopmentPlan | null>(null)
+  const [cachedPlan, setCachedPlan] = useState<CachedPlan | null>(null)
 
   const goal = bundle?.goal ?? profileGoal ?? (queryCode ? toGoalFallback(queryCode, queryTitle || "Выбранное направление") : null)
   const plan = bundle?.plan ?? cachedPlan ?? null
@@ -53,7 +60,7 @@ function PlanContent() {
       const parsed = JSON.parse(raw) as {
         nctCode?: string
         nctTitle?: string
-        plan?: DevelopmentPlan
+        plan?: CachedPlan
       }
       if (parsed?.plan && parsed.plan.nctCode) {
         setCachedPlan(parsed.plan)

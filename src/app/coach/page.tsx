@@ -6,6 +6,7 @@ import { useProfileStore } from "@/stores/profile-store"
 import { CoachShell } from "@/components/coach/CoachShell"
 import { CoachErrorBanner } from "@/components/coach/CoachErrorBanner"
 import { CoachTabContent } from "@/components/coach/CoachTabContent"
+import { applyPlanBundle, getPlanId } from "@/lib/coach/bundle-client"
 import {
   CoachGoalSetup,
   type CoachGoalDraft,
@@ -19,27 +20,7 @@ import type {
   CoachTaskStep,
   RoadmapDurationWeeks,
 } from "@/types/coach"
-import type { DevelopmentPlan } from "@/types/plan"
 import type { DailyPlanRecord, PlanBundle } from "@/types/admission"
-
-function buildFallbackGoal(
-  nctCode: string,
-  nctTitle: string,
-  overrides: Partial<CoachGoal> = {},
-): CoachGoal {
-  return {
-    id: overrides.id ?? `local-${nctCode}`,
-    nctCode,
-    nctTitle,
-    university: overrides.university,
-    profession: overrides.profession,
-    city: overrides.city,
-    setAt: overrides.setAt ?? Date.now(),
-    status: overrides.status ?? "active",
-    planId: overrides.planId,
-    roadmapId: overrides.roadmapId,
-  }
-}
 
 export default function CoachPage() {
   const goal = useCoachStore((s) => s.goal)
@@ -101,46 +82,10 @@ export default function CoachPage() {
 
         if (payload.status === "success" && payload.data?.bundle) {
           const bundle = payload.data.bundle
-          const bundleGoal =
-            bundle.goal ??
-            (bundle.plan
-              ? buildFallbackGoal(bundle.plan.nctCode, bundle.plan.nctTitle)
-              : null)
-
-          if (bundleGoal) {
-            setGoal(bundleGoal)
-            setProfileActiveGoal(bundleGoal)
+          applyPlanBundle(bundle)
+          if (bundle.roadmap?.goalId) {
+            setActiveTab("today")
           }
-
-          if (bundle.plan) {
-            setPlan(bundle.plan as DevelopmentPlan)
-          }
-
-          if (bundle.roadmap) {
-            const rm = bundle.roadmap as CoachRoadmap
-            setRoadmap(rm)
-            if (rm.goalId) {
-              setActiveTab("today")
-            }
-          }
-
-          if (bundle.today) {
-            setDayPlan({
-              date: bundle.today.planDate,
-              weekId: bundle.today.weekId,
-              tasks: bundle.today.tasks,
-              dailyPlanId: bundle.today.id,
-              roadmapId: bundle.today.roadmapId,
-              goalId: bundle.today.goalId,
-              weekNumber: bundle.today.weekNumber,
-              title: bundle.today.title,
-              completedTaskIds: bundle.today.completedTaskIds,
-              previousDate: bundle.today.previousDate,
-              completedAt: bundle.today.updatedAt,
-            })
-          }
-
-          setDailyHistory(bundle.history ?? [])
           syncProgress(bundle)
         }
       } catch (err) {
@@ -185,15 +130,20 @@ export default function CoachPage() {
 
   const handleGenerateRoadmap = async (durationWeeks?: RoadmapDurationWeeks) => {
     if (!effectiveGoal) return
+    if (!effectiveGoal.nctCode?.trim() || !effectiveGoal.nctTitle?.trim()) {
+      setError("Для Coach нужна корректная цель. Обновите план или выберите цель заново.")
+      return
+    }
     setLoading(true)
     setError(null)
     try {
+      const persistedPlanId = getPlanId(plan, effectiveGoal.planId)
       const res = await fetch("/api/coach/roadmap", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           goalId: effectiveGoal.id,
-          planId: plan ? `${effectiveGoal.id}:${plan.nctCode}` : undefined,
+          planId: persistedPlanId,
           nctCode: effectiveGoal.nctCode,
           nctTitle: effectiveGoal.nctTitle,
           university: effectiveGoal.university ?? "",
@@ -212,7 +162,15 @@ export default function CoachPage() {
       if (!res.ok || payload.status !== "success" || !payload.data?.roadmap) {
         throw new Error(payload.error ?? "Не удалось создать Roadmap")
       }
-      setRoadmap(payload.data.roadmap as CoachRoadmap)
+      const nextRoadmap = payload.data.roadmap as CoachRoadmap
+      const nextGoal: CoachGoal = {
+        ...effectiveGoal,
+        planId: persistedPlanId,
+        roadmapId: nextRoadmap.id,
+      }
+      setRoadmap(nextRoadmap)
+      setGoal(nextGoal)
+      setProfileActiveGoal(nextGoal)
       setActiveTab("today")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка создания Roadmap")
@@ -223,6 +181,10 @@ export default function CoachPage() {
 
   const handleGenerateDailyPlan = async () => {
     if (!effectiveGoal || !roadmap) return
+    if (!effectiveGoal.nctCode?.trim() || !effectiveGoal.nctTitle?.trim()) {
+      setError("Для ежедневного плана нужна корректная цель. Обновите план или выберите цель заново.")
+      return
+    }
     if (!roadmap.id) {
       setError("Roadmap ID отсутствует. Создайте Roadmap заново.")
       return
@@ -232,13 +194,14 @@ export default function CoachPage() {
     setLoading(true)
     setError(null)
     try {
+      const persistedPlanId = getPlanId(plan, effectiveGoal.planId)
       const res = await fetch("/api/coach/daily-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           goalId: effectiveGoal.id,
           roadmapId: roadmap.id,
-          planId: plan ? `${effectiveGoal.id}:${plan.nctCode}` : undefined,
+          planId: persistedPlanId,
           weekId: activeWeek.id,
           nctCode: effectiveGoal.nctCode,
           nctTitle: effectiveGoal.nctTitle,
@@ -264,8 +227,14 @@ export default function CoachPage() {
             dailyPlanId?: string
             roadmapId?: string
             goalId?: string
+            weekNumber?: number
+            title?: string
+            completedTaskIds?: string[]
+            skippedTaskIds?: string[]
             previousDate?: string
+            nextDate?: string
             completedAt?: number
+            stats?: Record<string, unknown> | null
           }
         }
         error?: string
@@ -281,9 +250,36 @@ export default function CoachPage() {
         dailyPlanId: dp.dailyPlanId,
         roadmapId: dp.roadmapId,
         goalId: dp.goalId,
+        weekNumber: dp.weekNumber,
+        title: dp.title,
+        completedTaskIds: dp.completedTaskIds,
+        skippedTaskIds: dp.skippedTaskIds,
         previousDate: dp.previousDate,
+        nextDate: dp.nextDate,
         completedAt: dp.completedAt,
+        stats: dp.stats,
       })
+      setDailyHistory([
+        {
+          id: dp.dailyPlanId ?? `${dp.date}-${dp.weekId}`,
+          goalId: dp.goalId ?? effectiveGoal.id,
+          roadmapId: dp.roadmapId ?? roadmap.id,
+          planId: persistedPlanId,
+          planDate: dp.date,
+          weekId: dp.weekId,
+          weekNumber: dp.weekNumber ?? activeWeek.number,
+          title: dp.title ?? activeWeek.title,
+          tasks: dp.tasks,
+          completedTaskIds: dp.completedTaskIds ?? [],
+          skippedTaskIds: dp.skippedTaskIds,
+          createdAt: dp.completedAt ?? Date.now(),
+          updatedAt: dp.completedAt ?? Date.now(),
+          previousDate: dp.previousDate,
+          nextDate: dp.nextDate,
+          stats: dp.stats ?? null,
+        },
+        ...dailyHistory.filter((item) => item.planDate !== dp.date),
+      ].sort((a, b) => b.planDate.localeCompare(a.planDate)))
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка создания плана")
     } finally {
@@ -355,11 +351,11 @@ export default function CoachPage() {
 
   if (!mounted) {
     return (
-      <CoachShell>
+      <main className="flex min-h-[calc(100vh-3.5rem)] flex-1 items-center justify-center px-4 py-12 sm:px-6">
         <div className="flex items-center justify-center py-20">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
-      </CoachShell>
+      </main>
     )
   }
 

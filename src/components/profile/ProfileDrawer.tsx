@@ -15,6 +15,7 @@ import { SyncAccountFlow } from "@/features/auth/SyncAccountFlow";
 import { cacheRemove } from "@/lib/cache";
 import { useAuthStore } from "@/stores/auth-store";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { CoachOverviewCard } from "@/components/coach/CoachOverviewCard";
 
 interface ProfileDrawerProps {
   open: boolean;
@@ -104,6 +105,7 @@ export function ProfileDrawer({ open, onClose }: ProfileDrawerProps) {
             </div>
             <div className="flex flex-col gap-6 p-5">
               <ProfileStats />
+              <CoachOverviewCard compact />
               <ProfileActivity />
               <ProfileAchievementsList />
               <ProfileBookmarksList />

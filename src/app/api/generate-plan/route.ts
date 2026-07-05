@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { generateDevelopmentPlan } from "@/lib/ai/generate-plan"
 import { createClient } from "@/lib/supabase/server"
+import { resolveCoachContext } from "@/lib/coach/persistence"
 import { GeneratePlanSchema, type GeneratePlanRequest } from "@/types/api/plan"
 
 export const dynamic = "force-dynamic"
@@ -47,21 +48,22 @@ export async function POST(request: Request) {
     const supabase = await createClient()
 
     const { data: { session } } = await supabase.auth.getSession()
+    let persistedPlanId: string | null = null
+    let persistedGoalId: string | null = payload.goalId ?? null
+
     if (session) {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        let goalId = payload.goalId
-
-        if (!goalId) {
-          const { data: activeGoal } = await supabase
-            .from("admission_goals")
-            .select("id")
-            .eq("user_id", user.id)
-            .eq("status", "active")
-            .eq("nct_code", plan.nctCode)
-            .maybeSingle()
-          goalId = activeGoal?.id
-        }
+        const context = await resolveCoachContext(supabase, user.id, {
+          goalId: payload.goalId,
+          nctCode: plan.nctCode,
+          nctTitle: plan.nctTitle,
+          university: payload.university ?? null,
+          profession: payload.profession ?? null,
+          city: payload.city ?? null,
+        })
+        const goalId = context.goal?.id ?? null
+        persistedGoalId = goalId
 
         if (goalId) {
           await supabase
@@ -94,17 +96,33 @@ export async function POST(request: Request) {
         }
 
         if (existingPlan?.id) {
-          await supabase
+          const { data: updatedPlan } = await supabase
             .from("plans")
             .update(payloadToSave)
             .eq("id", existingPlan.id)
+            .select("id")
+            .single()
+          persistedPlanId = updatedPlan?.id ?? existingPlan.id
         } else {
-          await supabase.from("plans").insert(payloadToSave)
+          const { data: insertedPlan } = await supabase
+            .from("plans")
+            .insert(payloadToSave)
+            .select("id")
+            .single()
+          persistedPlanId = insertedPlan?.id ?? null
         }
       }
     }
 
-    return NextResponse.json({ status: "success", data: plan })
+    return NextResponse.json({
+      status: "success",
+      data: {
+        ...plan,
+        id: persistedPlanId,
+        goal_id: persistedGoalId,
+        roadmap_id: null,
+      },
+    })
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal server error"
     return NextResponse.json({ status: "error", error: message, data: null }, { status: 500 })

@@ -93,6 +93,16 @@ const SyncProfileSchema = z.object({
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+    if (Array.isArray(body?.plans)) {
+      body.plans = body.plans.filter((plan: unknown) => {
+        if (!plan || typeof plan !== "object") return false
+        const candidate = plan as { nct_code?: unknown; nct_title?: unknown }
+        return typeof candidate.nct_code === "string"
+          && candidate.nct_code.trim().length > 0
+          && typeof candidate.nct_title === "string"
+          && candidate.nct_title.trim().length > 0
+      })
+    }
     const parsed = SyncProfileSchema.safeParse(body)
 
     if (!parsed.success) {
