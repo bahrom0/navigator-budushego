@@ -5,6 +5,7 @@ import type { CoachDiagnosticResult, RoadmapDurationWeeks } from "@/types/coach"
 import type { DevelopmentPlan } from "@/types/plan"
 import { createClient } from "@/lib/supabase/server"
 import { resolveCoachContext } from "@/lib/coach/persistence"
+import { appendProductHistory } from "@/lib/product-history"
 
 export const dynamic = "force-dynamic"
 
@@ -155,6 +156,24 @@ export async function POST(request: Request) {
               .update({ roadmap_id: insertedRoadmap.id, updated_at: new Date().toISOString() })
               .eq("id", context.plan.id)
           }
+        }
+
+        if (persistedRoadmapId) {
+          await appendProductHistory(supabase, user.id, {
+            goalId: context.goal.id,
+            entityType: "roadmap",
+            entityId: persistedRoadmapId,
+            action: existingRoadmap?.id ? "roadmap_updated" : "roadmap_created",
+            title: `Собран roadmap: ${roadmap.title ?? nctTitle}`,
+            summary: `${roadmap.weeks.length} недель в маршруте`,
+            metadata: {
+              nctCode,
+              nctTitle,
+              durationWeeks,
+              weekCount: roadmap.weeks.length,
+              activeWeekNumber: 1,
+            },
+          })
         }
       }
     }

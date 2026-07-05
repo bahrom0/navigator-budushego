@@ -112,7 +112,7 @@ export const useCoachStore = create<CoachStore>((set, get) => ({
             stats: bundle.todayPlan.stats,
           }
         : null,
-      dailyHistory: bundle.history,
+      dailyHistory: bundle.dailyHistory,
       error: null,
     }),
 

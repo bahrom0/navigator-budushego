@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { generateDevelopmentPlan } from "@/lib/ai/generate-plan"
 import { createClient } from "@/lib/supabase/server"
 import { resolveCoachContext } from "@/lib/coach/persistence"
+import { appendProductHistory } from "@/lib/product-history"
 import { GeneratePlanSchema, type GeneratePlanRequest } from "@/types/api/plan"
 
 export const dynamic = "force-dynamic"
@@ -103,6 +104,24 @@ export async function POST(request: Request) {
             .single()
           if (insertError) throw insertError
           persistedPlanId = insertedPlan?.id ?? null
+        }
+
+        if (persistedPlanId) {
+          await appendProductHistory(supabase, user.id, {
+            goalId,
+            entityType: "plan",
+            entityId: persistedPlanId,
+            action: existingPlan?.id ? "general_plan_updated" : "general_plan_generated",
+            title: `Собран общий план: ${plan.nctTitle}`,
+            summary: `${plan.stages.length} этапов подготовки`,
+            metadata: {
+              nctCode: plan.nctCode,
+              nctTitle: plan.nctTitle,
+              level: plan.level,
+              stageCount: plan.stages.length,
+              goalCount: plan.goals.length,
+            },
+          })
         }
       }
     }

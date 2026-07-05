@@ -453,10 +453,10 @@ function GoalSetupFlow({
 function syncProgress(bundle: ActiveGoalBundle) {
   const roadmapWeeks = bundle.roadmap?.weeks ?? []
   const totalTasksPlanned = roadmapWeeks.reduce((sum, week) => sum + week.tasks.length, 0)
-  const completedTasks = bundle.history.reduce(
-    (sum, plan) => sum + plan.tasks.filter((task) => task.completed).length,
-    0,
-  )
+  const completedTasks = bundle.dailyHistory.reduce(
+      (sum, plan) => sum + plan.tasks.filter((task) => task.completed).length,
+      0,
+    )
   const completionPercent = totalTasksPlanned > 0 ? Math.round((completedTasks / totalTasksPlanned) * 100) : 0
   useCoachStore.getState().updateProgress({
     totalTasksPlanned,

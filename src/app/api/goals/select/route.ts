@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { getByCode } from "@/lib/db/nct-db"
+import { appendProductHistory } from "@/lib/product-history"
 
 export const dynamic = "force-dynamic"
 
@@ -146,6 +147,23 @@ export async function POST(request: Request) {
       if (profileError) {
         return NextResponse.json({ status: "error", error: profileError.message, data: null }, { status: 500 })
       }
+
+      await appendProductHistory(supabase, user.id, {
+        goalId: inserted.id,
+        entityType: "goal",
+        entityId: inserted.id,
+        action: "goal_selected",
+        title: `Выбрана цель: ${goal.nctTitle}`,
+        summary: goal.university ? `${goal.nctCode} · ${goal.university}` : goal.nctCode,
+        metadata: {
+          nctCode: goal.nctCode,
+          nctTitle: goal.nctTitle,
+          university: goal.university ?? null,
+          profession: goal.profession ?? null,
+          city: goal.city ?? null,
+          hasRecommendationSnapshot: !!raw.recommendationSnapshot,
+        },
+      })
 
       return NextResponse.json({
         status: "success",

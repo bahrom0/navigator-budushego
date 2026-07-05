@@ -6,6 +6,7 @@ import { X, Loader2, Globe, Check } from "lucide-react"
 import { Input } from "@/components/Input"
 import { useAuthStore } from "@/stores/auth-store"
 import { useProfileStore } from "@/stores/profile-store"
+import { createProfileSyncPayload } from "@/lib/profile-sync"
 
 export function LoginModal() {
   const [open, setOpen] = useState(false)
@@ -44,34 +45,24 @@ export function LoginModal() {
   const triggerSync = useCallback(async () => {
     setSyncState("syncing")
     const profile = useProfileStore.getState()
+    const payload = createProfileSyncPayload(profile)
 
     try {
       const res = await fetch("/api/sync-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          plans: profile.plans.map((p) => ({ nct_code: p.nctCode, nct_title: p.nctTitle, level: p.level, goals: p.goals, stages: p.stages })),
-          bookmarks: profile.bookmarks.map((b) => ({ nct_code: b.nctCode, nct_title: b.nctTitle, institution: b.institution, city: b.city })),
-          achievements: profile.achievements.map((a) => ({ achievement_id: a.id, title: a.title, description: a.description })),
-          interviews: profile.interviews.map((i) => ({ nct_code: i.nctCode, nct_title: i.nctTitle, questions: i.questions, summary: i.summary, level: i.level })),
-          activityEvents: profile.activityLog.map((a) => ({
-            event_type: a.type,
-            label: a.label,
-            is_priority: a.isPriority ?? false,
-            priority_rank: a.priorityRank ?? (a.isPriority ? 1 : 0),
-            metadata: { timestamp: a.timestamp },
-          })),
-          sessionId: profile.sessionId,
-        }),
+        body: JSON.stringify(payload),
       })
 
       const result = await res.json()
 
-      if (result.status === "error" || !res.ok) {
+      if (result.status !== "success" || !res.ok) {
         setError(result.error || "Ошибка синхронизации")
         setSyncState("idle")
         return
       }
+
+      useProfileStore.getState().acknowledgeBookmarkDeletes(payload.deleted_bookmark_codes)
 
       setSyncState("synced")
       window.dispatchEvent(new CustomEvent("profile:sync"))

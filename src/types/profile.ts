@@ -34,6 +34,7 @@ export interface PlanRecord {
 
 export interface InterviewRecord {
   id: string
+  goalId?: string
   nctCode: string
   nctTitle: string
   questions: { id: string; question: string; answer: string }[]
@@ -81,6 +82,7 @@ export interface ProfileData {
   activePlanId?: string
   interviewResult?: { summary?: string; level?: UserLevel }
   bookmarks: BookmarkRecord[]
+  deletedBookmarkCodes: string[]
   plans: PlanRecord[]
   interviews: InterviewRecord[]
 }

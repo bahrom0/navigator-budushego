@@ -6,6 +6,7 @@ import type { CoachDiagnosticResult, CoachDayTask, CoachRoadmap } from "@/types/
 import type { DevelopmentPlan } from "@/types/plan"
 import type { DailyPlanRecord } from "@/types/admission"
 import { resolveCoachContext } from "@/lib/coach/persistence"
+import { appendProductHistory } from "@/lib/product-history"
 
 export const dynamic = "force-dynamic"
 
@@ -260,6 +261,24 @@ export async function POST(request: Request) {
       if (taskError) {
         return NextResponse.json({ status: "error", error: taskError.message, data: null }, { status: 500 })
       }
+
+      await appendProductHistory(supabase, user.id, {
+        goalId: resolvedGoalId,
+        entityType: "daily_plan",
+        entityId: String(insertedDay.id),
+        action: "daily_plan_generated",
+        title: `Собран план дня: ${weekTitle}`,
+        summary: `${dayPlan.tasks.length} задач на ${targetDate}`,
+        metadata: {
+          roadmapId,
+          planId: resolvedPlanId,
+          weekId,
+          weekTitle,
+          weekSubjects,
+          taskCount: dayPlan.tasks.length,
+          planDate: targetDate,
+        },
+      })
 
       return NextResponse.json({
         status: "success",

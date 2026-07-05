@@ -40,11 +40,33 @@ export interface DailyTaskRecord extends CoachDayTask {
   status: "pending" | "completed"
 }
 
+export type ProductHistoryEntityType =
+  | "goal"
+  | "plan"
+  | "roadmap"
+  | "daily_plan"
+  | "task"
+
+export interface ProductHistoryRecord {
+  id: string
+  userId?: string
+  goalId?: string
+  entityType: ProductHistoryEntityType | string
+  entityId?: string
+  action: string
+  title: string
+  summary?: string
+  metadata: Record<string, unknown>
+  occurredAt: number
+  createdAt: number
+}
+
 export interface ActiveGoalHistorySummary {
   daysTracked: number
   tasksCompleted: number
   tasksTotal: number
   lastPlanDate?: string
+  productEventsTracked?: number
 }
 
 export interface ActiveGoalCommunityContext {
@@ -61,7 +83,8 @@ export interface ActiveGoalBundle {
   generalPlan: DevelopmentPlan | null
   roadmap: CoachRoadmap | null
   todayPlan: DailyPlanRecord | null
-  history: DailyPlanRecord[]
+  dailyHistory: DailyPlanRecord[]
+  history: ProductHistoryRecord[]
   historySummary: ActiveGoalHistorySummary
   communityContext: ActiveGoalCommunityContext | null
 }

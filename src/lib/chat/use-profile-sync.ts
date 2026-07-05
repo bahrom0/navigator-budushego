@@ -7,6 +7,7 @@ import { loadProfile, saveProfile } from "@/lib/chat/db"
 import type { ProfileData, ActivityEvent } from "@/types/profile"
 import { isPriorityActivityEventType } from "@/types/activity"
 import type { CoachGoal } from "@/types/coach"
+import { createProfileSyncPayload } from "@/lib/profile-sync"
 
 function parseJSONArray(value: unknown): unknown[] {
   if (Array.isArray(value)) return value
@@ -38,13 +39,18 @@ function isValidPlan(plan: unknown): boolean {
 
 function sanitizeProfile(profile: ProfileData): ProfileData {
   const activeGoal = isValidGoal(profile.activeGoal) ? profile.activeGoal : null
+  const deletedBookmarkCodes = profile.deletedBookmarkCodes ?? []
   return {
     ...profile,
     activeGoal,
     activeGoalId: activeGoal?.id,
     goalHistory: (profile.goalHistory ?? []).filter(isValidGoal),
     plans: (profile.plans ?? []).filter(isValidPlan),
-    bookmarks: (profile.bookmarks ?? []).filter((bookmark) => isNonEmptyString(bookmark.nctCode) && isNonEmptyString(bookmark.nctTitle)),
+    bookmarks: (profile.bookmarks ?? []).filter((bookmark) =>
+      isNonEmptyString(bookmark.nctCode)
+      && isNonEmptyString(bookmark.nctTitle)
+      && !deletedBookmarkCodes.includes(bookmark.nctCode)),
+    deletedBookmarkCodes,
     interviews: (profile.interviews ?? []).filter((interview) => isNonEmptyString(interview.nctCode) && isNonEmptyString(interview.nctTitle)),
   }
 }
@@ -53,15 +59,27 @@ function mergeProfile(local: ProfileData, server: ProfileData): ProfileData {
   const safeLocal = sanitizeProfile(local)
   const safeServer = sanitizeProfile(server)
   const localIds = new Set(safeLocal.bookmarks.map((b) => b.nctCode))
+  const deletedBookmarkCodes = new Set(safeLocal.deletedBookmarkCodes)
   const mergedBookmarks = [
     ...safeLocal.bookmarks,
-    ...safeServer.bookmarks.filter((b) => !localIds.has(b.nctCode)),
+    ...safeServer.bookmarks.filter((b) =>
+      !localIds.has(b.nctCode) && !deletedBookmarkCodes.has(b.nctCode)),
   ]
 
-  const planByCode = new Map<string, typeof safeLocal.plans[0]>()
-  for (const p of safeServer.plans) planByCode.set(p.nctCode, p)
-  for (const p of safeLocal.plans) planByCode.set(p.nctCode, p)
-  const mergedPlans = Array.from(planByCode.values())
+  const planByDomainKey = new Map<string, typeof safeLocal.plans[0]>()
+  const planKey = (plan: typeof safeLocal.plans[0]) =>
+    `${plan.goalId ?? `nct:${plan.nctCode}`}:${plan.planType ?? "general"}`
+  for (const plan of safeServer.plans) planByDomainKey.set(planKey(plan), plan)
+  for (const plan of safeLocal.plans) {
+    const serverPlan = planByDomainKey.get(planKey(plan))
+    planByDomainKey.set(planKey(plan), {
+      ...serverPlan,
+      ...plan,
+      id: serverPlan?.id ?? plan.id,
+      createdAt: serverPlan?.createdAt ?? plan.createdAt,
+    })
+  }
+  const mergedPlans = Array.from(planByDomainKey.values())
 
   const achievementIds = new Set(safeLocal.achievements.map((a) => a.id))
   const mergedAchievements = [
@@ -70,65 +88,37 @@ function mergeProfile(local: ProfileData, server: ProfileData): ProfileData {
   ]
 
   const interviewByCode = new Map<string, typeof safeLocal.interviews[0]>()
-  for (const i of safeServer.interviews) interviewByCode.set(i.nctCode, i)
-  for (const i of safeLocal.interviews) interviewByCode.set(i.nctCode, i)
+  for (const interview of safeServer.interviews) interviewByCode.set(interview.nctCode, interview)
+  for (const interview of safeLocal.interviews) {
+    const serverInterview = interviewByCode.get(interview.nctCode)
+    interviewByCode.set(interview.nctCode, {
+      ...serverInterview,
+      ...interview,
+      id: serverInterview?.id ?? interview.id,
+      goalId: interview.goalId ?? serverInterview?.goalId,
+      createdAt: serverInterview?.createdAt ?? interview.createdAt,
+    })
+  }
   const mergedInterviews = Array.from(interviewByCode.values())
+
+  const activityById = new Map<string, ActivityEvent>()
+  for (const event of safeServer.activityLog) activityById.set(event.id, event)
+  for (const event of safeLocal.activityLog) activityById.set(event.id, event)
+  const mergedActivity = Array.from(activityById.values())
+    .sort((left, right) => right.timestamp - left.timestamp)
+    .slice(0, 500)
 
   return sanitizeProfile({
     ...safeServer,
     ...safeLocal,
     bookmarks: mergedBookmarks,
+    deletedBookmarkCodes: safeLocal.deletedBookmarkCodes,
     plans: mergedPlans,
     achievements: mergedAchievements,
     interviews: mergedInterviews,
+    activityLog: mergedActivity,
     sessionId: safeLocal.sessionId || safeServer.sessionId || getSessionId(),
   })
-}
-
-function profileToPayload(state: ProfileData) {
-  const safeState = sanitizeProfile(state)
-  return {
-    sessionId: safeState.sessionId,
-    plans: safeState.plans.map((p) => ({
-      id: p.id,
-      goal_id: p.goalId,
-      nct_code: p.nctCode,
-      nct_title: p.nctTitle,
-      level: p.level || undefined,
-      goals: p.goals,
-      stages: p.stages,
-      completed_steps: p.completedSteps,
-      status: p.status,
-      plan_type: p.planType,
-      roadmap_id: p.roadmapId,
-      updated_at: new Date().toISOString(),
-    })),
-    bookmarks: safeState.bookmarks.map((b) => ({
-      nct_code: b.nctCode,
-      nct_title: b.nctTitle,
-      institution: b.institution || undefined,
-      city: b.city || undefined,
-    })),
-    achievements: safeState.achievements.map((a) => ({
-      achievement_id: a.id,
-      title: a.title,
-      description: a.description || undefined,
-    })),
-    interviews: safeState.interviews.map((i) => ({
-      nct_code: i.nctCode,
-      nct_title: i.nctTitle,
-      questions: i.questions,
-      summary: i.summary || undefined,
-      level: i.level || undefined,
-    })),
-    activityEvents: state.activityLog.map((e: ActivityEvent) => ({
-      event_type: e.type,
-      label: e.label,
-      is_priority: typeof e.isPriority === "boolean" ? e.isPriority : isPriorityActivityEventType(e.type),
-      priority_rank: typeof e.priorityRank === "number" ? e.priorityRank : (isPriorityActivityEventType(e.type) ? 1 : 0),
-      metadata: { timestamp: e.timestamp },
-    })),
-  }
 }
 
 function normalizeActivityEvent(event: any): ActivityEvent {
@@ -142,7 +132,7 @@ function normalizeActivityEvent(event: any): ActivityEvent {
     event.metadata?.timestamp ??
     Date.now()
   return {
-    id: String(event.id ?? ""),
+    id: String(event.client_event_id ?? event.id ?? ""),
     type: String(event.event_type ?? event.type ?? ""),
     label: String(event.label ?? ""),
     timestamp: new Date(rawTimestamp).getTime(),
@@ -166,6 +156,7 @@ function extractProfile(state: Record<string, unknown>): ProfileData {
     activePlanId: state.activePlanId as string | undefined,
     interviewResult: state.interviewResult as ProfileData["interviewResult"],
     bookmarks: (state.bookmarks as ProfileData["bookmarks"]) ?? [],
+    deletedBookmarkCodes: (state.deletedBookmarkCodes as string[]) ?? [],
     plans: (state.plans as ProfileData["plans"]) ?? [],
     interviews: (state.interviews as ProfileData["interviews"]) ?? [],
   })
@@ -226,6 +217,7 @@ export function useProfileSync() {
           })),
           interviews: json.data.interviews.map((i: any) => ({
             id: i.id,
+            goalId: i.goal_id ?? undefined,
             nctCode: i.nct_code,
             nctTitle: i.nct_title,
             questions: parseJSONArray(i.questions),
@@ -265,9 +257,14 @@ export function useProfileSync() {
           const res = await fetch("/api/sync-profile", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(profileToPayload(current)),
+            body: JSON.stringify(createProfileSyncPayload(current)),
           })
-          if (!res.ok && res.status !== 401 && res.status !== 403) {
+          if (res.ok) {
+            const result = await res.json()
+            if (result.status === "success" && current.deletedBookmarkCodes.length > 0) {
+              useProfileStore.getState().acknowledgeBookmarkDeletes(current.deletedBookmarkCodes)
+            }
+          } else if (res.status !== 401 && res.status !== 403) {
             const text = await res.text()
             console.warn("[profile-sync] POST error:", res.status, text.slice(0, 200))
           }

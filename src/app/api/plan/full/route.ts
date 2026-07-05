@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import type { ActiveGoalBundle, AdmissionGoalRecord, DailyPlanRecord } from "@/types/admission"
+import type { ActiveGoalBundle, AdmissionGoalRecord, DailyPlanRecord, ProductHistoryRecord } from "@/types/admission"
 import type { CoachDayTask, CoachRoadmap } from "@/types/coach"
 import type { DevelopmentPlan } from "@/types/plan"
 import type { RecommendationSnapshot } from "@/types/recommendations"
@@ -43,6 +43,22 @@ function toDailyPlanRecord(row: Record<string, unknown>, tasks: CoachDayTask[]):
     previousDate: typeof row.previous_date === "string" ? row.previous_date : undefined,
     nextDate: typeof row.next_date === "string" ? row.next_date : undefined,
     stats: typeof row.stats === "object" && row.stats !== null ? row.stats as Record<string, unknown> : null,
+  }
+}
+
+function toProductHistoryRecord(row: Record<string, unknown>): ProductHistoryRecord {
+  return {
+    id: String(row.id),
+    userId: typeof row.user_id === "string" ? row.user_id : undefined,
+    goalId: typeof row.goal_id === "string" ? row.goal_id : undefined,
+    entityType: typeof row.entity_type === "string" ? row.entity_type : "goal",
+    entityId: typeof row.entity_id === "string" ? row.entity_id : undefined,
+    action: typeof row.action === "string" ? row.action : "updated",
+    title: typeof row.title === "string" ? row.title : "",
+    summary: typeof row.summary === "string" ? row.summary : undefined,
+    metadata: typeof row.metadata === "object" && row.metadata !== null ? row.metadata as Record<string, unknown> : {},
+    occurredAt: row.occurred_at ? Date.parse(String(row.occurred_at)) : Date.now(),
+    createdAt: row.created_at ? Date.parse(String(row.created_at)) : Date.now(),
   }
 }
 
@@ -179,11 +195,13 @@ export async function GET() {
         generalPlan: null,
         roadmap: null,
         todayPlan: null,
+        dailyHistory: [],
         history: [],
         historySummary: {
           daysTracked: 0,
           tasksCompleted: 0,
           tasksTotal: 0,
+          productEventsTracked: 0,
         },
         communityContext: null,
       }
@@ -220,13 +238,22 @@ export async function GET() {
 
     roadmapQuery = roadmapQuery.eq("goal_id", activeGoalId)
     dailyQuery = dailyQuery.eq("goal_id", activeGoalId)
+    const historyQuery = supabase
+      .from("product_history")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("goal_id", activeGoalId)
+      .order("occurred_at", { ascending: false })
+      .limit(30)
 
-    const [roadmapRes, dailyRes] = await Promise.all([
+    const [roadmapRes, dailyRes, productHistoryRes] = await Promise.all([
       roadmapQuery.maybeSingle(),
       dailyQuery,
+      historyQuery,
     ])
     if (roadmapRes.error) throw roadmapRes.error
     if (dailyRes.error) throw dailyRes.error
+    if (productHistoryRes.error) throw productHistoryRes.error
 
     const dailyPlans = dailyRes.data ?? []
     const dailyPlanIds = dailyPlans.map((row) => row.id)
@@ -260,8 +287,9 @@ export async function GET() {
       tasksByPlan.set(planId, list)
     }
 
-    const history = dailyPlans.map((row) => toDailyPlanRecord(row, tasksByPlan.get(String(row.id)) ?? []))
-    const today = history.find((plan) => plan.planDate === todayIso()) ?? history[0] ?? null
+    const dailyHistory = dailyPlans.map((row) => toDailyPlanRecord(row, tasksByPlan.get(String(row.id)) ?? []))
+    const productHistory = (productHistoryRes.data ?? []).map((row) => toProductHistoryRecord(row as Record<string, unknown>))
+    const today = dailyHistory.find((plan) => plan.planDate === todayIso()) ?? dailyHistory[0] ?? null
 
     const roadmap = roadmapRes.data
       ? ({
@@ -289,11 +317,11 @@ export async function GET() {
       : null
 
     const goal = toAdmissionGoalRecord(goalRes.data)
-    const tasksCompleted = history.reduce(
+    const tasksCompleted = dailyHistory.reduce(
       (sum, dailyPlan) => sum + dailyPlan.tasks.filter((task) => task.completed).length,
       0,
     )
-    const tasksTotal = history.reduce((sum, dailyPlan) => sum + dailyPlan.tasks.length, 0)
+    const tasksTotal = dailyHistory.reduce((sum, dailyPlan) => sum + dailyPlan.tasks.length, 0)
     const currentWeekNumber = roadmap?.currentWeekNumber
       ?? roadmap?.weeks.find((week) => week.status === "active")?.number
 
@@ -308,12 +336,14 @@ export async function GET() {
       generalPlan: toDevelopmentPlan(planRes.data),
       roadmap,
       todayPlan: today,
-      history,
+      dailyHistory,
+      history: productHistory,
       historySummary: {
-        daysTracked: history.length,
+        daysTracked: dailyHistory.length,
         tasksCompleted,
         tasksTotal,
-        lastPlanDate: history[0]?.planDate,
+        lastPlanDate: dailyHistory[0]?.planDate,
+        productEventsTracked: productHistory.length,
       },
       communityContext: goal
         ? {

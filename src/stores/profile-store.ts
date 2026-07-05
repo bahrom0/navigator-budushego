@@ -59,6 +59,7 @@ function emptyProfile(sessionId: string): ProfileData {
     activityLog: [],
     achievements: [],
     bookmarks: [],
+    deletedBookmarkCodes: [],
     plans: [],
     interviews: [],
   }
@@ -110,6 +111,7 @@ function normalizeProfileData(profile: ProfileData): ProfileData {
   const activeGoal = isValidGoal(profile.activeGoal) ? profile.activeGoal : null
   const goalHistory = (profile.goalHistory ?? []).filter(isValidGoal)
   const plans = (profile.plans ?? []).filter(isValidPlan)
+  const deletedBookmarkCodes = profile.deletedBookmarkCodes ?? []
 
   return {
     ...profile,
@@ -117,6 +119,10 @@ function normalizeProfileData(profile: ProfileData): ProfileData {
     activeGoalId: activeGoal?.id,
     goalHistory,
     plans,
+    bookmarks: (profile.bookmarks ?? []).filter(
+      (bookmark) => !deletedBookmarkCodes.includes(bookmark.nctCode),
+    ),
+    deletedBookmarkCodes,
     activityLog: normalizeActivityLog(profile.activityLog ?? []),
   }
 }
@@ -132,6 +138,7 @@ interface ProfileStore extends ProfileData {
   setRecommendations: (items: any[]) => void
   toggleBookmark: (bookmark: Omit<BookmarkRecord, "id" | "savedAt">) => void
   removeBookmark: (id: string) => void
+  acknowledgeBookmarkDeletes: (codes: string[]) => void
   upsertPlan: (plan: Omit<PlanRecord, "id" | "createdAt">) => string
   removePlan: (id: string) => void
   setActivePlan: (id: string | undefined) => void
@@ -233,20 +240,42 @@ export const useProfileStore = create<ProfileStore>((set, get) => {
   toggleBookmark: (bookmark) => {
     const existing = get().bookmarks.find((b) => b.nctCode === bookmark.nctCode)
     if (existing) {
-      set((state) => ({ bookmarks: state.bookmarks.filter((b) => b.id !== existing.id) }))
+      set((state) => ({
+        bookmarks: state.bookmarks.filter((b) => b.id !== existing.id),
+        deletedBookmarkCodes: Array.from(new Set([...state.deletedBookmarkCodes, existing.nctCode])),
+      }))
     } else {
       const entry: BookmarkRecord = {
         id: generateId(),
         ...bookmark,
         savedAt: Date.now(),
       }
-      set((state) => ({ bookmarks: [entry, ...state.bookmarks] }))
+      set((state) => ({
+        bookmarks: [entry, ...state.bookmarks],
+        deletedBookmarkCodes: state.deletedBookmarkCodes.filter((code) => code !== entry.nctCode),
+      }))
     }
     persistProfile(get())
   },
 
   removeBookmark: (id) => {
-    set((state) => ({ bookmarks: state.bookmarks.filter((b) => b.id !== id) }))
+    set((state) => {
+      const removed = state.bookmarks.find((bookmark) => bookmark.id === id)
+      return {
+        bookmarks: state.bookmarks.filter((bookmark) => bookmark.id !== id),
+        deletedBookmarkCodes: removed
+          ? Array.from(new Set([...state.deletedBookmarkCodes, removed.nctCode]))
+          : state.deletedBookmarkCodes,
+      }
+    })
+    persistProfile(get())
+  },
+
+  acknowledgeBookmarkDeletes: (codes) => {
+    if (codes.length === 0) return
+    set((state) => ({
+      deletedBookmarkCodes: state.deletedBookmarkCodes.filter((code) => !codes.includes(code)),
+    }))
     persistProfile(get())
   },
 

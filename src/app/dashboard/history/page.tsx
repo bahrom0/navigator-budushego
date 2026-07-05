@@ -1,40 +1,31 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 import { motion } from "framer-motion"
-import { useRouter } from "next/navigation"
-import {
-  Search, Eye, Bookmark, Mic, Sparkles, Target, CheckCircle2, Play, BarChart3, User, MessageSquare,
-} from "lucide-react"
-import { useProfileStore } from "@/stores/profile-store"
-import { ACTIVITY_EVENT_LABELS, type ActivityEventType } from "@/types/activity"
-import { isPriorityActivityEventType } from "@/types/activity"
+import { Search, CheckCircle2, Flag, GitBranch, CalendarDays, ArrowRight } from "lucide-react"
+import { applyActiveGoalBundle } from "@/lib/coach/bundle-client"
+import { fetchActiveGoalBundle } from "@/lib/active-goal-bundle-client"
+import type { ActiveGoalBundle, ProductHistoryRecord } from "@/types/admission"
 
-const EVENT_ICONS: Record<string, typeof Eye> = {
-  open_app: Play,
-  choose_category: Target,
-  start_analysis: BarChart3,
-  view_recommendation: Eye,
-  bookmark_code: Bookmark,
-  open_profile: User,
-  start_interview: Mic,
-  finish_interview: CheckCircle2,
-  generate_plan: Sparkles,
-  save_plan: Bookmark,
-  complete_plan_step: CheckCircle2,
-  use_teacher: MessageSquare,
+const ACTION_LINKS: Record<string, string> = {
+  goal_selected: "/plan",
+  general_plan_generated: "/plan",
+  general_plan_updated: "/plan",
+  roadmap_created: "/coach",
+  roadmap_updated: "/coach",
+  daily_plan_generated: "/coach",
+  coach_task_completed: "/coach",
+  coach_day_completed: "/coach",
 }
 
-const EVENT_LINKS: Record<string, string> = {
-  view_recommendation: "/recommendations",
-  choose_category: "/categories",
-  start_interview: "/interview",
-  finish_interview: "/interview",
-  generate_plan: "/plan",
-  save_plan: "/plan",
-  bookmark_code: "/dashboard/bookmarks",
-  use_teacher: "/teacher",
-}
+const ACTION_ICONS = {
+  goal: Flag,
+  plan: GitBranch,
+  roadmap: GitBranch,
+  daily_plan: CalendarDays,
+  task: CheckCircle2,
+} as const
 
 function formatDateLabel(timestamp: number): string {
   const date = new Date(timestamp)
@@ -49,11 +40,11 @@ function formatDateLabel(timestamp: number): string {
   return date.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })
 }
 
-function groupByDate(events: { timestamp: number }[]): Map<string, { timestamp: number }[]> {
-  const groups = new Map<string, { timestamp: number }[]>()
+function groupByDate(events: ProductHistoryRecord[]): Map<string, ProductHistoryRecord[]> {
+  const groups = new Map<string, ProductHistoryRecord[]>()
   for (const event of events) {
-    const label = formatDateLabel(event.timestamp)
-    const list = groups.get(label) || []
+    const label = formatDateLabel(event.occurredAt)
+    const list = groups.get(label) ?? []
     list.push(event)
     groups.set(label, list)
   }
@@ -61,137 +52,181 @@ function groupByDate(events: { timestamp: number }[]): Map<string, { timestamp: 
 }
 
 export default function DashboardHistory() {
-  const router = useRouter()
-  const activityLog = useProfileStore((s) => s.activityLog)
+  const [bundle, setBundle] = useState<ActiveGoalBundle | null>(null)
   const [search, setSearch] = useState("")
-  const [mounted, setMounted] = useState(false)
-  const priorityActivityLog = useMemo(
-    () =>
-      activityLog.filter((event) =>
-        typeof event.isPriority === "boolean"
-          ? event.isPriority
-          : isPriorityActivityEventType(event.type),
-    ),
-    [activityLog],
-  )
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setMounted(true)
+    let cancelled = false
+
+    async function load() {
+      try {
+        const nextBundle = await fetchActiveGoalBundle()
+        if (cancelled) return
+        setBundle(nextBundle)
+        if (nextBundle) {
+          applyActiveGoalBundle(nextBundle)
+        }
+      } catch {
+        if (!cancelled) {
+          setBundle(null)
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    void load()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim()
-    if (!q) return priorityActivityLog
-    return priorityActivityLog.filter(
-      (e) =>
-        e.label.toLowerCase().includes(q) ||
-        e.type.toLowerCase().includes(q)
+    const history = bundle?.history ?? []
+    const query = search.toLowerCase().trim()
+    if (!query) return history
+    return history.filter((item) =>
+      item.title.toLowerCase().includes(query)
+      || item.action.toLowerCase().includes(query)
+      || (item.summary ?? "").toLowerCase().includes(query),
     )
-  }, [priorityActivityLog, search])
+  }, [bundle, search])
 
   const grouped = useMemo(() => groupByDate(filtered), [filtered])
-
-  const handleEventClick = (event: (typeof priorityActivityLog)[0]) => {
-    const link = EVENT_LINKS[event.type]
-    if (link) router.push(link)
-  }
 
   return (
     <div>
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">История</h1>
-          <p className="mt-1 text-sm text-text-secondary">
-          {!mounted
-            ? "История"
-            : priorityActivityLog.length === 0
-            ? "История действий пуста"
-            : `${priorityActivityLog.length} действий`}
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">History</h1>
+        <p className="mt-1 text-sm text-text-secondary">
+          Здесь собраны реальные решения и прогресс по активной цели, а не просто telemetry-клики.
         </p>
       </motion.div>
 
-      {mounted && priorityActivityLog.length > 0 && (
-        <div className="mt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Поиск по событиям..."
-              className="h-10 w-full rounded-[12px] border border-border bg-card-bg pl-9 pr-4 text-sm text-foreground placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
+      {loading ? (
+        <div className="mt-8 rounded-[18px] border border-border bg-card-bg p-8 text-sm text-text-muted">
+          Загружаем историю цели...
         </div>
-      )}
+      ) : null}
 
-      {mounted && priorityActivityLog.length === 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-8 rounded-[18px] border border-border bg-background p-12 text-center"
-        >
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary-light">
-            <Eye className="h-6 w-6 text-primary" />
-          </div>
-          <p className="mt-4 text-sm font-medium text-foreground">История пока пуста</p>
-          <p className="mt-1 text-sm text-text-secondary">
-            Все ваши действия будут отображаться здесь.
+      {!loading && !bundle?.goal ? (
+        <div className="mt-8 rounded-[18px] border border-border bg-card-bg p-8">
+          <p className="text-sm font-medium text-foreground">Активная цель пока не выбрана</p>
+          <p className="mt-2 text-sm leading-6 text-text-secondary">
+            History начинает работать после выбора цели и первых шагов по плану.
           </p>
-        </motion.div>
-      )}
-
-      {mounted && filtered.length === 0 && priorityActivityLog.length > 0 && (
-        <div className="mt-8 rounded-[18px] border border-border bg-background p-8 text-center">
-          <p className="text-sm text-text-muted">Ничего не найдено. Попробуйте изменить запрос.</p>
+          <Link
+            href="/recommendations"
+            className="mt-4 inline-flex items-center gap-2 rounded-[12px] bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          >
+            Перейти к рекомендациям
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
-      )}
+      ) : null}
 
-      <div className="mt-6 space-y-8">
-        {Array.from(grouped.entries()).map(([dateLabel, events]) => (
-          <div key={dateLabel}>
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-text-muted">
-              {dateLabel}
-            </h2>
-            <div className="mt-3 flex flex-col gap-2">
-              {(events as typeof filtered).map((event, i) => {
-                const Icon = EVENT_ICONS[event.type] || Eye
-                const link = EVENT_LINKS[event.type]
-                return (
-                  <motion.div
-                    key={event.id}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.02 }}
-                  >
-                    <button
-                      onClick={() => handleEventClick(event)}
-                      className={`flex w-full items-center gap-3 rounded-[14px] border border-border bg-card-bg px-4 py-3 text-left transition-colors hover:bg-background ${link ? "cursor-pointer" : "cursor-default"}`}
-                    >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                        <Icon className="h-4 w-4 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {event.label}
-                        </p>
-                        <p className="text-xs text-text-muted">
-                          {new Date(event.timestamp).toLocaleTimeString("ru-RU", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      </div>
-                      <span className="shrink-0 rounded-full bg-background px-2 py-0.5 text-[11px] font-medium text-text-muted border border-border">
-                        {ACTIVITY_EVENT_LABELS[event.type as ActivityEventType] || event.type}
-                      </span>
-                    </button>
-                  </motion.div>
-                )
-              })}
+      {!loading && bundle?.goal ? (
+        <>
+          <div className="mt-6 rounded-[18px] border border-border bg-card-bg p-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Активная цель</p>
+                <h2 className="mt-2 text-lg font-semibold text-foreground">{bundle.goal.nctTitle}</h2>
+                <p className="mt-1 text-sm text-text-secondary">{bundle.goal.nctCode}</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-[14px] bg-background px-4 py-3">
+                  <p className="text-xs text-text-muted">События</p>
+                  <p className="mt-1 text-lg font-semibold text-foreground">{bundle.historySummary.productEventsTracked ?? 0}</p>
+                </div>
+                <div className="rounded-[14px] bg-background px-4 py-3">
+                  <p className="text-xs text-text-muted">Дней в Coach</p>
+                  <p className="mt-1 text-lg font-semibold text-foreground">{bundle.historySummary.daysTracked}</p>
+                </div>
+                <div className="rounded-[14px] bg-background px-4 py-3">
+                  <p className="text-xs text-text-muted">Задач выполнено</p>
+                  <p className="mt-1 text-lg font-semibold text-foreground">{bundle.historySummary.tasksCompleted}</p>
+                </div>
+              </div>
             </div>
+
+            {(bundle.history?.length ?? 0) > 0 ? (
+              <div className="mt-5 relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Поиск по решениям и прогрессу..."
+                  className="h-10 w-full rounded-[12px] border border-border bg-background pl-9 pr-4 text-sm text-foreground placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            ) : null}
           </div>
-        ))}
-      </div>
+
+          {bundle.history.length === 0 ? (
+            <div className="mt-8 rounded-[18px] border border-border bg-background p-10 text-center">
+              <p className="text-sm font-medium text-foreground">История еще не наполнена</p>
+              <p className="mt-2 text-sm text-text-secondary">
+                Как только вы соберете план, roadmap и начнете закрывать шаги в Coach, они появятся здесь.
+              </p>
+            </div>
+          ) : null}
+
+          {bundle.history.length > 0 && filtered.length === 0 ? (
+            <div className="mt-8 rounded-[18px] border border-border bg-background p-8 text-center">
+              <p className="text-sm text-text-muted">Ничего не найдено. Попробуйте изменить запрос.</p>
+            </div>
+          ) : null}
+
+          <div className="mt-6 space-y-8">
+            {Array.from(grouped.entries()).map(([dateLabel, events]) => (
+              <div key={dateLabel}>
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-text-muted">{dateLabel}</h2>
+                <div className="mt-3 flex flex-col gap-2">
+                  {events.map((event, index) => {
+                    const Icon = ACTION_ICONS[event.entityType as keyof typeof ACTION_ICONS] ?? CheckCircle2
+                    const href = ACTION_LINKS[event.action]
+                    const content = (
+                      <div className="flex items-start gap-3 rounded-[14px] border border-border bg-card-bg px-4 py-3 transition-colors hover:bg-background">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-foreground">{event.title}</p>
+                          <p className="mt-1 text-xs leading-5 text-text-secondary">
+                            {event.summary ?? "Значимое событие по активной цели"}
+                          </p>
+                          <p className="mt-1 text-[11px] text-text-muted">
+                            {new Date(event.occurredAt).toLocaleTimeString("ru-RU", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    )
+
+                    return (
+                      <motion.div
+                        key={event.id}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.02 }}
+                      >
+                        {href ? <Link href={href}>{content}</Link> : content}
+                      </motion.div>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : null}
     </div>
   )
 }

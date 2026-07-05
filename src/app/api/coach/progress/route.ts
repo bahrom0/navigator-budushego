@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import type { CoachProgress } from "@/types/coach"
+import { appendProductHistory } from "@/lib/product-history"
 
 export const dynamic = "force-dynamic"
 
@@ -23,15 +24,16 @@ const CoachProgressSchema = z.object({
 })
 
 const TaskToggleSchema = z.object({
-  dayPlanId: z.string().min(1, "Укажите ID плана"),
-  taskId: z.string().min(1, "Укажите ID задачи"),
+  dayPlanId: z.string().min(1, "РЈРєР°Р¶РёС‚Рµ ID РїР»Р°РЅР°"),
+  taskId: z.string().min(1, "РЈРєР°Р¶РёС‚Рµ ID Р·Р°РґР°С‡Рё"),
   completed: z.boolean(),
   currentProgress: CoachProgressSchema,
 })
 
 const DayCompleteSchema = z.object({
-  dayPlanId: z.string().min(1, "Укажите ID плана"),
+  dayPlanId: z.string().min(1, "РЈРєР°Р¶РёС‚Рµ ID РїР»Р°РЅР°"),
   completedAt: z.number().int().positive(),
+  goalId: z.string().min(1).optional(),
   currentProgress: CoachProgressSchema,
 })
 
@@ -65,8 +67,8 @@ async function persistTaskToggle(
     .eq("user_id", user.id)
 
   const completedIds = (tasks ?? [])
-    .filter((t) => t.completed === true)
-    .map((t) => t.task_id)
+    .filter((task) => task.completed === true)
+    .map((task) => task.task_id)
 
   await supabase
     .from("daily_plans")
@@ -76,6 +78,39 @@ async function persistTaskToggle(
     })
     .eq("id", dayPlanId)
     .eq("user_id", user.id)
+
+  if (!completed) {
+    return
+  }
+
+  const [{ data: taskRow }, { data: dayPlanRow }] = await Promise.all([
+    supabase
+      .from("daily_tasks")
+      .select("title")
+      .eq("task_id", taskId)
+      .eq("daily_plan_id", dayPlanId)
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("daily_plans")
+      .select("goal_id, plan_date")
+      .eq("id", dayPlanId)
+      .eq("user_id", user.id)
+      .maybeSingle(),
+  ])
+
+  await appendProductHistory(supabase, user.id, {
+    goalId: typeof dayPlanRow?.goal_id === "string" ? dayPlanRow.goal_id : null,
+    entityType: "task",
+    action: "coach_task_completed",
+    title: typeof taskRow?.title === "string" ? `Завершена задача: ${taskRow.title}` : "Завершена задача Coach",
+    summary: typeof dayPlanRow?.plan_date === "string" ? `День ${dayPlanRow.plan_date}` : "Прогресс в Coach",
+    metadata: {
+      dayPlanId,
+      taskId,
+      planDate: typeof dayPlanRow?.plan_date === "string" ? dayPlanRow.plan_date : null,
+    },
+  })
 }
 
 function updateStreak(progress: CoachProgress): CoachProgress {
@@ -114,7 +149,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           status: "error",
-          error: parsed.error.issues[0]?.message ?? "Некорректные данные",
+          error: parsed.error.issues[0]?.message ?? "РќРµРєРѕСЂСЂРµРєС‚РЅС‹Рµ РґР°РЅРЅС‹Рµ",
           data: null,
         },
         { status: 400 },
@@ -126,25 +161,19 @@ export async function POST(request: Request) {
     await persistTaskToggle(dayPlanId, taskId, completed)
 
     const tasksDelta = completed ? 1 : -1
-    const newCompleted = Math.max(
-      0,
-      currentProgress.totalTasksCompleted + tasksDelta,
-    )
+    const newCompleted = Math.max(0, currentProgress.totalTasksCompleted + tasksDelta)
 
     const updated: CoachProgress = {
       ...updateStreak(currentProgress),
       totalTasksCompleted: newCompleted,
       roadmapCompletionPercent: currentProgress.totalTasksPlanned > 0
-        ? Math.round(
-            (newCompleted / currentProgress.totalTasksPlanned) * 100,
-          )
+        ? Math.round((newCompleted / currentProgress.totalTasksPlanned) * 100)
         : 0,
     }
 
     return NextResponse.json({ status: "success", data: { progress: updated } })
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Internal server error"
+    const message = error instanceof Error ? error.message : "Internal server error"
     console.error("[coach/progress] POST error:", message)
     return NextResponse.json(
       { status: "error", error: message, data: null },
@@ -162,14 +191,14 @@ export async function PATCH(request: Request) {
       return NextResponse.json(
         {
           status: "error",
-          error: parsed.error.issues[0]?.message ?? "Некорректные данные",
+          error: parsed.error.issues[0]?.message ?? "РќРµРєРѕСЂСЂРµРєС‚РЅС‹Рµ РґР°РЅРЅС‹Рµ",
           data: null,
         },
         { status: 400 },
       )
     }
 
-    const { currentProgress } = parsed.data
+    const { currentProgress, dayPlanId, goalId } = parsed.data
 
     const updated: CoachProgress = {
       ...updateStreak(currentProgress),
@@ -177,10 +206,27 @@ export async function PATCH(request: Request) {
       lastActiveDate: new Date().toISOString().slice(0, 10),
     }
 
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await appendProductHistory(supabase, user.id, {
+        goalId: goalId ?? null,
+        entityType: "daily_plan",
+        entityId: dayPlanId,
+        action: "coach_day_completed",
+        title: "Завершен учебный день",
+        summary: `Серия: ${updated.currentStreak} дн.`,
+        metadata: {
+          dayPlanId,
+          streak: updated.currentStreak,
+          totalDaysActive: updated.totalDaysActive,
+        },
+      })
+    }
+
     return NextResponse.json({ status: "success", data: { progress: updated } })
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Internal server error"
+    const message = error instanceof Error ? error.message : "Internal server error"
     console.error("[coach/progress] PATCH error:", message)
     return NextResponse.json(
       { status: "error", error: message, data: null },
