@@ -34,7 +34,7 @@ export function ChatComposer({
 
   return (
     <div className="mx-auto w-full max-w-[760px] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
-      <div className="flex items-end gap-2 rounded-2xl border border-border bg-card-bg px-3 py-2 shadow-sm">
+      <div className="navigator-surface flex items-end gap-2 rounded-2xl px-3 py-2 shadow-sm">
         <div className="flex-1">
           <textarea
             ref={textareaRef}

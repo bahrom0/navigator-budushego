@@ -69,7 +69,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <>
       <ThemeSync />
-      <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-border bg-card-bg/78 shadow-[0_1px_0_rgb(255_255_255_/_0.18)] backdrop-blur">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-2">
             {showBackButton ? (

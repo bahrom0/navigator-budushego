@@ -44,10 +44,11 @@ export function CoachShell({ children }: CoachShellProps) {
     <div className={`bg-background ${
       activeTab === "chat" ? "-mt-px h-[calc(100dvh-3.5rem)] flex flex-col" : "-mt-px"
     }`}>
-      <header className="sticky top-14 z-30 border-b border-border bg-card-bg">
-        <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-3 px-4 sm:px-6">
+      <header className="sticky top-14 z-30 border-b border-border bg-card-bg/88 backdrop-blur">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[15px] font-semibold text-foreground">
+            <span className="navigator-kicker">Main workspace · coach</span>
+            <p className="mt-2 truncate text-[15px] font-semibold text-foreground">
               {resolvedGoal?.nctTitle ?? "Цель не выбрана"}
             </p>
             <p className="truncate text-xs text-text-secondary">
@@ -70,7 +71,7 @@ export function CoachShell({ children }: CoachShellProps) {
             ) : null}
           </div>
         </div>
-        <div className="hidden md:block">
+        <div className="mt-2 hidden md:block">
           <DesktopTabs activeTab={activeTab} onChange={setActiveTab} />
         </div>
       </header>
@@ -78,7 +79,7 @@ export function CoachShell({ children }: CoachShellProps) {
       <main className={`mx-auto w-full ${
         activeTab === "chat"
           ? "flex min-h-0 flex-col flex-1 overflow-hidden"
-          : "max-w-3xl px-4 pb-24 pt-4 sm:px-6 md:pb-8"
+          : "max-w-3xl px-4 pb-24 pt-5 sm:px-6 md:pb-8"
       }`}>
         {activeTab === "chat" ? (
           children

@@ -34,6 +34,10 @@ export default function OnboardingPage() {
             </p>
           </div>
 
+          <div className="mb-4">
+            <span className="navigator-kicker">Core flow · onboarding</span>
+          </div>
+
           <StepIndicator currentStep={currentStep} />
 
           <div className="mt-4 rounded-[2.5rem] border border-[var(--marketing-border)] bg-[var(--marketing-surface)] p-4 shadow-[0_24px_80px_rgba(31,27,22,0.06)] ring-1 ring-[rgba(255,255,255,0.22)] backdrop-blur-xl sm:p-6 dark:shadow-[0_24px_80px_rgba(0,0,0,0.28)] dark:ring-[rgba(255,255,255,0.06)]">

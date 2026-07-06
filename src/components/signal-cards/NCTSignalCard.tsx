@@ -79,7 +79,7 @@ export function NCTSignalCard({
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4, boxShadow: "0 8px 30px rgba(0,0,0,0.08)" }}
       transition={springHover}
-      className="group relative overflow-hidden rounded-[20px] border border-border bg-card-bg"
+      className="navigator-surface group relative overflow-hidden rounded-[20px]"
       style={{
         boxShadow: "0 1px 3px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.04)",
         borderLeft: `3px solid ${accentColor}`,

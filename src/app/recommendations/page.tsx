@@ -270,7 +270,7 @@ function SkeletonCard() {
 
 if (!onboardingLoaded || loading) {
     return (
-      <main className="flex flex-1 flex-col px-6">
+      <main className="navigator-page flex flex-1 flex-col">
         <div className="mb-8 flex items-center gap-3">
           <button
             onClick={goBack}
@@ -279,7 +279,7 @@ if (!onboardingLoaded || loading) {
             <ArrowLeft className="h-4 w-4 text-text-secondary" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Рекомендации</h1>
+            <h1 className="navigator-page-title">Рекомендации</h1>
             <p className="mt-1 text-sm text-text-secondary">Подбираем специальности на основе выбранных направлений. Следующий шаг здесь один: выбрать одну цель.</p>
           </div>
         </div>
@@ -302,7 +302,7 @@ if (!onboardingLoaded || loading) {
 
   if (error) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center px-6 py-24">
+      <main className="navigator-page flex flex-1 flex-col items-center justify-center py-24">
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="max-w-md text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-error/10">
             <Search className="h-7 w-7 text-error" />
@@ -329,7 +329,7 @@ if (!onboardingLoaded || loading) {
 
   if (results.length === 0) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center px-6 py-24">
+      <main className="navigator-page flex flex-1 flex-col items-center justify-center py-24">
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="max-w-md text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary-light">
             <Search className="h-7 w-7 text-primary" />
@@ -350,39 +350,49 @@ if (!onboardingLoaded || loading) {
   }
 
 return (
-  <main className="flex flex-1 flex-col px-6">
-    <motion.div
+  <main className="navigator-page flex flex-1 flex-col">
+    <motion.section
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 200, damping: 25 }}
-      className="mb-6 flex items-center gap-3"
+      className="navigator-hero mb-6 p-5 sm:p-6"
     >
-      <button
-        onClick={goBack}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-border bg-card-bg transition-colors hover:bg-background"
-      >
-        <ArrowLeft className="h-4 w-4 text-text-secondary" />
-      </button>
-      <div className="flex-1">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Рекомендации</h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          Подобрано {displayedResults.length}{cityFilter || studyFormFilter ? ` из ${results.length}` : ""} направлений. Сначала выберите одну цель, а детали можно открыть потом.
-          {overallConfidence !== null && (
-            <span className="ml-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary">
-              общая уверенность {Math.round(overallConfidence * 100)}%
-            </span>
-          )}
-        </p>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <button
+              onClick={goBack}
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] border border-border bg-card-bg/85 transition-colors hover:bg-background"
+            >
+              <ArrowLeft className="h-4 w-4 text-text-secondary" />
+            </button>
+            <div>
+              <span className="navigator-kicker">Core flow · select goal</span>
+              <h1 className="navigator-page-title mt-3">Рекомендации для выбора цели</h1>
+              <p className="navigator-page-subtitle mt-3">
+                Подобрано {displayedResults.length}{cityFilter || studyFormFilter ? ` из ${results.length}` : ""} направлений. Сейчас главное действие одно: выбрать одну цель и только потом уходить в детали, explain и план.
+              </p>
+            </div>
+          </div>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowFilters((v) => !v)}
+            className="inline-flex h-11 items-center gap-2 rounded-[14px] border border-border bg-card-bg/85 px-4 text-sm font-medium text-foreground transition-colors hover:bg-background"
+          >
+            <SlidersHorizontal className="h-4 w-4 text-text-muted" />
+            Фильтры
+          </motion.button>
+        </div>
+
+        <div className="flex flex-wrap gap-2.5">
+          <span className="navigator-chip">Следующий шаг: выбрать 1 цель</span>
+          <span className="navigator-chip">Фокус: core path, а не вторичные ветки</span>
+          {overallConfidence !== null ? (
+            <span className="navigator-chip">Общая уверенность {Math.round(overallConfidence * 100)}%</span>
+          ) : null}
+        </div>
       </div>
-      <motion.button
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setShowFilters((v) => !v)}
-        className="inline-flex h-10 items-center gap-2 rounded-[12px] border border-border bg-card-bg px-4 text-sm font-medium text-foreground transition-colors hover:bg-background"
-      >
-        <SlidersHorizontal className="h-4 w-4 text-text-muted" />
-        Фильтры
-      </motion.button>
-    </motion.div>
+    </motion.section>
 
     <AnimatePresence>
       {showFilters && (
@@ -394,7 +404,7 @@ return (
           transition={{ type: "spring", stiffness: 200, damping: 25 }}
           className="mb-6 overflow-hidden"
         >
-          <div className="grid grid-cols-1 gap-3 rounded-[16px] border border-border bg-card-bg p-4 md:grid-cols-3">
+          <div className="navigator-surface grid grid-cols-1 gap-3 p-4 md:grid-cols-3">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-medium text-text-secondary">Город</span>
               <select
@@ -465,7 +475,7 @@ return (
     </AnimatePresence>
 
     {displayedResults.length === 0 ? (
-      <main className="flex flex-1 flex-col items-center justify-center px-6 py-24">
+      <section className="flex flex-1 flex-col items-center justify-center py-24">
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="max-w-md text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary-light">
             <Search className="h-7 w-7 text-primary" />
@@ -481,7 +491,7 @@ return (
             Сбросить фильтры
           </button>
         </motion.div>
-      </main>
+      </section>
     ) : (
       <LayoutGroup>
         <motion.div

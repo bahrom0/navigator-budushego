@@ -88,7 +88,7 @@ function TeacherPageContent() {
   const [sessionLoading, setSessionLoading] = useState(false)
   const [bundle, setBundle] = useState<ActiveGoalBundle | null>(null)
   const namingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const hasAppliedPromptRef = useRef(false)
+  const lastAppliedPromptRef = useRef<string | null>(null)
 
   useEffect(() => {
     hydrateAuth()
@@ -166,13 +166,16 @@ function TeacherPageContent() {
   }, [mounted, isAuthenticated])
 
   useEffect(() => {
-    if (hasAppliedPromptRef.current) return
-
     const prompt = searchParams.get("prompt")?.trim()
-    if (!prompt) return
+    if (!prompt) {
+      lastAppliedPromptRef.current = null
+      return
+    }
+
+    if (lastAppliedPromptRef.current === prompt) return
 
     setInput(prompt)
-    hasAppliedPromptRef.current = true
+    lastAppliedPromptRef.current = prompt
   }, [searchParams])
 
   useEffect(() => {
@@ -320,7 +323,9 @@ function TeacherPageContent() {
       })
 
       const result: TeacherChatApiResponse = await res.json()
-      console.error("[/api/teacher/chat] response:", result, "http:", res.status)
+      if (!res.ok || result.status === "error") {
+        console.error("[/api/teacher/chat] response:", result, "http:", res.status)
+      }
 
       if (result.status === "error") {
         setError(result.error ?? "Ошибка при получении ответа")
@@ -585,6 +590,7 @@ function TeacherPageContent() {
                 animate={{ opacity: 1, y: 0 }}
                 className="mx-auto flex max-w-3xl flex-col items-center text-center"
               >
+                <span className="navigator-kicker navigator-kicker--muted mb-4">Secondary feature · ai study help</span>
                 <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/5">
                   <Sparkles className="h-7 w-7 text-primary/40" />
                 </div>
@@ -594,7 +600,7 @@ function TeacherPageContent() {
                 </p>
 
                 <div className="mt-5 grid w-full gap-3 text-left sm:grid-cols-2">
-                  <div className="rounded-[18px] border border-border bg-card-bg p-4">
+                  <div className="navigator-surface p-4">
                     <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                       <Target className="h-4 w-4 text-primary" />
                       Контекст цели
@@ -605,7 +611,7 @@ function TeacherPageContent() {
                         : "Пока без активной цели. Здесь лучше задавать точечные учебные вопросы."}
                     </p>
                   </div>
-                  <div className="rounded-[18px] border border-border bg-card-bg p-4">
+                  <div className="navigator-surface p-4">
                     <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                       <Route className="h-4 w-4 text-primary" />
                       Граница с Coach

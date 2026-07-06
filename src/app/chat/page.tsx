@@ -939,6 +939,7 @@ function CommunityHome({
 }) {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col items-center px-6 text-center">
+      <span className="navigator-kicker navigator-kicker--muted">Secondary feature · community</span>
       <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/10 text-primary">
         <Compass className="h-8 w-8" />
       </div>
@@ -968,7 +969,7 @@ function CommunityHome({
       ) : null}
 
       <div className="mt-8 grid w-full gap-3 sm:grid-cols-2">
-        <div className="rounded-[18px] border border-border bg-card-bg p-4 text-left">
+        <div className="navigator-surface p-4 text-left">
           <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <Users className="h-4 w-4 text-primary" />
             Goal-centered peers
@@ -977,7 +978,7 @@ function CommunityHome({
             Find people with the same code, city, university, or roadmap week and open a direct conversation from there.
           </p>
         </div>
-        <div className="rounded-[18px] border border-border bg-card-bg p-4 text-left">
+        <div className="navigator-surface p-4 text-left">
           <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <MapPinned className="h-4 w-4 text-primary" />
             Safe boundary

@@ -128,7 +128,7 @@ function PlanContent() {
 
   if (loading && !goal) {
     return (
-      <main className="flex flex-1 items-center justify-center px-6 py-24">
+      <main className="navigator-page navigator-page--narrow flex flex-1 items-center justify-center py-24">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </main>
     )
@@ -136,7 +136,7 @@ function PlanContent() {
 
   if (error && !goal) {
     return (
-      <main className="flex flex-1 items-center justify-center px-6 py-24">
+      <main className="navigator-page navigator-page--narrow flex flex-1 items-center justify-center py-24">
         <div className="max-w-md text-center">
           <p className="text-sm font-medium text-error">Не удалось загрузить план</p>
           <p className="mt-2 text-sm text-text-secondary">{error}</p>
@@ -146,9 +146,9 @@ function PlanContent() {
   }
 
   return (
-    <main className="flex flex-1 flex-col px-6 py-8">
+    <main className="navigator-page navigator-page--narrow flex flex-1 flex-col">
       <div className="mx-auto w-full max-w-5xl">
-        <div className="mb-8 flex items-start gap-3">
+        <div className="navigator-hero mb-8 flex items-start gap-3 p-5 sm:p-6">
           <button
             onClick={() => window.history.back()}
             className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-border bg-card-bg transition-colors hover:bg-background"
@@ -157,8 +157,9 @@ function PlanContent() {
             <ArrowLeft className="h-4 w-4 text-text-secondary" />
           </button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">План цели</h1>
-            <p className="mt-1 text-sm text-text-secondary">
+            <span className="navigator-kicker">Core flow · general plan</span>
+            <h1 className="navigator-page-title mt-3">План цели</h1>
+            <p className="navigator-page-subtitle mt-3">
               {goal ? `${goal.nctTitle} · ${goal.nctCode}` : "Сначала выберите цель и пройдите интервью"}
             </p>
           </div>
@@ -181,10 +182,10 @@ function PlanContent() {
         </div>
 
         {recommendationSnapshot && goal ? (
-          <section className="mb-6 rounded-[18px] border border-border bg-card-bg p-5">
+          <section className="navigator-surface mb-6 p-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="max-w-3xl">
-                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                <p className="navigator-kicker">
                   Почему выбрана эта цель · рекомендация №{recommendationSnapshot.selection.rank}
                 </p>
                 <p className="mt-2 text-sm leading-relaxed text-text-secondary">
@@ -212,10 +213,10 @@ function PlanContent() {
         ) : null}
 
         {goal ? (
-          <section className="mb-6 rounded-[18px] border border-border bg-card-bg p-5">
+          <section className="navigator-surface mb-6 p-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="max-w-3xl">
-                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                <p className="navigator-kicker navigator-kicker--muted">
                   Community around the active goal
                 </p>
                 <p className="mt-2 text-sm leading-relaxed text-text-secondary">
@@ -243,10 +244,10 @@ function PlanContent() {
         ) : null}
 
         {goal ? (
-          <section className="mb-6 rounded-[18px] border border-border bg-card-bg p-5">
+          <section className="navigator-surface mb-6 p-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="max-w-3xl">
-                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                <p className="navigator-kicker navigator-kicker--muted">
                   AI Chat as a helper layer
                 </p>
                 <p className="mt-2 text-sm leading-relaxed text-text-secondary">
@@ -269,7 +270,7 @@ function PlanContent() {
           <section>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold text-foreground">Общий план</h2>
+                <h2 className="navigator-section-title">Общий план</h2>
                 <p className="mt-1 text-sm text-text-secondary">
                   {plan.stages.length} этапов, собранных под вашу цель и уровень знаний
                 </p>
@@ -298,7 +299,7 @@ function PlanContent() {
             </div>
 
             <div className="space-y-4">
-              <div className="rounded-[18px] border border-border bg-card-bg p-5">
+              <div className="navigator-surface p-5">
                 <p className="text-sm font-semibold text-foreground">Что нужно подтянуть</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   {plan.goals.map((goalItem) => (
@@ -318,7 +319,7 @@ function PlanContent() {
             </div>
           </section>
         ) : loading ? (
-          <div className="rounded-[18px] border border-border bg-card-bg p-6 text-center">
+          <div className="navigator-surface p-6 text-center">
             <div className="mx-auto flex max-w-sm flex-col items-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-light">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -362,7 +363,7 @@ function EmptyPrompt({
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-[18px] border border-border bg-card-bg p-6 text-center"
+      className="navigator-surface p-6 text-center"
     >
       <div className="mx-auto flex max-w-sm flex-col items-center">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-light">
@@ -384,7 +385,7 @@ function EmptyPrompt({
 
 function FallbackPlanCard({ stage, index }: { stage: DevelopmentPlan["stages"][number]; index: number }) {
   return (
-    <div className="rounded-[20px] border border-border bg-card-bg p-6">
+    <div className="navigator-surface p-6">
       <div className="flex items-start gap-4">
         <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-background text-xs font-bold text-text-secondary">
           {index + 1}
@@ -400,7 +401,7 @@ function FallbackPlanCard({ stage, index }: { stage: DevelopmentPlan["stages"][n
 
 function PlanSkeleton() {
   return (
-    <main className="flex flex-1 items-center justify-center px-6 py-24">
+    <main className="navigator-page navigator-page--narrow flex flex-1 items-center justify-center py-24">
       <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
     </main>
   )

@@ -22,7 +22,7 @@ export function ChatSidebar({
 }: ChatSidebarProps) {
   return (
     <div
-      className={`h-full flex-shrink-0 overflow-hidden border-r border-border bg-card-bg transition-[width] duration-200 ${
+      className={`h-full flex-shrink-0 overflow-hidden border-r border-border bg-card-bg/86 backdrop-blur transition-[width] duration-200 ${
         collapsed ? "w-0" : "w-[260px]"
       }`}
     >

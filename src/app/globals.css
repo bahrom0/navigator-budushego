@@ -156,6 +156,124 @@ button {
   background: var(--text-muted);
 }
 
+.navigator-page {
+  width: min(100%, 80rem);
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.navigator-page--narrow {
+  width: min(100%, 72rem);
+}
+
+.navigator-hero,
+.navigator-surface,
+.navigator-surface-soft {
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  backdrop-filter: blur(18px);
+}
+
+.navigator-hero {
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.86), rgb(255 255 255 / 0.7)),
+    radial-gradient(circle at top right, rgb(37 99 235 / 0.12), transparent 28%);
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 0.03),
+    0 24px 60px rgb(15 23 42 / 0.08);
+}
+
+.navigator-surface {
+  background: rgb(255 255 255 / 0.82);
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 0.03),
+    0 16px 36px rgb(15 23 42 / 0.06);
+}
+
+.navigator-surface-soft {
+  background: rgb(238 243 251 / 0.84);
+}
+
+.navigator-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgb(37 99 235 / 0.14);
+  background: rgb(37 99 235 / 0.08);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.navigator-kicker--muted {
+  border-color: rgb(148 163 184 / 0.2);
+  background: rgb(148 163 184 / 0.08);
+  color: var(--text-secondary);
+}
+
+.navigator-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.25rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgb(255 255 255 / 0.78);
+  padding: 0.45rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.navigator-page-title {
+  font-size: clamp(1.75rem, 2.4vw, 2.5rem);
+  line-height: 1.08;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--foreground);
+}
+
+.navigator-page-subtitle {
+  max-width: 44rem;
+  font-size: 0.98rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.navigator-section-title {
+  font-size: 1.05rem;
+  font-weight: 650;
+  color: var(--foreground);
+}
+
+[data-theme="dark"] .navigator-hero {
+  background:
+    linear-gradient(180deg, rgb(15 23 42 / 0.9), rgb(15 23 42 / 0.78)),
+    radial-gradient(circle at top right, rgb(96 165 250 / 0.16), transparent 30%);
+  box-shadow:
+    0 1px 2px rgb(2 6 23 / 0.28),
+    0 24px 60px rgb(2 6 23 / 0.38);
+}
+
+[data-theme="dark"] .navigator-surface {
+  background: rgb(15 23 42 / 0.84);
+  box-shadow:
+    0 1px 2px rgb(2 6 23 / 0.22),
+    0 16px 36px rgb(2 6 23 / 0.3);
+}
+
+[data-theme="dark"] .navigator-surface-soft {
+  background: rgb(24 32 51 / 0.84);
+}
+
+[data-theme="dark"] .navigator-chip {
+  background: rgb(15 23 42 / 0.82);
+}
+
 @keyframes shimmer {
   100% {
     transform: translateX(100%);
@@ -174,5 +292,11 @@ button {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .navigator-page {
+    padding: 1.25rem 1rem 5rem;
   }
 }

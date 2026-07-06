@@ -59,10 +59,11 @@ export function ConversationList({
 
   return (
     <div className="flex h-full w-full flex-col">
-      <div className="shrink-0 border-b border-border px-3 py-3">
+      <div className="shrink-0 border-b border-border bg-card-bg/72 px-3 py-3 backdrop-blur">
         {communityTitle ? (
           <div className="mb-3">
-            <p className="text-sm font-semibold text-foreground">{communityTitle}</p>
+            <span className="navigator-kicker navigator-kicker--muted">Secondary feature · community</span>
+            <p className="mt-3 text-sm font-semibold text-foreground">{communityTitle}</p>
             {communityDescription ? (
               <p className="mt-1 text-xs leading-5 text-text-secondary">{communityDescription}</p>
             ) : null}
@@ -76,7 +77,7 @@ export function ConversationList({
             value={searchQuery}
             onChange={(e) => onSearch(e.target.value)}
             placeholder="Поиск по людям, коду или goal"
-            className="w-full rounded-xl border border-border bg-card-bg py-2 pl-9 pr-9 text-sm text-foreground placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="w-full rounded-xl border border-border bg-background/80 py-2 pl-9 pr-9 text-sm text-foreground placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
           {searchLoading ? (
             <Loader2 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-primary" />
