@@ -34,6 +34,7 @@ export function ChatPanel(props: ChatPanelProps) {
     messages,
     pendingMessages,
     currentUserId,
+    emptyState,
     input,
     typingUsername,
     onInputChange,
@@ -248,14 +249,16 @@ export function ChatPanel(props: ChatPanelProps) {
         animate={{ opacity: 1 }}
         className="flex flex-1 items-center justify-center bg-background"
       >
-        <div className="text-center">
+        {emptyState ?? (
+          <div className="text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/5">
             <UserPlus className="h-7 w-7 text-primary/40" />
           </div>
           <p className="text-sm text-text-secondary">
             Выберите диалог или найдите пользователя
           </p>
-        </div>
+          </div>
+        )}
       </motion.div>
     )
   }

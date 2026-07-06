@@ -1,15 +1,15 @@
-"use client";
+"use client"
 
-import { PanelLeftClose, MessageSquare, Plus } from "lucide-react";
-import type { ChatHistoryGroup } from "@/types/chat";
+import { PanelLeftClose, MessageSquare, Plus } from "lucide-react"
+import type { ChatHistoryGroup } from "@/types/chat"
 
 interface ChatSidebarProps {
-  groups: ChatHistoryGroup[];
-  activeSessionId: string | null;
-  collapsed: boolean;
-  onToggle: () => void;
-  onSessionSelect: (id: string) => void;
-  onNewChat: () => void;
+  groups: ChatHistoryGroup[]
+  activeSessionId: string | null
+  collapsed: boolean
+  onToggle: () => void
+  onSessionSelect: (id: string) => void
+  onNewChat: () => void
 }
 
 export function ChatSidebar({
@@ -29,12 +29,12 @@ export function ChatSidebar({
       <div className="flex h-full w-[260px] flex-col">
         <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-4">
           <span className="text-sm font-semibold tracking-tight text-foreground">
-            История чатов
+            История AI Chat
           </span>
           <button
             onClick={onToggle}
             className="flex h-11 w-11 items-center justify-center rounded-xl text-text-muted transition-colors hover:bg-foreground/5 hover:text-foreground"
-            aria-label="Свернуть историю чатов"
+            aria-label="Свернуть историю AI Chat"
           >
             <PanelLeftClose className="h-4 w-4" />
           </button>
@@ -47,7 +47,7 @@ export function ChatSidebar({
             className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-3 text-sm font-medium text-white transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
           >
             <Plus className="h-4 w-4" />
-            Новый чат
+            Новый разбор
           </button>
         </div>
 
@@ -59,7 +59,7 @@ export function ChatSidebar({
               </p>
               <div className="space-y-0.5">
                 {group.sessions.map((session) => {
-                  const isActive = session.id === activeSessionId;
+                  const isActive = session.id === activeSessionId
                   return (
                     <button
                       key={session.id}
@@ -73,7 +73,7 @@ export function ChatSidebar({
                       <MessageSquare className="h-3.5 w-3.5 flex-shrink-0 text-text-muted" />
                       <span className="truncate">{session.title}</span>
                     </button>
-                  );
+                  )
                 })}
               </div>
             </div>
@@ -81,5 +81,5 @@ export function ChatSidebar({
         </div>
       </div>
     </div>
-  );
+  )
 }

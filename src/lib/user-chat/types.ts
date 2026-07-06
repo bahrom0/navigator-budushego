@@ -6,6 +6,20 @@ export interface UserProfile {
   name: string | null
   level: string
   avatar_url?: string | null
+  active_goal_id?: string | null
+  community_context?: UserCommunityContext | null
+  match_reasons?: string[]
+}
+
+export type CommunityScope = "goal" | "university" | "city" | "week"
+
+export interface UserCommunityContext {
+  goal_id: string | null
+  nct_code: string | null
+  nct_title: string | null
+  university: string | null
+  city: string | null
+  current_week_number: number | null
 }
 
 export interface ConversationRecord {

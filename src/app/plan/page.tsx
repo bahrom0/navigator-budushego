@@ -4,7 +4,7 @@ import type { ReactNode } from "react"
 import { useCallback, useEffect, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
-import { ArrowLeft, ArrowRight, Check, Cloud, Loader2, Target } from "lucide-react"
+import { ArrowLeft, ArrowRight, Bot, Check, Cloud, Loader2, Target } from "lucide-react"
 import { PlanCard } from "@/components/plans/PlanCard"
 import { useProfileStore } from "@/stores/profile-store"
 import { applyActiveGoalBundle } from "@/lib/coach/bundle-client"
@@ -206,6 +206,60 @@ function PlanContent() {
                 className="inline-flex min-h-11 items-center rounded-[12px] border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-card-bg"
               >
                 Открыть детали
+              </button>
+            </div>
+          </section>
+        ) : null}
+
+        {goal ? (
+          <section className="mb-6 rounded-[18px] border border-border bg-card-bg p-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="max-w-3xl">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                  Community around the active goal
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+                  User Chat stays secondary: use it to discuss this code, find peers with the same goal, and compare how others move through preparation without replacing Coach.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => router.push("/chat?intent=code")}
+                  className="inline-flex min-h-11 items-center rounded-[12px] border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-card-bg"
+                >
+                  Обсудить код
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push("/chat?intent=goal")}
+                  className="inline-flex min-h-11 items-center rounded-[12px] bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+                >
+                  Найти людей с той же целью
+                </button>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {goal ? (
+          <section className="mb-6 rounded-[18px] border border-border bg-card-bg p-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="max-w-3xl">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                  AI Chat as a helper layer
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+                  Используйте AI Chat, чтобы разобраться в шагах общего плана, терминах и темах по выбранной цели. Он помогает понять материал, но не заменяет Coach и не перехватывает следующий шаг.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => router.push(`/teacher?source=plan&stageTitle=${encodeURIComponent(plan?.stages[0]?.title ?? "")}&prompt=${encodeURIComponent(plan?.stages[0] ? `Объясни, как подступиться к этапу "${plan.stages[0].title}".` : `Помоги понять, как проходить общий план по цели ${goal.nctCode}.`)}`)}
+                className="inline-flex min-h-11 items-center gap-2 rounded-[12px] border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-card-bg"
+              >
+                <Bot className="h-4 w-4" />
+                Разобрать план в AI Chat
               </button>
             </div>
           </section>

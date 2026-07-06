@@ -4,6 +4,7 @@ import { deepseekChat } from "@/lib/ai/deepseek"
 import { buildTeacherContext } from "@/lib/ai/teacher-context"
 import { TeacherChatResponseSchema } from "@/types/teacher"
 import type { ProfileData, PlanRecord } from "@/types/profile"
+import type { TeacherBundleContext, TeacherEntryContext } from "@/types/teacher"
 
 export const dynamic = "force-dynamic"
 
@@ -19,6 +20,33 @@ const TeacherChatSchema = z.object({
     .optional(),
   profile: z.unknown(),
   activePlan: z.unknown().optional(),
+  bundleContext: z
+    .object({
+      goalCode: z.string().optional(),
+      goalTitle: z.string().optional(),
+      university: z.string().optional(),
+      city: z.string().optional(),
+      planLevel: z.string().optional(),
+      planStageTitles: z.array(z.string()).optional(),
+      currentWeekNumber: z.number().optional(),
+      currentWeekTitle: z.string().optional(),
+      currentWeekSubjects: z.array(z.string()).optional(),
+      todayPlanDate: z.string().optional(),
+      todayTaskTitles: z.array(z.string()).optional(),
+    })
+    .optional(),
+  context: z
+    .object({
+      source: z.enum(["teacher_home", "plan", "coach_today", "coach_task", "coach_roadmap"]).optional(),
+      topic: z.string().optional(),
+      question: z.string().optional(),
+      stageTitle: z.string().optional(),
+      taskTitle: z.string().optional(),
+      taskType: z.string().optional(),
+      weekTitle: z.string().optional(),
+      weekNumber: z.number().optional(),
+    })
+    .optional(),
 })
 
 export async function POST(request: Request) {
@@ -33,11 +61,18 @@ export async function POST(request: Request) {
       )
     }
 
-    const { message, history = [], profile: rawProfile, activePlan: rawPlan } = parsed.data
+    const { message, history = [], profile: rawProfile, activePlan: rawPlan, bundleContext: rawBundleContext, context } = parsed.data
     const profile = rawProfile as ProfileData
     const activePlan = rawPlan ? (rawPlan as PlanRecord) : null
+    const bundleContext = rawBundleContext ? (rawBundleContext as TeacherBundleContext) : null
+    const entryContext = (context ?? null) as TeacherEntryContext | null
 
-    const systemMessages = buildTeacherContext({ profile, activePlan })
+    const systemMessages = buildTeacherContext({
+      profile,
+      activePlan,
+      bundleContext,
+      context: entryContext,
+    })
 
     const userMessages = history.map((h) => ({
       role: h.role as "user" | "assistant",

@@ -1,14 +1,15 @@
 "use client"
 
-import { useEffect, useState, useCallback, useRef } from "react"
+import { useEffect, useState, useCallback, useRef, useMemo, type ReactNode } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Loader2, UserCheck, Check, XCircle } from "lucide-react"
+import { Loader2, UserCheck, Check, XCircle, Compass, MapPinned, Users } from "lucide-react"
 import { toast } from "sonner"
 import { useAuthStore } from "@/stores/auth-store"
 import { useUserChatStore } from "@/lib/user-chat/store"
 import { useReplyStore } from "@/lib/user-chat/reply-store"
 import { useMobileChatNavStore } from "@/stores/mobile-chat-nav-store"
 import { userChatRealtime } from "@/lib/user-chat/realtime"
+import { fetchActiveGoalBundle } from "@/lib/active-goal-bundle-client"
 import {
   hydrateConversations,
   hydrateMessages,
@@ -23,8 +24,70 @@ import { ConversationList } from "@/components/user-chat/conversation-list"
 import { ChatHeader } from "@/components/user-chat/chat-header"
 import { ChatPanel } from "@/components/user-chat/chat-panel"
 import { UserProfilePanel } from "@/components/user-chat/user-profile-panel"
-import type { MessageWithAttachments, UserProfile } from "@/lib/user-chat/types"
-import type { ReplyTargetLike } from "@/components/user-chat/types-ui"
+import type { ActiveGoalBundle, ActiveGoalCommunityContext } from "@/types/admission"
+import type { CommunityScope, MessageWithAttachments, UserProfile } from "@/lib/user-chat/types"
+import type { CommunityFilterOption, ReplyTargetLike } from "@/components/user-chat/types-ui"
+
+const COMMUNITY_INTENT_TO_SCOPE: Record<string, CommunityScope> = {
+  code: "goal",
+  goal: "goal",
+  university: "university",
+  city: "city",
+  week: "week",
+}
+
+function resolveIntentScope(
+  intent: string | null,
+  context: ActiveGoalCommunityContext | null,
+): CommunityScope | null {
+  if (!intent) return null
+  const scope = COMMUNITY_INTENT_TO_SCOPE[intent]
+  if (!scope) return null
+  if (scope === "university" && !context?.university) return null
+  if (scope === "city" && !context?.city) return null
+  if (scope === "week" && typeof context?.currentWeekNumber !== "number") return null
+  return scope
+}
+
+function buildCommunityFilters(
+  context: ActiveGoalCommunityContext | null,
+): CommunityFilterOption[] {
+  if (!context) return []
+
+  const filters: CommunityFilterOption[] = [
+    {
+      id: "goal",
+      label: `Тот же код ${context.nctCode}`,
+      helper: "Обсудить выбранный код и цель",
+    },
+  ]
+
+  if (context.university) {
+    filters.push({
+      id: "university",
+      label: "Тот же вуз",
+      helper: context.university,
+    })
+  }
+
+  if (context.city) {
+    filters.push({
+      id: "city",
+      label: "Тот же город",
+      helper: context.city,
+    })
+  }
+
+  if (typeof context.currentWeekNumber === "number") {
+    filters.push({
+      id: "week",
+      label: `Неделя ${context.currentWeekNumber}`,
+      helper: "Люди на похожем этапе roadmap",
+    })
+  }
+
+  return filters
+}
 
 export default function UserChatPage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -38,7 +101,6 @@ export default function UserChatPage() {
   const isUsernameSet = useUserChatStore((s) => s.isUsernameSet)
   const username = useUserChatStore((s) => s.username)
   const isLoading = useUserChatStore((s) => s.isLoading)
-  const pendingMessages = useUserChatStore((s) => s.pendingMessages)
   const presenceState = useUserChatStore((s) => s.presenceState)
   const typingState = useUserChatStore((s) => s.typingState)
   const setActiveConversation = useUserChatStore((s) => s.setActiveConversation)
@@ -60,6 +122,12 @@ export default function UserChatPage() {
   const [searchResults, setSearchResults] = useState<UserProfile[]>([])
   const [searchLoading, setSearchLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+  const [resultsLabel, setResultsLabel] = useState<string | null>(null)
+  const [bundle, setBundle] = useState<ActiveGoalBundle | null>(null)
+  const [bundleResolved, setBundleResolved] = useState(false)
+  const [entryIntent, setEntryIntent] = useState<string | null>(null)
+  const [communityFilter, setCommunityFilter] = useState<CommunityScope | null>(null)
+  const [communityFilterReady, setCommunityFilterReady] = useState(false)
   const [newUsername, setNewUsername] = useState("")
   const [savingUsername, setSavingUsername] = useState(false)
   const [usernameSaved, setUsernameSaved] = useState(false)
@@ -79,6 +147,14 @@ export default function UserChatPage() {
     avatar_url: string | null
     level: string
     last_seen_at: string | null
+    community_context?: {
+      goal_id: string | null
+      nct_code: string | null
+      nct_title: string | null
+      university: string | null
+      city: string | null
+      current_week_number: number | null
+    } | null
   } | null>(null)
   const [profileFetchLoading, setProfileFetchLoading] = useState(false)
   const [profileFetchError, setProfileFetchError] = useState<string | null>(null)
@@ -105,6 +181,12 @@ export default function UserChatPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return
+    const params = new URLSearchParams(window.location.search)
+    setEntryIntent(params.get("intent"))
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
     const mql = window.matchMedia("(max-width: 767px)")
     const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches)
     setIsMobile(mql.matches)
@@ -117,6 +199,31 @@ export default function UserChatPage() {
       clearReply()
     }
   }, [activeConversationId, clearReply])
+
+  useEffect(() => {
+    if (!mounted || !isAuthenticated) return
+    let cancelled = false
+
+    async function loadBundle() {
+      try {
+        const nextBundle = await fetchActiveGoalBundle()
+        if (!cancelled) {
+          setBundle(nextBundle)
+          setBundleResolved(true)
+        }
+      } catch {
+        if (!cancelled) {
+          setBundle(null)
+          setBundleResolved(true)
+        }
+      }
+    }
+
+    void loadBundle()
+    return () => {
+      cancelled = true
+    }
+  }, [mounted, isAuthenticated])
 
   // Закрываем мобильную навигацию при размонтировании/смене маршрута
   useEffect(() => {
@@ -241,6 +348,103 @@ export default function UserChatPage() {
     }
   }, [activeConversationId, isUsernameSet])
 
+  const communityContext = bundle?.communityContext ?? null
+  const communityFilters = useMemo(
+    () => buildCommunityFilters(communityContext),
+    [communityContext],
+  )
+  const communityTitle = communityContext
+    ? `Community around ${communityContext.nctCode}`
+    : "Community around your goal"
+  const communityDescription = communityContext
+    ? "User Chat stays a secondary community layer: discuss the chosen code, meet peers with a similar goal, and compare roadmap rhythm without replacing Coach."
+    : "Use Community to talk to people around your goal. Goal, plan, roadmap, and today still stay in the core flow."
+
+  const loadDiscovery = useCallback(async (
+    scope: CommunityScope | null,
+    query: string,
+  ) => {
+    const trimmed = query.trim()
+    if (!trimmed && !scope) {
+      setSearchResults([])
+      setSearchLoading(false)
+      setSearched(false)
+      setResultsLabel(null)
+      return
+    }
+
+    const params = new URLSearchParams()
+    if (trimmed) params.set("q", trimmed)
+    if (scope) params.set("scope", scope)
+    if (communityContext?.nctCode) params.set("nctCode", communityContext.nctCode)
+    if (communityContext?.university) params.set("university", communityContext.university)
+    if (communityContext?.city) params.set("city", communityContext.city)
+    if (typeof communityContext?.currentWeekNumber === "number") {
+      params.set("week", String(communityContext.currentWeekNumber))
+    }
+
+    try {
+      const res = await fetch(`/api/user-chat/users?${params.toString()}`, {
+        cache: "no-store",
+      })
+      const json = await res.json()
+      if (json.status === "success" && Array.isArray(json.data)) {
+        setSearchResults(json.data as UserProfile[])
+      } else {
+        setSearchResults([])
+      }
+    } catch {
+      setSearchResults([])
+    } finally {
+      setSearchLoading(false)
+      setSearched(true)
+      if (trimmed) {
+        setResultsLabel(scope ? "Search inside selected community" : "Search results")
+      } else if (scope) {
+        const active = communityFilters.find((filter) => filter.id === scope)
+        setResultsLabel(active?.label ?? "Community")
+      } else {
+        setResultsLabel(null)
+      }
+    }
+  }, [communityContext, communityFilters])
+
+  useEffect(() => {
+    if (communityFilterReady) return
+    if (!bundleResolved) return
+    if (!isUsernameSet) return
+
+    const preferred = resolveIntentScope(entryIntent, communityContext)
+    if (preferred) {
+      setCommunityFilter(preferred)
+    } else if (communityContext && conversations.length === 0) {
+      setCommunityFilter("goal")
+    }
+    setCommunityFilterReady(true)
+  }, [
+    bundleResolved,
+    communityContext,
+    communityFilterReady,
+    conversations.length,
+    entryIntent,
+    isUsernameSet,
+  ])
+
+  useEffect(() => {
+    if (!isUsernameSet) return
+    if (searchQuery.trim().length > 0) return
+    if (!communityFilter) {
+      setSearchResults([])
+      setSearchLoading(false)
+      setSearched(false)
+      setResultsLabel(null)
+      return
+    }
+
+    setSearchLoading(true)
+    void loadDiscovery(communityFilter, "")
+  }, [communityFilter, isUsernameSet, loadDiscovery, searchQuery])
+
   const handleSaveUsername = useCallback(async () => {
     const name = newUsername.trim()
     if (name.length < 3 || name.length > 30) {
@@ -284,27 +488,17 @@ export default function UserChatPage() {
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
 
     if (q.length < 2) {
-      setSearchResults([])
       setSearchLoading(false)
+      setSearchResults([])
+      if (!communityFilter) setResultsLabel(null)
       return
     }
 
     setSearchLoading(true)
     searchTimerRef.current = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/user-chat/users?q=${encodeURIComponent(q)}`)
-        const json = await res.json()
-        if (json.status === "success" && Array.isArray(json.data)) {
-          setSearchResults(json.data)
-        }
-      } catch {
-        // silent
-      } finally {
-        setSearchLoading(false)
-        setSearched(true)
-      }
+      await loadDiscovery(communityFilter, q)
     }, 300)
-  }, [])
+  }, [communityFilter, loadDiscovery])
 
   const handleStartConversation = useCallback(async (participantId: string, initialMsg?: string) => {
     try {
@@ -321,6 +515,7 @@ export default function UserChatPage() {
         setSearchQuery("")
         setSearchResults([])
         setSearched(false)
+        setResultsLabel(null)
         await fetchConversations()
         if (json.data.id) {
           await deltaSync(json.data.id)
@@ -330,6 +525,13 @@ export default function UserChatPage() {
       // silent
     }
   }, [setActiveConversation])
+
+  const handleToggleCommunityFilter = useCallback((scope: CommunityScope) => {
+    setSearchQuery("")
+    setResultsLabel(null)
+    setSearched(false)
+    setCommunityFilter((current) => (current === scope ? null : scope))
+  }, [])
 
   const handleSend = useCallback(async () => {
     const text = input.trim()
@@ -449,12 +651,25 @@ export default function UserChatPage() {
     [handleCloseProfile, handleStartConversation],
   )
 
-  const activeMessages = activeConversationId ? messagesByConversation[activeConversationId] ?? [] : []
-  const visibleMessages = activeMessages
-    .filter((m) => !m.deleted_at)
-    .filter((m, idx, arr) => arr.findIndex((x) => x.id === m.id) === idx)
-  const activeConv = conversations.find((c) => c.id === activeConversationId)
-  const otherMember = activeConv?.other_member
+  const otherMember = conversations.find((c) => c.id === activeConversationId)?.other_member
+  const selectedCommunityFilter = communityFilters.find((filter) => filter.id === communityFilter) ?? null
+  const emptyStateTitle = communityContext
+    ? `Start from ${communityContext.nctCode}`
+    : "Open Community from your goal"
+  const emptyStateBody = selectedCommunityFilter
+    ? `Now looking for people in "${selectedCommunityFilter.label}". Goal and roadmap remain in Coach and Plan; Community is only for peer discussion.`
+    : communityContext
+      ? "Use Community to discuss the selected code, find people with a similar goal, or compare the current roadmap week."
+      : "Community appears after you choose a goal. It stays connected to the active goal instead of becoming a separate social feed."
+  const communityEmptyState = (
+    <CommunityHome
+      title={emptyStateTitle}
+      body={emptyStateBody}
+      filters={communityFilters}
+      activeFilter={communityFilter}
+      onSelectFilter={handleToggleCommunityFilter}
+    />
+  )
 
   if (!mounted || authLoading) {
     return (
@@ -521,12 +736,17 @@ export default function UserChatPage() {
             activeConversationId={activeConversationId}
             presenceState={presenceState}
             isLoading={isLoading}
+            communityTitle={communityTitle}
+            communityDescription={communityDescription}
+            communityFilters={communityFilters}
+            activeCommunityFilter={communityFilter}
             searchQuery={searchQuery}
             searchResults={searchResults}
             searchLoading={searchLoading}
             searched={searched}
-            onSelectConversation={setActiveConversation}
+            resultsLabel={resultsLabel}
             onSearch={handleSearch}
+            onToggleCommunityFilter={handleToggleCommunityFilter}
             onStartConversation={handleStartConversation}
             typingUsername={typingState[otherMember?.user_id ?? ""]?.username ?? ""}
             input={input}
@@ -541,9 +761,9 @@ export default function UserChatPage() {
             onOpenProfile={handleOpenProfile}
             replyTo={reply}
             onCancelReply={clearReply}
+            emptyState={communityEmptyState}
             isMobile={isMobile}
             mobileNavOpen={mobileNavOpen}
-            onOpenMobileNav={openMobileNav}
             onBackToList={openMobileNav}
             onSelectConversationMobile={(id) => {
               setActiveConversation(id)
@@ -704,17 +924,89 @@ function UsernameGate({
   )
 }
 
+function CommunityHome({
+  title,
+  body,
+  filters,
+  activeFilter,
+  onSelectFilter,
+}: {
+  title: string
+  body: string
+  filters: CommunityFilterOption[]
+  activeFilter: CommunityScope | null
+  onSelectFilter: (scope: CommunityScope) => void
+}) {
+  return (
+    <div className="mx-auto flex w-full max-w-2xl flex-col items-center px-6 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/10 text-primary">
+        <Compass className="h-8 w-8" />
+      </div>
+      <h2 className="mt-5 text-xl font-semibold text-foreground">{title}</h2>
+      <p className="mt-2 max-w-xl text-sm leading-6 text-text-secondary">{body}</p>
+
+      {filters.length > 0 ? (
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          {filters.map((filter) => {
+            const active = activeFilter === filter.id
+            return (
+              <button
+                key={filter.id}
+                type="button"
+                onClick={() => onSelectFilter(filter.id)}
+                className={`inline-flex min-h-10 items-center rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                  active
+                    ? "border-primary/20 bg-primary text-white"
+                    : "border-border bg-card-bg text-foreground hover:bg-background"
+                }`}
+              >
+                {filter.label}
+              </button>
+            )
+          })}
+        </div>
+      ) : null}
+
+      <div className="mt-8 grid w-full gap-3 sm:grid-cols-2">
+        <div className="rounded-[18px] border border-border bg-card-bg p-4 text-left">
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <Users className="h-4 w-4 text-primary" />
+            Goal-centered peers
+          </div>
+          <p className="mt-2 text-sm leading-6 text-text-secondary">
+            Find people with the same code, city, university, or roadmap week and open a direct conversation from there.
+          </p>
+        </div>
+        <div className="rounded-[18px] border border-border bg-card-bg p-4 text-left">
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <MapPinned className="h-4 w-4 text-primary" />
+            Safe boundary
+          </div>
+          <p className="mt-2 text-sm leading-6 text-text-secondary">
+            Community supports the active goal. It does not replace Coach, does not create a parallel plan flow, and does not turn MMT Navigator into a social feed.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 interface ChatLayoutProps {
   conversations: ReturnType<typeof useUserChatStore.getState>["conversations"]
   activeConversationId: string | null
   presenceState: Record<string, boolean>
   isLoading: boolean
+  communityTitle: string | null
+  communityDescription: string | null
+  communityFilters: CommunityFilterOption[]
+  activeCommunityFilter: CommunityScope | null
   searchQuery: string
   searchResults: UserProfile[]
   searchLoading: boolean
   searched: boolean
-  onSelectConversation: (id: string) => void
+  resultsLabel: string | null
   onSearch: (q: string) => void
+  onToggleCommunityFilter: (scope: CommunityScope) => void
   onStartConversation: (userId: string) => void
   typingUsername: string
   input: string
@@ -729,9 +1021,9 @@ interface ChatLayoutProps {
   onOpenProfile: (userId: string) => void
   replyTo: ReplyTargetLike | null
   onCancelReply: () => void
+  emptyState: ReactNode
   isMobile: boolean
   mobileNavOpen: boolean
-  onOpenMobileNav: () => void
   onBackToList: () => void
   onSelectConversationMobile: (id: string) => void
 }
@@ -742,12 +1034,17 @@ function ChatLayout(props: ChatLayoutProps) {
     activeConversationId,
     presenceState,
     isLoading,
+    communityTitle,
+    communityDescription,
+    communityFilters,
+    activeCommunityFilter,
     searchQuery,
     searchResults,
     searchLoading,
     searched,
-    onSelectConversation,
+    resultsLabel,
     onSearch,
+    onToggleCommunityFilter,
     onStartConversation,
     typingUsername,
     input,
@@ -762,9 +1059,9 @@ function ChatLayout(props: ChatLayoutProps) {
     onOpenProfile,
     replyTo,
     onCancelReply,
+    emptyState,
     isMobile,
     mobileNavOpen,
-    onOpenMobileNav,
     onBackToList,
     onSelectConversationMobile,
   } = props
@@ -808,14 +1105,20 @@ function ChatLayout(props: ChatLayoutProps) {
           activeConversationId={activeConversationId}
           presenceState={presenceState}
           isLoading={isLoading}
+          communityTitle={communityTitle}
+          communityDescription={communityDescription}
+          communityFilters={communityFilters}
+          activeCommunityFilter={activeCommunityFilter}
           searchQuery={searchQuery}
           searchResults={searchResults}
           searchLoading={searchLoading}
           searched={searched}
+          resultsLabel={resultsLabel}
           onSelectConversation={(id) => {
             onSelectConversationMobile(id)
           }}
           onSearch={onSearch}
+          onToggleCommunityFilter={onToggleCommunityFilter}
           onStartConversation={onStartConversation}
         />
       </motion.aside>
@@ -839,6 +1142,7 @@ function ChatLayout(props: ChatLayoutProps) {
             isOnline={isOnline}
             isTyping={otherTyping}
             lastSeenAt={null}
+            onBack={onBackToList}
             onOpenProfile={() => onOpenProfile(otherMember.user_id)}
             onOpenSearch={() => {
               toast.info("Поиск по сообщениям скоро будет доступен", {
@@ -853,6 +1157,7 @@ function ChatLayout(props: ChatLayoutProps) {
           messages={visibleMessages}
           pendingMessages={pendingMessages}
           currentUserId={currentUserId}
+          emptyState={emptyState}
           input={input}
           typingUsername={typingUsername}
           onInputChange={onInputChange}

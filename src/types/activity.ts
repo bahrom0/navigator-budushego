@@ -71,7 +71,7 @@ export const ACTIVITY_EVENT_LABELS: Record<ActivityEventType, string> = {
   test_plan: "Прохождение проверки плана",
   complete_plan: "Завершение общего плана",
   regenerate_plan: "Пересборка общего плана",
-  use_teacher: "Запуск AI Teacher",
+  use_teacher: "Использование AI Chat",
   coach_goal_set: "Установка цели в Coach",
   coach_diagnostic_taken: "Прохождение диагностики",
   coach_roadmap_created: "Создание roadmap в Coach",

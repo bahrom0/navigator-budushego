@@ -12,6 +12,14 @@ interface UserProfileData {
   avatar_url: string | null
   level: string
   last_seen_at: string | null
+  community_context?: {
+    goal_id: string | null
+    nct_code: string | null
+    nct_title: string | null
+    university: string | null
+    city: string | null
+    current_week_number: number | null
+  } | null
 }
 
 interface UserProfilePanelProps {
@@ -139,6 +147,31 @@ export function UserProfilePanel({
                   </span>
                   <span>{formatLastSeen(profile.last_seen_at, false)}</span>
                 </div>
+
+                {profile.community_context ? (
+                  <div className="mt-4 flex w-full flex-wrap gap-2 text-left">
+                    {profile.community_context.nct_code ? (
+                      <span className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] text-text-secondary">
+                        {profile.community_context.nct_code}
+                      </span>
+                    ) : null}
+                    {profile.community_context.university ? (
+                      <span className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] text-text-secondary">
+                        {profile.community_context.university}
+                      </span>
+                    ) : null}
+                    {profile.community_context.city ? (
+                      <span className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] text-text-secondary">
+                        {profile.community_context.city}
+                      </span>
+                    ) : null}
+                    {typeof profile.community_context.current_week_number === "number" ? (
+                      <span className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] text-text-secondary">
+                        Week {profile.community_context.current_week_number}
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
 
                 {profile.bio ? (
                   <p className="mt-4 w-full whitespace-pre-wrap text-left text-[14px] leading-relaxed text-text-secondary">

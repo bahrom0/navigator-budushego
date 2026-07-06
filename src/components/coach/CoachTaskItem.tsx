@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
-import { Check, ChevronDown, BookOpen } from "lucide-react"
+import { Bot, Check, ChevronDown, BookOpen } from "lucide-react"
 import { useCoachStore } from "@/stores/coach-store"
 import type { CoachDayTask, CoachTaskType } from "@/types/coach"
 
@@ -69,6 +70,17 @@ export function CoachTaskItem({ task, onToggle, onRequestDetail }: CoachTaskItem
             </span>
             {task.duration ? <span className="text-xs text-text-muted">{task.duration} мин</span> : null}
           </div>
+          {!task.completed ? (
+            <div className="mt-2">
+              <Link
+                href={`/teacher?source=coach_task&taskTitle=${encodeURIComponent(task.title)}&taskType=${encodeURIComponent(label)}&prompt=${encodeURIComponent(`Помоги разобраться, как выполнить задачу "${task.title}".`)}`}
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-[10px] border border-border bg-background px-3 text-xs font-medium text-text-secondary transition-colors hover:bg-card-bg hover:text-foreground"
+              >
+                <Bot className="h-3.5 w-3.5 text-primary" />
+                Разобрать в AI Chat
+              </Link>
+            </div>
+          ) : null}
         </div>
         {!task.completed && onRequestDetail ? (
           <button

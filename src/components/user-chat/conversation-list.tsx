@@ -39,30 +39,72 @@ export function ConversationList({
   activeConversationId,
   presenceState,
   isLoading,
+  communityTitle,
+  communityDescription,
+  communityFilters = [],
+  activeCommunityFilter = null,
   searchQuery,
   searchResults,
   searchLoading,
   searched,
+  resultsLabel,
   onSelectConversation,
   onSearch,
+  onToggleCommunityFilter,
   onStartConversation,
 }: ConversationListProps) {
+  const showDiscoveryResults =
+    searchQuery.trim().length >= 2 ||
+    (!!activeCommunityFilter && (searched || searchLoading || searchResults.length > 0))
+
   return (
     <div className="flex h-full w-full flex-col">
-      <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3">
-        <div className="relative flex-1">
+      <div className="shrink-0 border-b border-border px-3 py-3">
+        {communityTitle ? (
+          <div className="mb-3">
+            <p className="text-sm font-semibold text-foreground">{communityTitle}</p>
+            {communityDescription ? (
+              <p className="mt-1 text-xs leading-5 text-text-secondary">{communityDescription}</p>
+            ) : null}
+          </div>
+        ) : null}
+
+        <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearch(e.target.value)}
-            placeholder="Поиск пользователей..."
+            placeholder="Поиск по людям, коду или goal"
             className="w-full rounded-xl border border-border bg-card-bg py-2 pl-9 pr-9 text-sm text-foreground placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
           {searchLoading ? (
             <Loader2 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-primary" />
           ) : null}
         </div>
+
+        {communityFilters.length > 0 ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {communityFilters.map((filter) => {
+              const active = activeCommunityFilter === filter.id
+              return (
+                <button
+                  key={filter.id}
+                  type="button"
+                  onClick={() => onToggleCommunityFilter?.(filter.id)}
+                  className={`inline-flex min-h-9 items-center rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    active
+                      ? "border-primary/20 bg-primary/10 text-primary"
+                      : "border-border bg-background text-text-secondary hover:bg-card-bg hover:text-foreground"
+                  }`}
+                  title={filter.helper}
+                >
+                  {filter.label}
+                </button>
+              )
+            })}
+          </div>
+        ) : null}
       </div>
 
       <div className="chat-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2">
@@ -71,12 +113,12 @@ export function ConversationList({
             <Loader2 className="h-5 w-5 animate-spin text-text-muted" />
             <p className="text-xs text-text-muted">Загрузка...</p>
           </div>
-        ) : searchQuery.trim().length >= 2 ? (
+        ) : showDiscoveryResults ? (
           <SearchResults
             loading={searchLoading}
             searched={searched}
             results={searchResults}
-            query={searchQuery}
+            label={resultsLabel ?? searchQuery}
             onStart={onStartConversation}
           />
         ) : conversations.length === 0 ? (
@@ -198,11 +240,11 @@ interface SearchResultsProps {
   loading: boolean
   searched: boolean
   results: ConversationListProps["searchResults"]
-  query: string
+  label: string | null
   onStart: (userId: string) => void
 }
 
-function SearchResults({ loading, searched, results, query, onStart }: SearchResultsProps) {
+function SearchResults({ loading, searched, results, label, onStart }: SearchResultsProps) {
   if (loading) {
     return (
       <div className="space-y-1 px-1 py-2">
@@ -230,7 +272,7 @@ function SearchResults({ loading, searched, results, query, onStart }: SearchRes
         className="flex flex-col items-center gap-2 px-3 py-10 text-center"
       >
         <Users className="h-8 w-8 text-text-muted/40" />
-        <p className="text-xs text-text-muted">Пользователи не найдены</p>
+        <p className="text-xs text-text-muted">Подходящие люди не найдены</p>
       </motion.div>
     )
   }
@@ -238,7 +280,7 @@ function SearchResults({ loading, searched, results, query, onStart }: SearchRes
   if (results.length === 0) {
     return (
       <p className="px-3 py-2 text-[11px] font-medium uppercase tracking-widest text-text-muted">
-        Результаты поиска: {query}
+        {label ?? "Community"}
       </p>
     )
   }
@@ -246,7 +288,7 @@ function SearchResults({ loading, searched, results, query, onStart }: SearchRes
   return (
     <div className="space-y-0.5 px-1 py-1">
       <p className="px-2 pb-1 text-[11px] font-medium uppercase tracking-widest text-text-muted">
-        {loading ? "Поиск..." : "Результаты поиска"}
+        {loading ? "Поиск..." : label ?? "Подходящие люди"}
       </p>
       <motion.div layout className="space-y-0.5">
         {results.map((user, idx) => (
@@ -265,8 +307,26 @@ function SearchResults({ loading, searched, results, query, onStart }: SearchRes
               <p className="truncate text-sm font-medium text-foreground">
                 {user.name ?? user.username ?? "Пользователь"}
               </p>
-              {user.name ? (
-                <p className="truncate text-[11px] text-text-muted">{user.name}</p>
+              <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-text-muted">
+                {user.username ? <span>@{user.username}</span> : null}
+                {user.community_context?.nct_code ? (
+                  <span>{user.community_context.nct_code}</span>
+                ) : null}
+                {typeof user.community_context?.current_week_number === "number" ? (
+                  <span>Week {user.community_context.current_week_number}</span>
+                ) : null}
+              </div>
+              {user.match_reasons && user.match_reasons.length > 0 ? (
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {user.match_reasons.slice(0, 2).map((reason) => (
+                    <span
+                      key={`${user.user_id}-${reason}`}
+                      className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] text-text-secondary"
+                    >
+                      {reason}
+                    </span>
+                  ))}
+                </div>
               ) : null}
             </div>
           </motion.button>
@@ -284,9 +344,9 @@ function EmptyState() {
       className="flex flex-col items-center gap-2 px-3 py-10 text-center"
     >
       <MessageCircle className="h-8 w-8 text-text-muted/40" />
-      <p className="text-sm font-medium text-foreground">Нет диалогов</p>
+      <p className="text-sm font-medium text-foreground">Пока нет диалогов</p>
       <p className="max-w-[220px] text-xs text-text-muted">
-        Найдите пользователя по username, чтобы начать общение
+        Начните с goal-контекста или найдите человека по username, чтобы открыть личный диалог.
       </p>
     </motion.div>
   )

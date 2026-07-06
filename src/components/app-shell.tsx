@@ -106,18 +106,18 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Link
                   href="/teacher"
                   className="hidden h-10 items-center gap-1.5 rounded-full border border-border bg-card-bg px-3 text-sm font-medium text-text-secondary transition-colors hover:bg-background hover:text-foreground sm:inline-flex"
-                  aria-label="AI Teacher"
+                  aria-label="AI Help"
                 >
                   <Bot className="h-4 w-4" />
-                  <span className="hidden lg:inline">AI Teacher</span>
+                  <span className="hidden lg:inline">AI Help</span>
                 </Link>
                 <Link
                   href="/chat"
                   className="hidden h-10 items-center gap-1.5 rounded-full border border-border bg-card-bg px-3 text-sm font-medium text-text-secondary transition-colors hover:bg-background hover:text-foreground sm:inline-flex"
-                  aria-label="User Chat"
+                  aria-label="Community"
                 >
                   <MessageCircle className="h-4 w-4" />
-                  <span className="hidden lg:inline">Chat</span>
+                  <span className="hidden lg:inline">Community</span>
                 </Link>
               </>
             ) : null}

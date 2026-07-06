@@ -2,7 +2,8 @@
 
 import { useCallback } from "react"
 import { motion } from "framer-motion"
-import { Flame, Target, CalendarOff, ChevronLeft, ChevronRight } from "lucide-react"
+import Link from "next/link"
+import { Bot, Flame, Target, CalendarOff, ChevronLeft, ChevronRight } from "lucide-react"
 import { useCoachStore } from "@/stores/coach-store"
 import { CoachTaskItem } from "@/components/coach/CoachTaskItem"
 
@@ -84,6 +85,16 @@ export function CoachDailyPlan({ onGenerate, onRequestTaskDetail, onNavigateDate
         <span className="text-xs font-medium text-text-muted">
           {completed}/{total}
         </span>
+      </div>
+
+      <div className="mb-4 flex justify-end">
+        <Link
+          href={`/teacher?source=coach_today&topic=${encodeURIComponent("today_plan")}&prompt=${encodeURIComponent("Помоги понять, как пройти сегодняшний план и на что обратить внимание при выполнении задач.")}`}
+          className="inline-flex min-h-11 items-center gap-2 rounded-[12px] border border-border bg-card-bg px-4 text-sm font-medium text-foreground transition-colors hover:bg-background"
+        >
+          <Bot className="h-4 w-4 text-primary" />
+          Спросить AI Chat про этот день
+        </Link>
       </div>
 
       <div className="mb-4 flex items-center justify-between">

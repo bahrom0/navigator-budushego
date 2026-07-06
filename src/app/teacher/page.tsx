@@ -1,19 +1,23 @@
 "use client"
 
-import { useEffect, useState, useCallback, useRef } from "react"
+import { Suspense, useEffect, useState, useCallback, useRef, useMemo } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { Loader2, PanelLeft } from "lucide-react"
+import { Loader2, PanelLeft, Sparkles, Target, Route } from "lucide-react"
+import { useSearchParams } from "next/navigation"
 import { useAuthStore } from "@/stores/auth-store"
 import { useTeacherStore } from "@/stores/teacher-store"
 import { useProfileStore } from "@/stores/profile-store"
 import { logActivityEvent } from "@/lib/activity-logger"
+import { fetchActiveGoalBundle } from "@/lib/active-goal-bundle-client"
+import { buildTeacherBundleContext } from "@/lib/ai/teacher-bundle-context"
 import { ChatSidebar } from "@/components/chat/chat-sidebar"
 import { ChatMessages } from "@/components/chat/chat-messages"
 import { ChatComposer } from "@/components/chat/chat-composer"
 import { SidebarSkeleton, ChatAreaSkeleton } from "@/components/chat/chat-skeleton"
 import { useChatSync } from "@/lib/chat/use-chat-sync"
 import { saveMessage } from "@/lib/chat/db"
-import type { TeacherMessage, TeacherChatApiResponse } from "@/types/teacher"
+import type { ActiveGoalBundle } from "@/types/admission"
+import type { TeacherMessage, TeacherChatApiResponse, TeacherEntryContext } from "@/types/teacher"
 import type { ChatHistoryGroup, ChatSession, ChatSessionRecord } from "@/types/chat"
 
 function generateId(): string {
@@ -58,10 +62,14 @@ function truncateHistory(messages: TeacherMessage[], maxExchanges = 10): Teacher
   return messages.slice(Math.max(0, keepFrom))
 }
 
-export default function TeacherPage() {
+function TeacherPageContent() {
+  const searchParams = useSearchParams()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const authLoading = useAuthStore((s) => s.isLoading)
   const hydrateAuth = useAuthStore((s) => s.hydrate)
+  const activeGoal = useProfileStore((s) => s.activeGoal)
+  const activePlanId = useProfileStore((s) => s.activePlanId)
+  const plans = useProfileStore((s) => s.plans)
   const {
     messages, isLoading, error,
     addMessage, setLoading, setError,
@@ -78,7 +86,9 @@ export default function TeacherPage() {
   const [streamingId, setStreamingId] = useState<string | null>(null)
   const [initialLoadDone, setInitialLoadDone] = useState(false)
   const [sessionLoading, setSessionLoading] = useState(false)
+  const [bundle, setBundle] = useState<ActiveGoalBundle | null>(null)
   const namingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hasAppliedPromptRef = useRef(false)
 
   useEffect(() => {
     hydrateAuth()
@@ -87,6 +97,83 @@ export default function TeacherPage() {
   }, [hydrateAuth, hydrate])
 
   useChatSync()
+
+  const activePlan = useMemo(() => {
+    if (!activePlanId) return null
+    return plans.find((plan) => plan.id === activePlanId) ?? null
+  }, [activePlanId, plans])
+
+  const bundleContext = useMemo(() => buildTeacherBundleContext(bundle), [bundle])
+  const bundleGoal = bundle?.goal ?? null
+  const bundlePlan = bundle?.generalPlan ?? null
+  const bundleActiveWeek = useMemo(
+    () => bundle?.roadmap?.weeks.find((week) => week.status === "active") ?? bundle?.roadmap?.weeks[0] ?? null,
+    [bundle],
+  )
+
+  const entryContext = useMemo<TeacherEntryContext | null>(() => {
+    const source = searchParams.get("source")
+    const question = searchParams.get("prompt")?.trim() || undefined
+    const topic = searchParams.get("topic")?.trim() || undefined
+    const stageTitle = searchParams.get("stageTitle")?.trim() || undefined
+    const taskTitle = searchParams.get("taskTitle")?.trim() || undefined
+    const taskType = searchParams.get("taskType")?.trim() || undefined
+    const weekTitle = searchParams.get("weekTitle")?.trim() || undefined
+    const weekNumberRaw = searchParams.get("weekNumber")?.trim()
+    const weekNumber = weekNumberRaw ? Number(weekNumberRaw) : undefined
+
+    const validSource = source === "plan" || source === "coach_today" || source === "coach_task" || source === "coach_roadmap" || source === "teacher_home"
+      ? source
+      : undefined
+
+    if (!validSource && !question && !topic && !stageTitle && !taskTitle && !taskType && !weekTitle) {
+      return null
+    }
+
+    return {
+      source: validSource ?? "teacher_home",
+      question,
+      topic,
+      stageTitle,
+      taskTitle,
+      taskType,
+      weekTitle,
+      weekNumber: typeof weekNumber === "number" && Number.isFinite(weekNumber) ? weekNumber : undefined,
+    }
+  }, [searchParams])
+
+  useEffect(() => {
+    if (!mounted || !isAuthenticated) return
+    let cancelled = false
+
+    async function loadBundle() {
+      try {
+        const nextBundle = await fetchActiveGoalBundle()
+        if (!cancelled) {
+          setBundle(nextBundle)
+        }
+      } catch {
+        if (!cancelled) {
+          setBundle(null)
+        }
+      }
+    }
+
+    void loadBundle()
+    return () => {
+      cancelled = true
+    }
+  }, [mounted, isAuthenticated])
+
+  useEffect(() => {
+    if (hasAppliedPromptRef.current) return
+
+    const prompt = searchParams.get("prompt")?.trim()
+    if (!prompt) return
+
+    setInput(prompt)
+    hasAppliedPromptRef.current = true
+  }, [searchParams])
 
   useEffect(() => {
     if (!mounted || !isAuthenticated || initialLoadDone) return
@@ -212,6 +299,8 @@ export default function TeacherPage() {
           profile: {
             sessionId: profile.sessionId,
             level: profile.level,
+            activeGoalId: profile.activeGoalId,
+            activeGoal: profile.activeGoal,
             lastNctCodes: profile.lastNctCodes,
             activityLog: profile.activityLog,
             achievements: profile.achievements,
@@ -219,8 +308,14 @@ export default function TeacherPage() {
             plans: profile.plans,
             interviews: profile.interviews,
             activePlanId: profile.activePlanId,
+            goalHistory: profile.goalHistory,
+            recommendations: profile.recommendations,
+            savedCodes: profile.savedCodes,
+            deletedBookmarkCodes: profile.deletedBookmarkCodes,
           },
-          activePlan: activePlan ?? undefined,
+          activePlan: (bundlePlan ?? activePlan) ?? undefined,
+          bundleContext: bundleContext ?? undefined,
+          context: entryContext ?? undefined,
         }),
       })
 
@@ -234,7 +329,7 @@ export default function TeacherPage() {
 
       const reply = result.data?.reply?.trim()
       if (!reply) {
-        setError(result.error ?? "AI Teacher временно не отвечает. Попробуйте ещё раз.")
+        setError(result.error ?? "AI Chat временно не отвечает. Попробуйте ещё раз.")
         return
       }
 
@@ -258,7 +353,7 @@ export default function TeacherPage() {
       })
       saveMessageToApi(sessionId, assistantMsg)
       setStreamingId(msgId)
-      logActivityEvent("use_teacher", "Общение с AI Teacher")
+      logActivityEvent("use_teacher", "Использование AI Chat")
 
       if (namingTimerRef.current) clearTimeout(namingTimerRef.current)
       const storeState = useTeacherStore.getState()
@@ -274,7 +369,7 @@ export default function TeacherPage() {
     } finally {
       setLoading(false)
     }
-  }, [input, isLoading, messages, activeSessionId, addMessage, setLoading, setError, createSession, saveMessageToApi, autoNameSession, renameSession])
+  }, [input, isLoading, messages, activeSessionId, addMessage, setLoading, setError, createSession, saveMessageToApi, autoNameSession, renameSession, activePlan, bundleContext, bundlePlan, entryContext])
 
   const startNewChat = useCallback(async () => {
     reset()
@@ -313,6 +408,59 @@ export default function TeacherPage() {
     : groups
 
   const sessionsLoadingState = useTeacherStore((s) => s.sessionsLoading)
+  const quickPrompts = useMemo(() => {
+    const prompts: string[] = []
+
+    if (entryContext?.taskTitle) {
+      prompts.push(`Помоги разобраться, как выполнить задачу "${entryContext.taskTitle}".`)
+    }
+
+    if (entryContext?.stageTitle) {
+      prompts.push(`Объясни, зачем нужен этап "${entryContext.stageTitle}" и как к нему подступиться.`)
+    }
+
+    if (bundleGoal ?? activeGoal) {
+      const goal = bundleGoal ?? activeGoal
+      prompts.push(`Какие темы особенно важны для цели ${goal?.nctCode} и почему?`)
+    }
+
+    if (bundlePlan?.stages[0] ?? activePlan?.stages[0]) {
+      const firstStage = bundlePlan?.stages[0] ?? activePlan?.stages[0]
+      prompts.push(`Разбери первый этап плана "${firstStage?.title}" простыми шагами.`)
+    }
+
+    if (bundleActiveWeek) {
+      prompts.push(`Объясни, зачем нужна неделя ${bundleActiveWeek.number} "${bundleActiveWeek.title}" и как к ней подступиться.`)
+    }
+
+    prompts.push("Объясни непонятную тему простыми словами и без лишней воды.")
+
+    return Array.from(new Set(prompts)).slice(0, 4)
+  }, [entryContext, activeGoal, activePlan, bundleActiveWeek, bundleGoal, bundlePlan])
+
+  const entryHeadline = useMemo(() => {
+    if (entryContext?.taskTitle) return `Помощь по задаче: ${entryContext.taskTitle}`
+    if (entryContext?.weekTitle) return `Помощь по неделе roadmap: ${entryContext.weekTitle}`
+    if (entryContext?.stageTitle) return `Помощь по этапу плана: ${entryContext.stageTitle}`
+    if (bundleGoal ?? activeGoal) return `AI Chat рядом с целью ${(bundleGoal ?? activeGoal)?.nctCode}`
+    return "AI Chat как вторичный помощник"
+  }, [entryContext, activeGoal, bundleGoal])
+
+  const entryDescription = useMemo(() => {
+    if (entryContext?.source === "coach_task") {
+      return "AI Chat поможет разобрать тему или задачу, но приоритеты и следующий шаг по-прежнему остаются в Coach."
+    }
+
+    if (entryContext?.source === "coach_roadmap") {
+      return "Используйте AI Chat, чтобы понять смысл текущей недели roadmap, темы и учебные риски, не превращая его в замену Coach."
+    }
+
+    if (entryContext?.source === "plan") {
+      return "Используйте AI Chat, чтобы понять этапы общего плана, термины и учебные темы, не превращая его в замену Coach."
+    }
+
+    return "AI Chat объясняет темы, термины и шаги плана. Он не выбирает цель, не строит roadmap и не ведёт ежедневное выполнение вместо Coach."
+  }, [entryContext])
 
   if (!mounted || authLoading) {
     return (
@@ -430,6 +578,58 @@ export default function TeacherPage() {
             error={error}
             streamingId={streamingId}
             onRegenerate={regenerateMessage}
+            loadingText="AI Chat готовит ответ..."
+            emptyState={(
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mx-auto flex max-w-3xl flex-col items-center text-center"
+              >
+                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/5">
+                  <Sparkles className="h-7 w-7 text-primary/40" />
+                </div>
+                <h2 className="text-lg font-semibold text-foreground">{entryHeadline}</h2>
+                <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-text-secondary">
+                  {entryDescription}
+                </p>
+
+                <div className="mt-5 grid w-full gap-3 text-left sm:grid-cols-2">
+                  <div className="rounded-[18px] border border-border bg-card-bg p-4">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <Target className="h-4 w-4 text-primary" />
+                      Контекст цели
+                    </div>
+                    <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+                      {bundleGoal ?? activeGoal
+                        ? `${(bundleGoal ?? activeGoal)?.nctTitle} · ${(bundleGoal ?? activeGoal)?.nctCode}`
+                        : "Пока без активной цели. Здесь лучше задавать точечные учебные вопросы."}
+                    </p>
+                  </div>
+                  <div className="rounded-[18px] border border-border bg-card-bg p-4">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <Route className="h-4 w-4 text-primary" />
+                      Граница с Coach
+                    </div>
+                    <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+                      Coach ведёт по roadmap и today. AI Chat нужен, чтобы понять материал, шаг или термин по запросу.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex w-full flex-wrap justify-center gap-2">
+                  {quickPrompts.map((prompt) => (
+                    <button
+                      key={prompt}
+                      type="button"
+                      onClick={() => void sendMessage(prompt)}
+                      className="inline-flex min-h-11 items-center rounded-[12px] border border-border bg-card-bg px-4 text-sm font-medium text-foreground transition-colors hover:bg-background"
+                    >
+                      {prompt}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
           />
         )}
 
@@ -443,5 +643,21 @@ export default function TeacherPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+function TeacherPageSkeleton() {
+  return (
+    <div className="flex flex-1 items-center justify-center px-6 py-24">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  )
+}
+
+export default function TeacherPage() {
+  return (
+    <Suspense fallback={<TeacherPageSkeleton />}>
+      <TeacherPageContent />
+    </Suspense>
   )
 }

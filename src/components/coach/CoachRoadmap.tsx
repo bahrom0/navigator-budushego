@@ -9,7 +9,9 @@ import {
   ChevronDown,
   Map,
   Clock,
+  Bot,
 } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useCoachStore } from "@/stores/coach-store"
 import { RoadmapDurationModal } from "@/components/coach/RoadmapDurationModal"
 import type { CoachWeek, CoachWeekStatus, RoadmapDurationWeeks } from "@/types/coach"
@@ -38,6 +40,7 @@ function durationLabel(weeks?: number): string {
 }
 
 export function CoachRoadmap({ onGenerate }: CoachRoadmapProps) {
+  const router = useRouter()
   const roadmap = useCoachStore((s) => s.roadmap)
   const isLoading = useCoachStore((s) => s.isLoading)
   const [showModal, setShowModal] = useState(false)
@@ -60,32 +63,54 @@ export function CoachRoadmap({ onGenerate }: CoachRoadmapProps) {
     )
   }
 
-  const completedCount = roadmap.weeks.filter(
-    (w) => w.status === "completed",
-  ).length
+  const completedCount = roadmap.weeks.filter((week) => week.status === "completed").length
+  const activeWeek = roadmap.weeks.find((week) => week.status === "active") ?? roadmap.weeks[0] ?? null
 
   return (
     <section>
-      <div className="mb-4">
-        <h2 className="text-base font-semibold text-foreground">Roadmap</h2>
-        <p className="mt-0.5 flex items-center gap-1.5 text-sm text-text-secondary">
-          <span>{roadmap.weeks.length} недель · пройдено {completedCount}</span>
-          {roadmap.durationWeeks ? (
-            <span className="inline-flex items-center gap-1 text-xs text-text-muted">
-              <Clock className="h-3 w-3" />
-              {durationLabel(roadmap.durationWeeks)}
-            </span>
-          ) : null}
-        </p>
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-base font-semibold text-foreground">Roadmap</h2>
+          <p className="mt-0.5 flex items-center gap-1.5 text-sm text-text-secondary">
+            <span>{roadmap.weeks.length} недель · пройдено {completedCount}</span>
+            {roadmap.durationWeeks ? (
+              <span className="inline-flex items-center gap-1 text-xs text-text-muted">
+                <Clock className="h-3 w-3" />
+                {durationLabel(roadmap.durationWeeks)}
+              </span>
+            ) : null}
+          </p>
+        </div>
+        {activeWeek ? (
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => router.push("/chat?intent=week")}
+              className="inline-flex min-h-10 items-center rounded-[12px] border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-card-bg"
+            >
+              Обсудить неделю {activeWeek.number}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push(
+                `/teacher?source=coach_roadmap&topic=${encodeURIComponent("roadmap_week")}&weekTitle=${encodeURIComponent(activeWeek.title)}&weekNumber=${encodeURIComponent(String(activeWeek.number))}&prompt=${encodeURIComponent(`Объясни, как пройти неделю ${activeWeek.number} "${activeWeek.title}" и на какие темы обратить особое внимание.`)}`,
+              )}
+              className="inline-flex min-h-10 items-center gap-2 rounded-[12px] border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-card-bg"
+            >
+              <Bot className="h-4 w-4 text-primary" />
+              Разобрать неделю в AI Chat
+            </button>
+          </div>
+        ) : null}
       </div>
       <div className="space-y-2">
-        {roadmap.weeks.map((week, i) => (
+        {roadmap.weeks.map((week, index) => (
           <motion.div
             key={week.id}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{
-              delay: i * 0.04,
+              delay: index * 0.04,
               duration: 0.25,
               ease: "easeOut",
             }}
@@ -110,7 +135,7 @@ function WeekCard({ week }: { week: CoachWeek }) {
     >
       <button
         type="button"
-        onClick={() => setExpanded((p) => !p)}
+        onClick={() => setExpanded((prev) => !prev)}
         className="flex w-full items-center gap-3 p-4 text-left"
       >
         <StatusIcon className={`h-5 w-5 shrink-0 ${statusColor}`} />
@@ -151,12 +176,12 @@ function WeekCard({ week }: { week: CoachWeek }) {
                 {week.description}
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {week.subjects.map((s) => (
+                {week.subjects.map((subject) => (
                   <span
-                    key={s}
+                    key={subject}
                     className="rounded-[6px] bg-muted px-2 py-0.5 text-[11px] text-text-muted"
                   >
-                    {s}
+                    {subject}
                   </span>
                 ))}
               </div>
@@ -211,11 +236,10 @@ function RoadmapEmpty({ onGenerate }: { onGenerate?: () => void }) {
           <Map className="h-6 w-6 text-primary" />
         </div>
         <h2 className="mt-4 text-base font-semibold text-foreground">
-          Маршрут подготовки ещё не создан
+          Маршрут подготовки еще не создан
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-          Пройдите диагностику, чтобы Coach построил персонализированный
-          Roadmap.
+          Пройдите диагностику, чтобы Coach построил персонализированный roadmap.
         </p>
         {onGenerate ? (
           <button
@@ -223,7 +247,7 @@ function RoadmapEmpty({ onGenerate }: { onGenerate?: () => void }) {
             onClick={onGenerate}
             className="mt-5 inline-flex h-11 items-center gap-2 rounded-[12px] bg-primary px-5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
           >
-            Создать Roadmap
+            Создать roadmap
           </button>
         ) : null}
       </div>
@@ -234,9 +258,9 @@ function RoadmapEmpty({ onGenerate }: { onGenerate?: () => void }) {
 function RoadmapSkeleton() {
   return (
     <div className="space-y-3">
-      {[1, 2, 3].map((i) => (
+      {[1, 2, 3].map((item) => (
         <div
-          key={i}
+          key={item}
           className="h-[72px] animate-pulse rounded-[14px] bg-card-bg"
         />
       ))}

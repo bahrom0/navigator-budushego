@@ -11,6 +11,7 @@ import {
   ThumbsUp,
   ThumbsDown,
 } from "lucide-react"
+import type { ReactNode } from "react"
 import type { TeacherMessage } from "@/types/teacher"
 
 interface ChatMessagesProps {
@@ -20,6 +21,8 @@ interface ChatMessagesProps {
   streamingId: string | null
   onRegenerate: (messageId: string) => void
   renderAfterMessage?: (messageId: string) => React.ReactNode
+  emptyState?: ReactNode
+  loadingText?: string
 }
 
 function StreamingContent({ content }: { content: string }) {
@@ -183,6 +186,8 @@ export function ChatMessages({
   streamingId,
   onRegenerate,
   renderAfterMessage,
+  emptyState,
+  loadingText = "Помощник думает...",
 }: ChatMessagesProps) {
   const listRef = useRef<HTMLDivElement>(null)
   const [deletedIds, setDeletedIds] = useState<string[]>([])
@@ -208,22 +213,23 @@ export function ChatMessages({
     >
       <div className="mx-auto w-full max-w-[860px] px-5 pb-20 pt-8 sm:px-10 lg:px-14">
         {visibleMessages.length === 0 && !isLoading && !error && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center text-center"
-          >
-            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/5">
-              <Sparkles className="h-7 w-7 text-primary/40" />
-            </div>
-            <h2 className="text-base font-semibold text-foreground">
-              Добро пожаловать
-            </h2>
-            <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-text-secondary">
-              Я — твой AI-наставник. Знаю твой профиль, планы и прогресс.
-              Спроси о рекомендациях, этапах развития или проверь свои знания.
-            </p>
-          </motion.div>
+          emptyState ?? (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center justify-center text-center"
+            >
+              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/5">
+                <Sparkles className="h-7 w-7 text-primary/40" />
+              </div>
+              <h2 className="text-base font-semibold text-foreground">
+                Начните разговор
+              </h2>
+              <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-text-secondary">
+                Спросите о непонятной теме, термине или шаге подготовки.
+              </p>
+            </motion.div>
+          )
         )}
 
         <AnimatePresence initial={false}>
@@ -257,7 +263,7 @@ export function ChatMessages({
             </div>
             <div className="flex items-center gap-2">
               <Loader2 className="h-3.5 w-3.5 animate-spin text-text-muted" />
-              <span className="text-xs text-text-muted">Наставник думает...</span>
+              <span className="text-xs text-text-muted">{loadingText}</span>
             </div>
           </motion.div>
         )}

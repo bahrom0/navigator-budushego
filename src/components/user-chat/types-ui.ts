@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import type {
+  CommunityScope,
   ConversationWithMember,
   MessageWithAttachments,
   PendingMessage,
@@ -12,13 +13,25 @@ export interface ConversationListProps {
   activeConversationId: string | null
   presenceState: Record<string, boolean>
   isLoading: boolean
+  communityTitle?: string | null
+  communityDescription?: string | null
+  communityFilters?: CommunityFilterOption[]
+  activeCommunityFilter?: CommunityScope | null
   searchQuery: string
   searchResults: UserProfile[]
   searchLoading: boolean
   searched: boolean
+  resultsLabel?: string | null
   onSelectConversation: (id: string) => void
   onSearch: (query: string) => void
+  onToggleCommunityFilter?: (scope: CommunityScope) => void
   onStartConversation: (userId: string) => void
+}
+
+export interface CommunityFilterOption {
+  id: CommunityScope
+  label: string
+  helper?: string
 }
 
 export interface ChatHeaderProps {
@@ -38,6 +51,7 @@ export interface ChatPanelProps {
   messages: MessageWithAttachments[]
   pendingMessages: PendingMessage[]
   currentUserId: string | null
+  emptyState?: ReactNode
   input: string
   typingUsername: string
   onInputChange: (value: string) => void
