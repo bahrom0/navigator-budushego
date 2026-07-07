@@ -47,7 +47,7 @@ export function CoachShell({ children }: CoachShellProps) {
       <header className="sticky top-14 z-30 border-b border-border bg-card-bg/88 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="min-w-0 flex-1">
-            <span className="navigator-kicker">Main workspace · coach</span>
+            {/* <span className="navigator-kicker">Main workspace · coach</span> */}
             <p className="mt-2 truncate text-[15px] font-semibold text-foreground">
               {resolvedGoal?.nctTitle ?? "Цель не выбрана"}
             </p>

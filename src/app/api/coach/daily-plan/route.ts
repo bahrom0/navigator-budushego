@@ -7,6 +7,7 @@ import type { DevelopmentPlan } from "@/types/plan"
 import type { DailyPlanRecord } from "@/types/admission"
 import { resolveCoachContext } from "@/lib/coach/persistence"
 import { appendProductHistory } from "@/lib/product-history"
+import { addDays, getWeekForDate, isDateWithinRoadmap } from "@/lib/coach/daily-plan-schedule"
 
 export const dynamic = "force-dynamic"
 
@@ -18,14 +19,14 @@ const WeekTaskSchema = z.object({
 })
 
 const DailyPlanRequestSchema = z.object({
-  goalId: z.string().min(1, "Укажите ID цели"),
-  roadmapId: z.string().min(1, "Укажите ID roadmap"),
+  goalId: z.string().min(1, "РЈРєР°Р¶РёС‚Рµ ID С†РµР»Рё"),
+  roadmapId: z.string().min(1, "РЈРєР°Р¶РёС‚Рµ ID roadmap"),
   planId: z.string().min(1).optional(),
-  weekId: z.string().min(1, "Укажите ID недели"),
-  nctCode: z.string().trim().min(1, "Укажите код НЦТ").max(20),
-  nctTitle: z.string().trim().min(1, "Укажите название").max(200),
-  weekTitle: z.string().trim().min(1, "Укажите название недели").max(200),
-  weekSubjects: z.array(z.string()).min(1, "Укажите предметы недели"),
+  weekId: z.string().min(1, "РЈРєР°Р¶РёС‚Рµ ID РЅРµРґРµР»Рё"),
+  nctCode: z.string().trim().min(1, "РЈРєР°Р¶РёС‚Рµ РєРѕРґ РќР¦Рў").max(20),
+  nctTitle: z.string().trim().min(1, "РЈРєР°Р¶РёС‚Рµ РЅР°Р·РІР°РЅРёРµ").max(200),
+  weekTitle: z.string().trim().min(1, "РЈРєР°Р¶РёС‚Рµ РЅР°Р·РІР°РЅРёРµ РЅРµРґРµР»Рё").max(200),
+  weekSubjects: z.array(z.string()).min(1, "РЈРєР°Р¶РёС‚Рµ РїСЂРµРґРјРµС‚С‹ РЅРµРґРµР»Рё"),
   weekTasks: z.array(WeekTaskSchema).default([]),
   previousCompletedCount: z.number().int().min(0).optional(),
   previousSkippedCount: z.number().int().min(0).optional(),
@@ -48,7 +49,7 @@ function mapTask(row: Record<string, unknown>) {
     completedAt: row.completed_at ? new Date(String(row.completed_at)).getTime() : undefined,
     position: typeof row.position === "number" ? row.position : undefined,
     metadata: typeof row.metadata === "object" && row.metadata !== null ? row.metadata as Record<string, unknown> : undefined,
-  }
+  } satisfies CoachDayTask
 }
 
 async function findDailyPlan(
@@ -80,6 +81,38 @@ async function findDailyPlan(
   }
 }
 
+function buildDayPlanResponse(row: Record<string, unknown>, tasks: CoachDayTask[]) {
+  return {
+    date: String(row.plan_date),
+    weekId: String(row.week_id),
+    tasks,
+    dailyPlanId: String(row.id),
+    roadmapId: String(row.roadmap_id),
+    goalId: String(row.goal_id),
+    weekNumber: Number(row.week_number ?? 1),
+    title: String(row.title ?? ""),
+    completedTaskIds: Array.isArray(row.completed_task_ids)
+      ? row.completed_task_ids
+      : typeof row.completed_task_ids === "string"
+        ? JSON.parse(row.completed_task_ids as string)
+        : [],
+    skippedTaskIds: Array.isArray(row.skipped_task_ids)
+      ? row.skipped_task_ids
+      : typeof row.skipped_task_ids === "string"
+        ? JSON.parse(row.skipped_task_ids as string)
+        : [],
+    previousDate: typeof row.previous_date === "string" ? row.previous_date : undefined,
+    nextDate: typeof row.next_date === "string" ? row.next_date : undefined,
+    completedAt: row.updated_at ? new Date(String(row.updated_at)).getTime() : undefined,
+    stats: typeof row.stats === "object" && row.stats !== null ? row.stats as Record<string, unknown> : null,
+    generationContext:
+      typeof row.generation_context === "object" && row.generation_context !== null
+        ? row.generation_context as Record<string, unknown>
+        : null,
+    isDraft: tasks.length === 0,
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
@@ -89,7 +122,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           status: "error",
-          error: parsed.error.issues[0]?.message ?? "Некорректные данные",
+          error: parsed.error.issues[0]?.message ?? "РќРµРєРѕСЂСЂРµРєС‚РЅС‹Рµ РґР°РЅРЅС‹Рµ",
           data: null,
         },
         { status: 400 },
@@ -135,36 +168,12 @@ export async function POST(request: Request) {
       if (context.plan?.id) resolvedPlanId = context.plan.id
 
       const existing = await findDailyPlan(supabase, user.id, resolvedGoalId, targetDate)
-
-      if (existing) {
+      if (existing && existing.tasks.length > 0) {
         const row = existing.planRow
         return NextResponse.json({
           status: "success",
           data: {
-            dayPlan: {
-              date: String(row.plan_date),
-              weekId: String(row.week_id),
-              tasks: existing.tasks,
-              dailyPlanId: row.id,
-              roadmapId: String(row.roadmap_id),
-              goalId: String(row.goal_id),
-              weekNumber: Number(row.week_number ?? 1),
-              title: String(row.title ?? ""),
-              completedTaskIds: Array.isArray(row.completed_task_ids)
-                ? row.completed_task_ids
-                : typeof row.completed_task_ids === "string"
-                  ? JSON.parse(row.completed_task_ids as string)
-                  : [],
-              skippedTaskIds: Array.isArray(row.skipped_task_ids)
-                ? row.skipped_task_ids
-                : typeof row.skipped_task_ids === "string"
-                  ? JSON.parse(row.skipped_task_ids as string)
-                  : [],
-              previousDate: typeof row.previous_date === "string" ? row.previous_date : undefined,
-              nextDate: typeof row.next_date === "string" ? row.next_date : undefined,
-              completedAt: row.updated_at ? new Date(String(row.updated_at)).getTime() : undefined,
-              stats: typeof row.stats === "object" && row.stats !== null ? row.stats as Record<string, unknown> : null,
-            },
+            dayPlan: buildDayPlanResponse(row, existing.tasks),
             dailyPlanId: row.id,
             goalId: resolvedGoalId,
             roadmapId,
@@ -175,40 +184,88 @@ export async function POST(request: Request) {
       }
     }
 
+    let existingDraft: Awaited<ReturnType<typeof findDailyPlan>> | null = null
+    if (session && user) {
+      existingDraft = await findDailyPlan(supabase, user.id, resolvedGoalId, targetDate)
+    }
+
+    const draftGenerationContext =
+      typeof existingDraft?.planRow.generation_context === "object" && existingDraft.planRow.generation_context !== null
+        ? existingDraft.planRow.generation_context as Record<string, unknown>
+        : null
+
+    const requestedRoadmap = roadmap as CoachRoadmap | null | undefined
+    const matchedWeek = requestedRoadmap ? getWeekForDate(requestedRoadmap, targetDate) : null
+    const resolvedWeekId =
+      matchedWeek?.id
+      ?? (typeof draftGenerationContext?.weekId === "string" ? draftGenerationContext.weekId : weekId)
+    const resolvedWeekTitle =
+      matchedWeek?.title
+      ?? (typeof draftGenerationContext?.weekTitle === "string" ? draftGenerationContext.weekTitle : weekTitle)
+    const resolvedWeekSubjects = matchedWeek?.subjects
+      ?? (
+        Array.isArray(draftGenerationContext?.weekSubjects)
+          ? draftGenerationContext.weekSubjects.filter((subject): subject is string => typeof subject === "string")
+          : weekSubjects
+      )
+    const resolvedWeekTasks = matchedWeek?.tasks ?? weekTasks
+    const resolvedWeekNumber =
+      matchedWeek?.number
+      ?? (typeof draftGenerationContext?.weekNumber === "number" ? draftGenerationContext.weekNumber : Number(weekId.replace(/\D+/g, "")) || 1)
+
     const dayPlan = await generateDailyPlan({
-      goalId,
+      goalId: resolvedGoalId,
       roadmapId,
-      planId,
-      weekId,
+      planId: resolvedPlanId ?? undefined,
+      weekId: resolvedWeekId,
       nctCode,
       nctTitle,
-      weekTitle,
-      weekSubjects,
-      weekTasks,
+      weekTitle: resolvedWeekTitle,
+      weekSubjects: resolvedWeekSubjects,
+      weekTasks: resolvedWeekTasks,
       planDate: targetDate,
       previousCompletedCount,
       previousSkippedCount,
       diagnosticResult: diagnosticResult as CoachDiagnosticResult | null | undefined,
       miniTestResults: miniTestResults ?? undefined,
       generalPlan: generalPlan as DevelopmentPlan | null | undefined,
-      roadmap: roadmap as CoachRoadmap | null | undefined,
+      roadmap: requestedRoadmap,
       dailyHistory: dailyHistory as DailyPlanRecord[] | null | undefined,
+      dayContext: draftGenerationContext,
     })
 
     if (session && user) {
       const generationContext = {
+        ...draftGenerationContext,
         goalId: resolvedGoalId,
         roadmapId,
         planId: resolvedPlanId,
-        weekId,
+        weekId: resolvedWeekId,
+        weekNumber: resolvedWeekNumber,
+        weekTitle: resolvedWeekTitle,
+        weekSubjects: resolvedWeekSubjects,
         nctCode,
         nctTitle,
-        weekTitle,
         planDate: targetDate,
         hasGeneralPlan: !!generalPlan,
         hasDiagnostic: !!diagnosticResult,
         hasHistory: !!(dailyHistory as DailyPlanRecord[] | null)?.length,
+        promptSeed: typeof draftGenerationContext?.promptSeed === "string" ? draftGenerationContext.promptSeed : undefined,
       }
+
+      const previousDate =
+        typeof existingDraft?.planRow.previous_date === "string"
+          ? existingDraft.planRow.previous_date
+          : requestedRoadmap && isDateWithinRoadmap(requestedRoadmap, targetDate)
+            ? addDays(targetDate, -1)
+            : null
+
+      const nextDate =
+        typeof existingDraft?.planRow.next_date === "string"
+          ? existingDraft.planRow.next_date
+          : requestedRoadmap && isDateWithinRoadmap(requestedRoadmap, targetDate)
+            ? addDays(targetDate, 1)
+            : null
 
       const dayBasePayload: Record<string, unknown> = {
         user_id: user.id,
@@ -217,36 +274,53 @@ export async function POST(request: Request) {
         roadmap_id: roadmapId,
         plan_id: resolvedPlanId,
         plan_date: targetDate,
-        week_id: weekId,
-        week_number: Number(weekId.replace(/\D+/g, "")) || 1,
-        title: weekTitle,
-        previous_date: previousDateFor(targetDate),
+        week_id: resolvedWeekId,
+        week_number: resolvedWeekNumber,
+        title: resolvedWeekTitle,
+        previous_date: previousDate,
+        next_date: nextDate,
         completed_task_ids: [],
         skipped_task_ids: [],
         summary: null,
+        generation_context: generationContext,
       }
 
-      const { data: insertedDay, error: dayError } = await supabase
-        .from("daily_plans")
-        .insert(dayBasePayload)
-        .select("id")
-        .single()
+      const existingDraftId = typeof existingDraft?.planRow.id === "string" ? existingDraft.planRow.id : null
+      let persistedDayId = existingDraftId
 
-      if (dayError) {
-        return NextResponse.json({ status: "error", error: dayError.message, data: null }, { status: 500 })
-      }
-
-      try {
-        await supabase
+      if (existingDraftId) {
+        const { error: updateDayError } = await supabase
           .from("daily_plans")
-          .update({ generation_context: generationContext })
-          .eq("id", insertedDay.id)
-      } catch {} // column may not exist before migration 015
+          .update(dayBasePayload)
+          .eq("id", existingDraftId)
+
+        if (updateDayError) {
+          return NextResponse.json({ status: "error", error: updateDayError.message, data: null }, { status: 500 })
+        }
+      } else {
+        const { data: insertedDay, error: dayError } = await supabase
+          .from("daily_plans")
+          .insert(dayBasePayload)
+          .select("id")
+          .single()
+
+        if (dayError) {
+          return NextResponse.json({ status: "error", error: dayError.message, data: null }, { status: 500 })
+        }
+
+        persistedDayId = String(insertedDay.id)
+      }
+
+      if (!persistedDayId) {
+        return NextResponse.json({ status: "error", error: "Failed to persist daily plan", data: null }, { status: 500 })
+      }
+
+      await supabase.from("daily_tasks").delete().eq("user_id", user.id).eq("daily_plan_id", persistedDayId)
 
       const taskRows = dayPlan.tasks.map((task, index) => ({
         user_id: user.id,
         session_id: null,
-        daily_plan_id: insertedDay.id,
+        daily_plan_id: persistedDayId,
         task_id: task.id,
         title: task.title,
         type: task.type,
@@ -265,18 +339,19 @@ export async function POST(request: Request) {
       await appendProductHistory(supabase, user.id, {
         goalId: resolvedGoalId,
         entityType: "daily_plan",
-        entityId: String(insertedDay.id),
-        action: "daily_plan_generated",
-        title: `Собран план дня: ${weekTitle}`,
-        summary: `${dayPlan.tasks.length} задач на ${targetDate}`,
+        entityId: persistedDayId,
+        action: existingDraftId ? "daily_plan_materialized" : "daily_plan_generated",
+        title: `РЎРѕР±СЂР°РЅ РїР»Р°РЅ РґРЅСЏ: ${resolvedWeekTitle}`,
+        summary: `${dayPlan.tasks.length} Р·Р°РґР°С‡ РЅР° ${targetDate}`,
         metadata: {
           roadmapId,
           planId: resolvedPlanId,
-          weekId,
-          weekTitle,
-          weekSubjects,
+          weekId: resolvedWeekId,
+          weekTitle: resolvedWeekTitle,
+          weekSubjects: resolvedWeekSubjects,
           taskCount: dayPlan.tasks.length,
           planDate: targetDate,
+          fromDraft: !!existingDraftId,
         },
       })
 
@@ -285,16 +360,21 @@ export async function POST(request: Request) {
         data: {
           dayPlan: {
             ...dayPlan,
-            dailyPlanId: insertedDay.id,
+            dailyPlanId: persistedDayId,
             roadmapId,
             goalId: resolvedGoalId,
-            previousDate: previousDateFor(targetDate),
+            weekNumber: resolvedWeekNumber,
+            title: resolvedWeekTitle,
+            previousDate: typeof previousDate === "string" ? previousDate : undefined,
+            nextDate: typeof nextDate === "string" ? nextDate : undefined,
+            generationContext,
+            isDraft: false,
           },
-          dailyPlanId: insertedDay.id,
+          dailyPlanId: persistedDayId,
           goalId: resolvedGoalId,
           roadmapId,
           planId: resolvedPlanId,
-          reused: false,
+          reused: !!existingDraftId,
         },
       })
     }
@@ -343,34 +423,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ status: "success", data: { dayPlan: null } })
     }
 
-    const row = existing.planRow
-
     return NextResponse.json({
       status: "success",
       data: {
-        dayPlan: {
-          date: String(row.plan_date),
-          weekId: String(row.week_id),
-          tasks: existing.tasks,
-          dailyPlanId: row.id,
-          roadmapId: String(row.roadmap_id),
-          goalId: String(row.goal_id),
-          weekNumber: Number(row.week_number ?? 1),
-          title: String(row.title ?? ""),
-          completedTaskIds: Array.isArray(row.completed_task_ids)
-            ? row.completed_task_ids
-            : typeof row.completed_task_ids === "string"
-              ? JSON.parse(row.completed_task_ids as string)
-              : [],
-          skippedTaskIds: Array.isArray(row.skipped_task_ids)
-            ? row.skipped_task_ids
-            : typeof row.skipped_task_ids === "string"
-              ? JSON.parse(row.skipped_task_ids as string)
-              : [],
-          previousDate: typeof row.previous_date === "string" ? row.previous_date : undefined,
-          nextDate: typeof row.next_date === "string" ? row.next_date : undefined,
-          completedAt: row.updated_at ? new Date(String(row.updated_at)).getTime() : undefined,
-        },
+        dayPlan: buildDayPlanResponse(existing.planRow, existing.tasks),
       },
     })
   } catch (error) {
@@ -381,10 +437,4 @@ export async function GET(request: Request) {
       { status: 500 },
     )
   }
-}
-
-function previousDateFor(dateIso: string): string {
-  const date = new Date(`${dateIso}T00:00:00.000Z`)
-  date.setUTCDate(date.getUTCDate() - 1)
-  return date.toISOString().slice(0, 10)
 }

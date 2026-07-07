@@ -6,6 +6,7 @@ import type { DevelopmentPlan } from "@/types/plan"
 import { createClient } from "@/lib/supabase/server"
 import { resolveCoachContext } from "@/lib/coach/persistence"
 import { appendProductHistory } from "@/lib/product-history"
+import { buildRoadmapDates, getWeekForDate } from "@/lib/coach/daily-plan-schedule"
 
 export const dynamic = "force-dynamic"
 
@@ -61,6 +62,7 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser()
 
     let persistedRoadmapId: string | null = null
+    const roadmapStartDate = new Date().toISOString().slice(0, 10)
 
     if (session && user) {
       const context = await resolveCoachContext(supabase, user.id, {
@@ -74,18 +76,19 @@ export async function POST(request: Request) {
       })
 
       if (context.goal?.id) {
+        const contextGoalId = context.goal.id
         const { data: existingRoadmap } = await supabase
           .from("roadmaps")
           .select("id")
           .eq("user_id", user.id)
-          .eq("goal_id", context.goal.id)
+          .eq("goal_id", contextGoalId)
           .eq("status", "active")
           .maybeSingle()
 
         const basePayload: Record<string, unknown> = {
           user_id: user.id,
           session_id: null,
-          goal_id: context.goal.id,
+          goal_id: contextGoalId,
           plan_id: context.plan?.id ?? null,
           weeks: roadmap.weeks,
           current_week_number: 1,
@@ -101,7 +104,7 @@ export async function POST(request: Request) {
         if (generalPlan) maybeExtraPayload.plan_snapshot = generalPlan as Record<string, unknown>
         if (diagnosticResult) maybeExtraPayload.diagnostic_snapshot = diagnosticResult as Record<string, unknown>
         maybeExtraPayload.generation_context = {
-          goalId: context.goal.id,
+          goalId: contextGoalId,
           planId: context.plan?.id ?? null,
           nctCode,
           nctTitle,
@@ -109,6 +112,8 @@ export async function POST(request: Request) {
           profession: profession || undefined,
           city: city || undefined,
           durationWeeks,
+          startDate: roadmapStartDate,
+          totalDays: (durationWeeks as number) * 7,
           hasGeneralPlan: !!generalPlan,
           hasDiagnostic: !!diagnosticResult,
         }
@@ -159,8 +164,73 @@ export async function POST(request: Request) {
         }
 
         if (persistedRoadmapId) {
+          const persistedRoadmap = {
+            ...roadmap,
+            id: persistedRoadmapId,
+            goalId: contextGoalId,
+            createdAt: roadmap.createdAt,
+            updatedAt: Date.now(),
+            durationWeeks: durationWeeks as RoadmapDurationWeeks,
+            generationContext: maybeExtraPayload.generation_context as Record<string, unknown>,
+          }
+
+          const roadmapDates = buildRoadmapDates(persistedRoadmap)
+          if (roadmapDates.length > 0) {
+            const precreatedRows = roadmapDates
+              .map((planDate, index) => {
+                const week = getWeekForDate(persistedRoadmap, planDate)
+                if (!week) return null
+
+                return {
+                  user_id: user.id,
+                  session_id: null,
+                  goal_id: contextGoalId,
+                  roadmap_id: persistedRoadmapId,
+                  plan_id: context.plan?.id ?? null,
+                  plan_date: planDate,
+                  week_id: week.id,
+                  week_number: week.number,
+                  title: week.title,
+                  previous_date: index > 0 ? roadmapDates[index - 1] : null,
+                  next_date: index < roadmapDates.length - 1 ? roadmapDates[index + 1] : null,
+                  summary: null,
+                  generation_context: {
+                    roadmapId: persistedRoadmapId,
+                    planId: context.plan?.id ?? null,
+                    goalId: contextGoalId,
+                    nctCode,
+                    nctTitle,
+                    planDate,
+                    roadmapStartDate,
+                    roadmapTotalDays: roadmapDates.length,
+                    dayNumber: index + 1,
+                    weekId: week.id,
+                    weekNumber: week.number,
+                    weekTitle: week.title,
+                    weekSubjects: week.subjects,
+                    weekTaskIds: week.tasks.map((task) => task.id),
+                    promptSeed: `Day ${index + 1} of ${roadmapDates.length} for week ${week.number}: ${week.title}`,
+                  },
+                }
+              })
+              .filter((row): row is NonNullable<typeof row> => row !== null)
+
+            if (precreatedRows.length > 0) {
+              const { error: precreateError } = await supabase
+                .from("daily_plans")
+                .upsert(precreatedRows, {
+                  onConflict: "user_id,goal_id,plan_date",
+                  ignoreDuplicates: false,
+                })
+
+              if (precreateError) {
+                return NextResponse.json({ status: "error", error: precreateError.message, data: null }, { status: 500 })
+              }
+            }
+          }
+
           await appendProductHistory(supabase, user.id, {
-            goalId: context.goal.id,
+            goalId: contextGoalId,
             entityType: "roadmap",
             entityId: persistedRoadmapId,
             action: existingRoadmap?.id ? "roadmap_updated" : "roadmap_created",

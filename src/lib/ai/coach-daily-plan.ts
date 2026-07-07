@@ -5,8 +5,8 @@ import type {
   CoachDayTask,
   CoachDiagnosticResult,
   CoachMiniTestResult,
-  CoachWeekTask,
   CoachRoadmap,
+  CoachWeekTask,
 } from "@/types/coach"
 import type { DevelopmentPlan } from "@/types/plan"
 import type { DailyPlanRecord } from "@/types/admission"
@@ -41,48 +41,184 @@ export interface GenerateDailyPlanOptions {
   generalPlan?: DevelopmentPlan | null
   roadmap?: CoachRoadmap | null
   dailyHistory?: DailyPlanRecord[] | null
-}
-
-function buildPlanContext(plan?: DevelopmentPlan | null): string {
-  if (!plan) return "(Общий план не создан.)"
-  const lines: string[] = [
-    "=== ОБЩИЙ ПЛАН РАЗВИТИЯ ===",
-    `Уровень: ${plan.level}`,
-  ]
-  if (plan.goals?.length) {
-    lines.push("Цели плана:")
-    plan.goals.forEach((g) => lines.push(`  - ${g.title}: ${g.description}`))
-  }
-  if (plan.stages?.length) {
-    lines.push("Этапы:")
-    plan.stages.forEach((s) => {
-      lines.push(`  - ${s.title}: ${s.description}`)
-      if (s.recommendations?.length) lines.push(`    Рекомендации: ${s.recommendations.join("; ")}`)
-    })
-  }
-  return lines.join("\n")
+  dayContext?: Record<string, unknown> | null
 }
 
 const SYSTEM_PROMPT: DeepSeekMessage = {
   role: "system",
   content: [
-    "Ты — персональный наставник по подготовке к поступлению в Казахстане.",
-    "Генерируешь план на день для абитуриента.",
-    "План содержит 4-6 задач разных типов: study, practice, review, test.",
-    "Каждая задача имеет длительность в минутах (5-120).",
-    "Учитывай общий план развития как главный ориентир.",
-    "Учитывай результаты диагностики: слабые темы требуют больше внимания.",
-    "Учитывай roadmap: каждая задача дня должна быть шагом к выполнению недельных задач.",
-    "Учитывай прогресс: если опережает — усложняй, если отстаёт — упрощай.",
-    "Если пропущено много задач — снизь нагрузку, верни к слабым темам.",
-    "Учитывай историю предыдущих дней: не повторяй уже выполненные задачи, развивай пройденное.",
-    "Отвечай только валидный JSON без markdown.",
+    "Ты персональный AI-коуч по подготовке к поступлению в Казахстане.",
+    "Твоя задача — генерировать план только на один день.",
+    "План должен содержать 4-6 задач типов study, practice, review, test.",
+    "Каждая задача должна быть конкретной, отличимой от задач предыдущих дней и иметь длительность 5-120 минут.",
+    "Опирайся на общий план, диагностику, roadmap, историю предыдущих дней и позицию текущего дня в маршруте.",
+    "Нельзя повторять вчерашние или уже выполненные задачи дословно и по смыслу.",
+    "Если в прошлые дни уже был разбор темы, следующий день должен продвигать ученика на новый шаг, а не копировать то же самое другими словами.",
+    "Отвечай только валидным JSON без markdown.",
   ].join(" "),
 }
 
-export async function generateDailyPlan(
-  options: GenerateDailyPlanOptions,
-): Promise<CoachDayPlan> {
+function buildPlanContext(plan?: DevelopmentPlan | null): string {
+  if (!plan) return "(Общий план пока не создан.)"
+
+  const lines: string[] = [
+    "=== ОБЩИЙ ПЛАН ===",
+    `Уровень: ${plan.level}`,
+  ]
+
+  if (plan.goals.length > 0) {
+    lines.push("Цели:")
+    plan.goals.forEach((goal) => lines.push(`- ${goal.title}: ${goal.description}`))
+  }
+
+  if (plan.stages.length > 0) {
+    lines.push("Этапы:")
+    plan.stages.forEach((stage) => {
+      lines.push(`- ${stage.title}: ${stage.description}`)
+      if (stage.recommendations?.length) {
+        lines.push(`  Рекомендации: ${stage.recommendations.join("; ")}`)
+      }
+    })
+  }
+
+  return lines.join("\n")
+}
+
+function buildDiagnosticContext(diagnosticResult?: CoachDiagnosticResult | null): string {
+  if (!diagnosticResult) return "(Диагностика не пройдена.)"
+
+  return [
+    "=== ДИАГНОСТИКА ===",
+    ...diagnosticResult.subjects.map((subject) => `${subject.subject}: ${subject.level} (${subject.score}%)`),
+    `Слабые темы: ${diagnosticResult.weaknesses.join(", ") || "не указаны"}`,
+    `Сильные темы: ${diagnosticResult.strengths.join(", ") || "не указаны"}`,
+  ].join("\n")
+}
+
+function buildMiniTestContext(miniTestResults?: CoachMiniTestResult[]): string {
+  if (!miniTestResults?.length) return ""
+
+  return [
+    "",
+    "=== МИНИ-ТЕСТЫ ===",
+    ...miniTestResults.map((result) => `${result.subject}: ${result.correctAnswers}/${result.totalQuestions} правильных`),
+  ].join("\n")
+}
+
+function buildWeekTasksContext(weekTasks: CoachWeekTask[]): string {
+  if (weekTasks.length === 0) return ""
+
+  return [
+    "",
+    "=== ЗАДАЧИ НЕДЕЛИ ИЗ ROADMAP ===",
+    ...weekTasks.map((task) => `- ${task.title} (${task.type}): ${task.description}`),
+    "Каждая задача дня должна быть реальным шагом к выполнению этих недельных задач.",
+  ].join("\n")
+}
+
+function buildRoadmapOverview(roadmap?: CoachRoadmap | null): string {
+  if (!roadmap?.weeks.length) return ""
+
+  return [
+    "",
+    "=== ROADMAP ===",
+    `Всего недель: ${roadmap.durationWeeks ?? roadmap.weeks.length}`,
+    ...roadmap.weeks.slice(0, 6).map((week) => `Неделя ${week.number}: ${week.title} [${week.status}] — ${week.subjects.join(", ")}`),
+  ].join("\n")
+}
+
+function buildSummaryHistoryContext(dailyHistory?: DailyPlanRecord[] | null): string {
+  if (!dailyHistory?.length) return ""
+
+  const recent = dailyHistory
+    .slice()
+    .sort((a, b) => b.planDate.localeCompare(a.planDate))
+    .slice(0, 5)
+
+  return [
+    "",
+    "=== ИСТОРИЯ ДНЕЙ ===",
+    ...recent.map((day) => `${day.planDate}: ${day.title} — задач: ${day.tasks.length}, выполнено: ${day.tasks.filter((task) => task.completed).length}`),
+  ].join("\n")
+}
+
+function buildDetailedHistoryContext(dailyHistory?: DailyPlanRecord[] | null): string {
+  if (!dailyHistory?.length) return ""
+
+  const recent = dailyHistory
+    .slice()
+    .sort((a, b) => b.planDate.localeCompare(a.planDate))
+    .slice(0, 4)
+
+  const lines: string[] = ["", "=== ДЕТАЛЬНО ЧТО УЖЕ БЫЛО ==="]
+
+  recent.forEach((day) => {
+    lines.push(`День ${day.planDate} — ${day.title}`)
+    day.tasks.slice(0, 8).forEach((task) => {
+      lines.push(`- [${task.completed ? "done" : "open"}] ${task.type}: ${task.title} — ${task.description}`)
+    })
+  })
+
+  const completedTitles = recent.flatMap((day) => day.tasks.filter((task) => task.completed).map((task) => task.title)).slice(0, 12)
+  const recentTitles = recent.flatMap((day) => day.tasks.map((task) => task.title)).slice(0, 16)
+
+  if (completedTitles.length > 0) {
+    lines.push("Уже завершённые задачи, которые нельзя повторять:")
+    completedTitles.forEach((title) => lines.push(`- ${title}`))
+  }
+
+  if (recentTitles.length > 0) {
+    lines.push("Недавние формулировки и фокусы, которые нельзя просто перефразировать:")
+    recentTitles.forEach((title) => lines.push(`- ${title}`))
+  }
+
+  lines.push("Следующий день должен развивать уже пройденное и давать новый шаг вперёд.")
+
+  return lines.join("\n")
+}
+
+function buildDayContext(dayContext?: Record<string, unknown> | null): string {
+  if (!dayContext) return ""
+
+  return [
+    "",
+    "=== КОНТЕКСТ ТЕКУЩЕГО ДНЯ ===",
+    typeof dayContext.promptSeed === "string" ? `Сигнал маршрута: ${dayContext.promptSeed}` : null,
+    typeof dayContext.dayNumber === "number" && typeof dayContext.roadmapTotalDays === "number"
+      ? `Позиция в маршруте: день ${dayContext.dayNumber} из ${dayContext.roadmapTotalDays}`
+      : null,
+    typeof dayContext.weekNumber === "number" ? `Номер недели: ${dayContext.weekNumber}` : null,
+    typeof dayContext.weekTitle === "string" ? `Фокус недели: ${dayContext.weekTitle}` : null,
+  ]
+    .filter((line): line is string => typeof line === "string" && line.length > 0)
+    .join("\n")
+}
+
+function buildAdaptationHint(
+  completed: number,
+  skipped: number,
+  miniTestResults?: CoachMiniTestResult[],
+): string {
+  const weakSubjects = miniTestResults
+    ?.filter((result) => result.correctAnswers < result.totalQuestions * 0.6)
+    .map((result) => result.subject)
+
+  const weakHint = weakSubjects?.length ? ` Фокус на слабых темах: ${weakSubjects.join(", ")}.` : ""
+
+  if (skipped > completed && skipped > 3) {
+    return `АДАПТАЦИЯ: было много пропусков — снизь нагрузку, делай более короткие задачи и укрепляй базу.${weakHint}`
+  }
+  if (completed > 8) {
+    return `АДАПТАЦИЯ: ученик идёт с опережением — можно усложнить день и дать более продвинутые шаги.${weakHint}`
+  }
+  if (completed < 2) {
+    return `АДАПТАЦИЯ: выполнено мало — упрости вход и дай понятные обзорные шаги.${weakHint}`
+  }
+
+  return `АДАПТАЦИЯ: стандартная нагрузка, но новый день должен всё равно отличаться от предыдущего.${weakHint}`
+}
+
+export async function generateDailyPlan(options: GenerateDailyPlanOptions): Promise<CoachDayPlan> {
   const {
     goalId,
     weekId,
@@ -101,67 +237,8 @@ export async function generateDailyPlan(
     generalPlan,
     roadmap,
     dailyHistory,
+    dayContext,
   } = options
-
-  const planContext = buildPlanContext(generalPlan)
-
-  const diagnosticContext = diagnosticResult
-    ? [
-        "=== ДИАГНОСТИКА ===",
-        ...diagnosticResult.subjects.map(
-          (s) => `${s.subject}: ${s.level} (${s.score}%)`,
-        ),
-        `Слабые: ${diagnosticResult.weaknesses.join(", ")}`,
-        `Сильные: ${diagnosticResult.strengths.join(", ")}`,
-      ].join("\n")
-    : "(Диагностика не пройдена.)"
-
-  const miniTestContext = miniTestResults?.length
-    ? [
-        "",
-        "=== МИНИ-ТЕСТЫ ===",
-        ...miniTestResults.map(
-          (m) => `${m.subject}: ${m.correctAnswers}/${m.totalQuestions} правильных`,
-        ),
-      ].join("\n")
-    : ""
-
-  const adaptation = buildAdaptationHint(
-    previousCompletedCount ?? 0,
-    previousSkippedCount ?? 0,
-    miniTestResults,
-  )
-
-  const weekTasksContext = weekTasks.length > 0
-    ? [
-        "",
-        "=== ЗАДАЧИ НЕДЕЛИ (из Roadmap) ===",
-        ...weekTasks.map((t) => `- ${t.title} (${t.type}): ${t.description}`),
-        "",
-        "Каждая задача дня должна быть конкретным шагом к выполнению одной из задач недели.",
-      ].join("\n")
-    : ""
-
-  const roadmapOverview = roadmap?.weeks?.length
-    ? [
-        "",
-        "=== ROADMAP (обзор) ===",
-        `Всего недель: ${roadmap.durationWeeks ?? roadmap.weeks.length}`,
-        ...roadmap.weeks.slice(0, 3).map((w) =>
-          `  Неделя ${w.number}: ${w.title} [${w.status}] — ${w.subjects.join(", ")}`
-        ),
-      ].join("\n")
-    : ""
-
-  const historyContext = dailyHistory?.length
-    ? [
-        "",
-        "=== ИСТОРИЯ ПРЕДЫДУЩИХ ДНЕЙ ===",
-        ...dailyHistory.slice(0, 5).map((h) =>
-          `  ${h.planDate}: ${h.title} — задач: ${h.tasks.length}, выполнено: ${h.tasks.filter((t) => t.completed).length}`
-        ),
-      ].join("\n")
-    : ""
 
   const prompt: DeepSeekMessage = {
     role: "user",
@@ -171,34 +248,40 @@ export async function generateDailyPlan(
       planId ? `Plan ID: ${planId}` : null,
       `Цель: ${nctTitle} (код НЦТ: ${nctCode})`,
       `Текущая неделя: ${weekTitle}`,
-      `Предметы: ${weekSubjects.join(", ")}`,
+      `Предметы недели: ${weekSubjects.join(", ")}`,
       "",
-      planContext,
+      buildPlanContext(generalPlan),
       "",
-      diagnosticContext,
-      miniTestContext,
-      weekTasksContext,
-      roadmapOverview,
-      historyContext,
-      adaptation,
+      buildDiagnosticContext(diagnosticResult),
+      buildMiniTestContext(miniTestResults),
+      buildWeekTasksContext(weekTasks),
+      buildRoadmapOverview(roadmap),
+      buildSummaryHistoryContext(dailyHistory),
+      buildDetailedHistoryContext(dailyHistory),
+      buildDayContext(dayContext),
+      buildAdaptationHint(
+        previousCompletedCount ?? 0,
+        previousSkippedCount ?? 0,
+        miniTestResults,
+      ),
       "",
       "Сгенерируй план на день: 4-6 задач.",
-      "Не повторяй задачи из предыдущих дней, если они уже выполнены.",
-      "Приоритеты: сначала общий план, потом диагностика, потом roadmap, потом цель, потом прогресс.",
-      "",
-      "Ответь JSON строго по схеме:",
+      "Нельзя повторять уже выполненные задачи прошлых дней ни дословно, ни по смыслу.",
+      "Если вчера была теория по теме, сегодня нужен следующий шаг: практика, применение, разбор ошибок, мини-тест или углубление.",
+      "Каждая задача должна иметь новый микро-фокус внутри темы, а не быть косметическим переписыванием вчерашней формулировки.",
+      "Ответь строго JSON по схеме:",
       "{",
       '  "tasks": [',
       "    {",
       '      "id": "dt1",',
-      '      "title": "Изучить квадратные уравнения",',
+      '      "title": "Разобрать ...",',
       '      "type": "study",',
-      '      "description": "Повторить теорию и решить 5 задач",',
+      '      "description": "Что именно сделать и зачем",',
       '      "duration": 25',
       "    }",
       "  ]",
       "}",
-      "ВАЖНО: строго валидный JSON, без markdown.",
+      "ВАЖНО: только валидный JSON без markdown.",
     ]
       .filter((line): line is string => typeof line === "string" && line.length > 0)
       .join("\n"),
@@ -206,15 +289,12 @@ export async function generateDailyPlan(
 
   const raw = await deepseekChat([SYSTEM_PROMPT, prompt], {
     model: "deepseek-chat",
-    temperature: 0.4,
+    temperature: 0.45,
     maxTokens: 2048,
     responseFormat: { type: "json_object" },
   })
 
-  const cleaned = raw
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/i, "")
-    .trim()
+  const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim()
 
   let parsed: unknown
   try {
@@ -223,11 +303,7 @@ export async function generateDailyPlan(
     const jsonStart = cleaned.indexOf("{")
     const jsonEnd = cleaned.lastIndexOf("}")
     if (jsonStart !== -1 && jsonEnd > jsonStart) {
-      try {
-        parsed = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1))
-      } catch {
-        throw new Error("Failed to parse daily plan JSON")
-      }
+      parsed = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1))
     } else {
       throw new Error("Failed to parse daily plan JSON")
     }
@@ -235,43 +311,15 @@ export async function generateDailyPlan(
 
   const result = DailyPlanResponseSchema.safeParse(parsed)
   if (!result.success) {
-    throw new Error(
-      `Daily plan validation failed: ${result.error.issues[0]?.message}`,
-    )
+    throw new Error(`Daily plan validation failed: ${result.error.issues[0]?.message}`)
   }
 
-  const today = planDate || new Date().toISOString().slice(0, 10)
   return {
-    date: today,
+    date: planDate || new Date().toISOString().slice(0, 10),
     weekId,
-    tasks: result.data.tasks.map((t): CoachDayTask => ({
-      ...t,
+    tasks: result.data.tasks.map((task): CoachDayTask => ({
+      ...task,
       completed: false,
     })),
   }
-}
-
-function buildAdaptationHint(
-  completed: number,
-  skipped: number,
-  miniTestResults?: CoachMiniTestResult[],
-): string {
-  const weakSubjects = miniTestResults
-    ?.filter((m) => m.correctAnswers < m.totalQuestions * 0.6)
-    .map((m) => m.subject)
-
-  const weakHint = weakSubjects?.length
-    ? ` Фокус на слабых темах: ${weakSubjects.join(", ")}.`
-    : ""
-
-  if (skipped > completed && skipped > 3) {
-    return `АДАПТАЦИЯ: много пропущенных задач — снизь нагрузку, короткие задачи, возврат к основам.${weakHint}`
-  }
-  if (completed > 8) {
-    return `АДАПТАЦИЯ: опережает — усложни задачи, добавь продвинутые темы.${weakHint}`
-  }
-  if (completed < 2) {
-    return `АДАПТАЦИЯ: мало выполненных — упрости задачи, обзорные задания.${weakHint}`
-  }
-  return `АДАПТАЦИЯ: стандартная нагрузка.${weakHint}`
 }

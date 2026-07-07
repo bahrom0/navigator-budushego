@@ -15,6 +15,7 @@ import type {
 import type { DevelopmentPlan } from "@/types/plan"
 import type { DailyPlanRecord } from "@/types/admission"
 import type { ActiveGoalBundle } from "@/types/admission"
+import { cacheGet, cacheRemove, cacheSet } from "@/lib/cache"
 
 interface CoachStore {
   bundle: ActiveGoalBundle | null
@@ -86,69 +87,167 @@ const initialProgress: CoachProgress = {
   subjectLevels: [],
 }
 
-export const useCoachStore = create<CoachStore>((set, get) => ({
+const STORAGE_KEY = "coach-state-v1"
+
+type PersistedCoachState = Pick<
+  CoachStore,
+  | "goal"
+  | "plan"
+  | "dailyHistory"
+  | "roadmap"
+  | "dayPlan"
+  | "navigateDate"
+  | "diagnostics"
+  | "progress"
+  | "activeTab"
+>
+
+function buildPersistedState(state: Partial<CoachStore>): PersistedCoachState {
+  return {
+    goal: state.goal ?? null,
+    plan: state.plan ?? null,
+    dailyHistory: state.dailyHistory ?? [],
+    roadmap: state.roadmap ?? null,
+    dayPlan: state.dayPlan ?? null,
+    navigateDate: state.navigateDate ?? new Date().toISOString().slice(0, 10),
+    diagnostics: state.diagnostics ?? [],
+    progress: state.progress ?? initialProgress,
+    activeTab: state.activeTab ?? "today",
+  }
+}
+
+function persistCoachState(state: Partial<CoachStore>): void {
+  cacheSet(STORAGE_KEY, buildPersistedState(state))
+}
+
+export const useCoachStore = create<CoachStore>((set, get) => {
+  const persisted = cacheGet<PersistedCoachState>(STORAGE_KEY) ?? buildPersistedState({})
+
+  return {
   bundle: null,
   applyBundle: (bundle) =>
-    set({
-      bundle,
-      goal: bundle.goal,
-      plan: bundle.generalPlan,
-      roadmap: bundle.roadmap,
-      dayPlan: bundle.todayPlan
-        ? {
-            date: bundle.todayPlan.planDate,
-            weekId: bundle.todayPlan.weekId,
-            tasks: bundle.todayPlan.tasks,
-            dailyPlanId: bundle.todayPlan.id,
-            roadmapId: bundle.todayPlan.roadmapId,
-            goalId: bundle.todayPlan.goalId,
-            weekNumber: bundle.todayPlan.weekNumber,
-            title: bundle.todayPlan.title,
-            completedTaskIds: bundle.todayPlan.completedTaskIds,
-            skippedTaskIds: bundle.todayPlan.skippedTaskIds,
-            previousDate: bundle.todayPlan.previousDate,
-            nextDate: bundle.todayPlan.nextDate,
-            completedAt: bundle.todayPlan.updatedAt,
-            stats: bundle.todayPlan.stats,
-          }
-        : null,
-      dailyHistory: bundle.dailyHistory,
-      error: null,
+    set((state) => {
+      const next = {
+        ...state,
+        bundle,
+        goal: bundle.goal,
+        plan: bundle.generalPlan,
+        roadmap: bundle.roadmap,
+        dayPlan: bundle.todayPlan
+          ? {
+              date: bundle.todayPlan.planDate,
+              weekId: bundle.todayPlan.weekId,
+              tasks: bundle.todayPlan.tasks,
+              dailyPlanId: bundle.todayPlan.id,
+              roadmapId: bundle.todayPlan.roadmapId,
+              goalId: bundle.todayPlan.goalId,
+              weekNumber: bundle.todayPlan.weekNumber,
+              title: bundle.todayPlan.title,
+              completedTaskIds: bundle.todayPlan.completedTaskIds,
+              skippedTaskIds: bundle.todayPlan.skippedTaskIds,
+              previousDate: bundle.todayPlan.previousDate,
+              nextDate: bundle.todayPlan.nextDate,
+              completedAt: bundle.todayPlan.updatedAt,
+              stats: bundle.todayPlan.stats,
+              generationContext: bundle.todayPlan.generationContext,
+              isDraft: bundle.todayPlan.isDraft,
+            }
+          : null,
+        dailyHistory: bundle.dailyHistory,
+        error: null,
+      }
+      persistCoachState(next)
+      return next
     }),
 
-  goal: null,
-  setGoal: (goal) => set({ goal, error: null }),
+  goal: persisted.goal,
+  setGoal: (goal) => set((state) => {
+    const next = { ...state, goal, error: null }
+    persistCoachState(next)
+    return next
+  }),
   archiveGoal: () =>
-    set((state) =>
-      state.goal ? { goal: { ...state.goal, status: "changed" } } : state,
-    ),
-  clearGoal: () => set({ goal: null }),
+    set((state) => {
+      if (!state.goal) return state
+      const next = { ...state, goal: { ...state.goal, status: "changed" } }
+      persistCoachState(next)
+      return next
+    }),
+  clearGoal: () => set((state) => {
+    const next = { ...state, goal: null }
+    persistCoachState(next)
+    return next
+  }),
 
-  plan: null,
-  setPlan: (plan) => set({ plan }),
+  plan: persisted.plan,
+  setPlan: (plan) => set((state) => {
+    const next = { ...state, plan }
+    persistCoachState(next)
+    return next
+  }),
 
-  dailyHistory: [],
-  setDailyHistory: (plans) => set({ dailyHistory: plans }),
+  dailyHistory: persisted.dailyHistory,
+  setDailyHistory: (plans) => set((state) => {
+    const next = { ...state, dailyHistory: plans }
+    persistCoachState(next)
+    return next
+  }),
 
-  roadmap: null,
-  setRoadmap: (roadmap) => set({ roadmap, error: null }),
-  clearRoadmap: () => set({ roadmap: null }),
+  roadmap: persisted.roadmap,
+  setRoadmap: (roadmap) => set((state) => {
+    const next = { ...state, roadmap, error: null }
+    persistCoachState(next)
+    return next
+  }),
+  clearRoadmap: () => set((state) => {
+    const next = { ...state, roadmap: null }
+    persistCoachState(next)
+    return next
+  }),
 
-  dayPlan: null,
-  setDayPlan: (plan) => set({ dayPlan: plan, error: null }),
+  dayPlan: persisted.dayPlan,
+  setDayPlan: (plan) => set((state) => {
+    const next = { ...state, dayPlan: plan, error: null }
+    persistCoachState(next)
+    return next
+  }),
   toggleTask: (taskId) =>
     set((state) => {
       if (!state.dayPlan) return state
+      const toggledTask = state.dayPlan.tasks.find((t) => t.id === taskId)
+      if (!toggledTask) return state
+
+      const nextCompleted = !toggledTask.completed
       const tasks: CoachDayTask[] = state.dayPlan.tasks.map((t) =>
         t.id === taskId
           ? {
               ...t,
-              completed: !t.completed,
-              completedAt: !t.completed ? Date.now() : undefined,
+              completed: nextCompleted,
+              completedAt: nextCompleted ? Date.now() : undefined,
             }
           : t,
       )
-      return { dayPlan: { ...state.dayPlan, tasks } }
+
+      const completedTaskIds = tasks.filter((task) => task.completed).map((task) => task.id)
+      const nextDayPlan = { ...state.dayPlan, tasks, completedTaskIds }
+
+      const next = {
+        ...state,
+        dayPlan: nextDayPlan,
+        dailyHistory: state.dailyHistory.map((plan) =>
+          plan.id === state.dayPlan?.dailyPlanId || plan.planDate === state.dayPlan?.date
+            ? {
+                ...plan,
+                tasks,
+                completedTaskIds,
+                updatedAt: Date.now(),
+                isDraft: false,
+              }
+            : plan,
+        ),
+      }
+      persistCoachState(next)
+      return next
     }),
   persistToggleTask: async (dayPlanId: string, taskId: string, completed: boolean) => {
     const state = get()
@@ -165,21 +264,41 @@ export const useCoachStore = create<CoachStore>((set, get) => ({
       })
       const payload = (await res.json()) as { status?: string; data?: { progress?: CoachProgress }; error?: string }
       if (res.ok && payload.status === "success" && payload.data?.progress) {
-        set({ progress: payload.data.progress })
+        set((state) => {
+          const next = { ...state, progress: payload.data?.progress ?? state.progress }
+          persistCoachState(next)
+          return next
+        })
       }
     } catch (err) {
       console.error("[coach-store] Failed to persist task toggle:", err)
     }
   },
-  clearDayPlan: () => set({ dayPlan: null }),
+  clearDayPlan: () => set((state) => {
+    const next = { ...state, dayPlan: null }
+    persistCoachState(next)
+    return next
+  }),
 
-  navigateDate: new Date().toISOString().slice(0, 10),
-  setNavigateDate: (date) => set({ navigateDate: date }),
+  navigateDate: persisted.navigateDate,
+  setNavigateDate: (date) => set((state) => {
+    const next = { ...state, navigateDate: date }
+    persistCoachState(next)
+    return next
+  }),
 
-  diagnostics: [],
+  diagnostics: persisted.diagnostics,
   addDiagnostic: (result) =>
-    set((state) => ({ diagnostics: [result, ...state.diagnostics] })),
-  clearDiagnostics: () => set({ diagnostics: [] }),
+    set((state) => {
+      const next = { ...state, diagnostics: [result, ...state.diagnostics] }
+      persistCoachState(next)
+      return next
+    }),
+  clearDiagnostics: () => set((state) => {
+    const next = { ...state, diagnostics: [] }
+    persistCoachState(next)
+    return next
+  }),
 
   miniTests: [],
   addMiniTest: (test) =>
@@ -204,17 +323,29 @@ export const useCoachStore = create<CoachStore>((set, get) => ({
     set((state) => ({ messages: [...state.messages, msg] })),
   clearMessages: () => set({ messages: [] }),
 
-  progress: initialProgress,
+  progress: persisted.progress,
   updateProgress: (partial) =>
-    set((state) => ({ progress: { ...state.progress, ...partial } })),
-  resetProgress: () => set({ progress: initialProgress }),
+    set((state) => {
+      const next = { ...state, progress: { ...state.progress, ...partial } }
+      persistCoachState(next)
+      return next
+    }),
+  resetProgress: () => set((state) => {
+    const next = { ...state, progress: initialProgress }
+    persistCoachState(next)
+    return next
+  }),
 
   taskSteps: {},
   setTaskSteps: (taskId, steps) =>
     set((state) => ({ taskSteps: { ...state.taskSteps, [taskId]: steps } })),
 
-  activeTab: "today",
-  setActiveTab: (tab) => set({ activeTab: tab }),
+  activeTab: persisted.activeTab,
+  setActiveTab: (tab) => set((state) => {
+    const next = { ...state, activeTab: tab }
+    persistCoachState(next)
+    return next
+  }),
 
   isLoading: false,
   setLoading: (loading) => set({ isLoading: loading }),
@@ -240,4 +371,6 @@ export const useCoachStore = create<CoachStore>((set, get) => ({
       isLoading: false,
       error: null,
     }),
-}))
+    cacheRemove(STORAGE_KEY),
+  }
+})

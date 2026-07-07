@@ -1,12 +1,15 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react"
+import { Loader2, Sparkles } from "lucide-react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { useCoachStore } from "@/stores/coach-store"
 import { useProfileStore } from "@/stores/profile-store"
 import { CoachShell } from "@/components/coach/CoachShell"
 import { CoachErrorBanner } from "@/components/coach/CoachErrorBanner"
 import { CoachTabContent } from "@/components/coach/CoachTabContent"
 import { applyActiveGoalBundle, getPlanId } from "@/lib/coach/bundle-client"
+import { RoadmapDurationModal } from "@/components/coach/RoadmapDurationModal"
 import {
   CoachGoalSetup,
   type CoachGoalDraft,
@@ -21,15 +24,17 @@ import type {
   RoadmapDurationWeeks,
 } from "@/types/coach"
 import type { ActiveGoalBundle } from "@/types/admission"
+import { getRoadmapStartDate, getWeekForDate } from "@/lib/coach/daily-plan-schedule"
 
-export default function CoachPage() {
+function CoachPageContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const goal = useCoachStore((s) => s.goal)
   const plan = useCoachStore((s) => s.plan)
   const roadmap = useCoachStore((s) => s.roadmap)
   const dayPlan = useCoachStore((s) => s.dayPlan)
   const dailyHistory = useCoachStore((s) => s.dailyHistory)
   const setGoal = useCoachStore((s) => s.setGoal)
-  const setPlan = useCoachStore((s) => s.setPlan)
   const setRoadmap = useCoachStore((s) => s.setRoadmap)
   const setDayPlan = useCoachStore((s) => s.setDayPlan)
   const setDailyHistory = useCoachStore((s) => s.setDailyHistory)
@@ -39,19 +44,86 @@ export default function CoachPage() {
   const activeTab = useCoachStore((s) => s.activeTab)
   const setActiveTab = useCoachStore((s) => s.setActiveTab)
   const setTaskSteps = useCoachStore((s) => s.setTaskSteps)
-  const progress = useCoachStore((s) => s.progress)
-  const setProgress = useCoachStore((s) => s.updateProgress)
   const diagnostics = useCoachStore((s) => s.diagnostics)
   const navigateDate = useCoachStore((s) => s.navigateDate)
   const setNavigateDate = useCoachStore((s) => s.setNavigateDate)
   const profileActiveGoal = useProfileStore((s) => s.activeGoal)
+  const profilePlans = useProfileStore((s) => s.plans)
   const profileRecommendations = useProfileStore((s) => s.recommendations)
   const sessionId = useProfileStore((s) => s.sessionId)
   const setProfileActiveGoal = useProfileStore((s) => s.setActiveGoal)
   const [mounted, setMounted] = useState(false)
+  const [showRoadmapSetup, setShowRoadmapSetup] = useState(false)
+  const [isGeneratingRoadmap, setIsGeneratingRoadmap] = useState(false)
 
   const effectiveGoal = goal ?? profileActiveGoal ?? null
   const hasGoal = !!effectiveGoal
+
+  const syncBundle = useCallback((bundle: ActiveGoalBundle) => {
+    const selectedDate = useCoachStore.getState().navigateDate
+    const selectedPlan = bundle.dailyHistory.find((plan) => plan.planDate === selectedDate) ?? null
+    const preferredPlan = selectedPlan ?? bundle.todayPlan
+
+    applyActiveGoalBundle(bundle)
+
+    const todayCandidate = preferredPlan
+    if (todayCandidate?.planDate) {
+      setNavigateDate(todayCandidate.planDate)
+    } else {
+      const roadmapStartDate = getRoadmapStartDate(bundle.roadmap)
+      if (roadmapStartDate) {
+        setNavigateDate(roadmapStartDate)
+      }
+    }
+
+    if (bundle.roadmap) {
+      setActiveTab(todayCandidate && !todayCandidate.isDraft ? "today" : "roadmap")
+      if (todayCandidate) {
+        setDayPlan({
+          date: todayCandidate.planDate,
+          weekId: todayCandidate.weekId,
+          tasks: todayCandidate.tasks,
+          dailyPlanId: todayCandidate.id,
+          roadmapId: todayCandidate.roadmapId,
+          goalId: todayCandidate.goalId,
+          weekNumber: todayCandidate.weekNumber,
+          title: todayCandidate.title,
+          completedTaskIds: todayCandidate.completedTaskIds,
+          skippedTaskIds: todayCandidate.skippedTaskIds,
+          previousDate: todayCandidate.previousDate,
+          nextDate: todayCandidate.nextDate,
+          completedAt: todayCandidate.updatedAt,
+          stats: todayCandidate.stats,
+          generationContext: todayCandidate.generationContext,
+          isDraft: todayCandidate.isDraft,
+        })
+      }
+    }
+
+    syncProgress(bundle)
+  }, [setActiveTab, setDayPlan, setNavigateDate])
+
+  const loadBundle = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const res = await fetch("/api/plan/full", { method: "GET" })
+      const payload = (await res.json()) as {
+        status?: string
+        data?: { activeGoalId?: string | null; bundle?: ActiveGoalBundle | null }
+        error?: string
+      }
+
+      if (payload.status === "success" && payload.data?.bundle) {
+        syncBundle(payload.data.bundle)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РґР°РЅРЅС‹С…")
+    } finally {
+      setLoading(false)
+    }
+  }, [setError, setLoading, syncBundle])
 
   useEffect(() => {
     setMounted(true)
@@ -64,44 +136,33 @@ export default function CoachPage() {
   }, [profileActiveGoal, goal, setGoal])
 
   useEffect(() => {
-    let cancelled = false
+    if (plan || !effectiveGoal) return
+    const localPlan = profilePlans.find((item) => item.goalId === effectiveGoal.id || item.nctCode === effectiveGoal.nctCode)
+    if (!localPlan) return
 
-    async function loadBundle() {
-      setLoading(true)
-      setError(null)
+    setPlan({
+      nctCode: localPlan.nctCode,
+      nctTitle: localPlan.nctTitle,
+      level: localPlan.level,
+      goals: localPlan.goals,
+      stages: localPlan.stages,
+      id: localPlan.id,
+      goal_id: localPlan.goalId ?? null,
+      roadmap_id: localPlan.roadmapId ?? null,
+    })
+  }, [effectiveGoal, plan, profilePlans, setPlan])
 
-      try {
-        const res = await fetch("/api/plan/full", { method: "GET" })
-        const payload = (await res.json()) as {
-          status?: string
-          data?: { activeGoalId?: string | null; bundle?: ActiveGoalBundle | null }
-          error?: string
-        }
+  useEffect(() => {
+    void loadBundle()
+  }, [loadBundle])
 
-        if (cancelled) return
-
-        if (payload.status === "success" && payload.data?.bundle) {
-          const bundle = payload.data.bundle
-          applyActiveGoalBundle(bundle)
-          if (bundle.roadmap?.goalId) {
-            setActiveTab("today")
-          }
-          syncProgress(bundle)
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Ошибка загрузки данных")
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    loadBundle()
-    return () => {
-      cancelled = true
-    }
-  }, [setActiveTab, setDailyHistory, setDayPlan, setError, setGoal, setLoading, setPlan, setProfileActiveGoal, setRoadmap, setProgress])
+  useEffect(() => {
+    if (!mounted) return
+    if (!effectiveGoal || roadmap) return
+    if (searchParams.get("setup") !== "roadmap") return
+    setActiveTab("roadmap")
+    setShowRoadmapSetup(true)
+  }, [mounted, effectiveGoal, roadmap, searchParams, setActiveTab])
 
   const recommendations = useMemo<CoachRecommendation[]>(() => {
     if (!Array.isArray(profileRecommendations)) return []
@@ -131,11 +192,12 @@ export default function CoachPage() {
   const handleGenerateRoadmap = async (durationWeeks?: RoadmapDurationWeeks) => {
     if (!effectiveGoal) return
     if (!effectiveGoal.nctCode?.trim() || !effectiveGoal.nctTitle?.trim()) {
-      setError("Для Coach нужна корректная цель. Обновите план или выберите цель заново.")
+      setError("Р”Р»СЏ Coach РЅСѓР¶РЅР° РєРѕСЂСЂРµРєС‚РЅР°СЏ С†РµР»СЊ. РћР±РЅРѕРІРёС‚Рµ РїР»Р°РЅ РёР»Рё РІС‹Р±РµСЂРёС‚Рµ С†РµР»СЊ Р·Р°РЅРѕРІРѕ.")
       return
     }
     setLoading(true)
     setError(null)
+    setIsGeneratingRoadmap(true)
     try {
       const persistedPlanId = getPlanId(plan, effectiveGoal.planId)
       const res = await fetch("/api/coach/roadmap", {
@@ -160,8 +222,9 @@ export default function CoachPage() {
         error?: string
       }
       if (!res.ok || payload.status !== "success" || !payload.data?.roadmap) {
-        throw new Error(payload.error ?? "Не удалось создать Roadmap")
+        throw new Error(payload.error ?? "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ Roadmap")
       }
+
       const nextRoadmap = payload.data.roadmap as CoachRoadmap
       const nextGoal: CoachGoal = {
         ...effectiveGoal,
@@ -171,28 +234,40 @@ export default function CoachPage() {
       setRoadmap(nextRoadmap)
       setGoal(nextGoal)
       setProfileActiveGoal(nextGoal)
-      setActiveTab("today")
+      setNavigateDate(getRoadmapStartDate(nextRoadmap) ?? new Date().toISOString().slice(0, 10))
+
+      await loadBundle()
+      setActiveTab("roadmap")
+      setShowRoadmapSetup(false)
+      router.replace("/coach")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка создания Roadmap")
+      setError(err instanceof Error ? err.message : "РћС€РёР±РєР° СЃРѕР·РґР°РЅРёСЏ Roadmap")
     } finally {
+      setIsGeneratingRoadmap(false)
       setLoading(false)
     }
   }
 
-  const handleGenerateDailyPlan = async () => {
+  const handleGenerateDailyPlan = async (targetDate?: string) => {
     if (!effectiveGoal || !roadmap) return
     if (!effectiveGoal.nctCode?.trim() || !effectiveGoal.nctTitle?.trim()) {
-      setError("Для ежедневного плана нужна корректная цель. Обновите план или выберите цель заново.")
+      setError("Р”Р»СЏ РµР¶РµРґРЅРµРІРЅРѕРіРѕ РїР»Р°РЅР° РЅСѓР¶РЅР° РєРѕСЂСЂРµРєС‚РЅР°СЏ С†РµР»СЊ. РћР±РЅРѕРІРёС‚Рµ РїР»Р°РЅ РёР»Рё РІС‹Р±РµСЂРёС‚Рµ С†РµР»СЊ Р·Р°РЅРѕРІРѕ.")
       return
     }
     if (!roadmap.id) {
-      setError("Roadmap ID отсутствует. Создайте Roadmap заново.")
+      setError("Roadmap ID РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚. РЎРѕР·РґР°Р№С‚Рµ Roadmap Р·Р°РЅРѕРІРѕ.")
       return
     }
-    const activeWeek = roadmap.weeks.find((w) => w.status === "active") ?? roadmap.weeks[0]
+
+    const targetPlanDate = targetDate ?? navigateDate
+    const matchedWeek = getWeekForDate(roadmap, targetPlanDate)
+    const fallbackWeek = roadmap.weeks.find((w) => w.status === "active") ?? roadmap.weeks[0]
+    const activeWeek = matchedWeek ?? fallbackWeek
     if (!activeWeek) return
+
     setLoading(true)
     setError(null)
+    setNavigateDate(targetPlanDate)
     try {
       const persistedPlanId = getPlanId(plan, effectiveGoal.planId)
       const res = await fetch("/api/coach/daily-plan", {
@@ -211,7 +286,7 @@ export default function CoachPage() {
           previousCompletedCount: dayPlan?.tasks.filter((t) => t.completed).length ?? 0,
           previousSkippedCount: dayPlan ? dayPlan.tasks.length - dayPlan.tasks.filter((t) => t.completed).length : 0,
           diagnosticResult: diagnostics.length > 0 ? diagnostics[0] : null,
-          planDate: navigateDate,
+          planDate: targetPlanDate,
           generalPlan: plan ?? null,
           roadmap: roadmap ?? null,
           dailyHistory: dailyHistory ?? null,
@@ -235,12 +310,14 @@ export default function CoachPage() {
             nextDate?: string
             completedAt?: number
             stats?: Record<string, unknown> | null
+            generationContext?: Record<string, unknown> | null
+            isDraft?: boolean
           }
         }
         error?: string
       }
       if (!res.ok || payload.status !== "success" || !payload.data?.dayPlan) {
-        throw new Error(payload.error ?? "Не удалось создать план на сегодня")
+        throw new Error(payload.error ?? "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ РїР»Р°РЅ РЅР° РґРµРЅСЊ")
       }
       const dp = payload.data.dayPlan
       setDayPlan({
@@ -258,6 +335,8 @@ export default function CoachPage() {
         nextDate: dp.nextDate,
         completedAt: dp.completedAt,
         stats: dp.stats,
+        generationContext: dp.generationContext,
+        isDraft: dp.isDraft,
       })
       setDailyHistory([
         {
@@ -277,11 +356,15 @@ export default function CoachPage() {
           previousDate: dp.previousDate,
           nextDate: dp.nextDate,
           stats: dp.stats ?? null,
+          generationContext: dp.generationContext ?? null,
+          isDraft: dp.isDraft ?? false,
         },
         ...dailyHistory.filter((item) => item.planDate !== dp.date),
       ].sort((a, b) => b.planDate.localeCompare(a.planDate)))
+      setNavigateDate(dp.date)
+      setActiveTab("today")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка создания плана")
+      setError(err instanceof Error ? err.message : "РћС€РёР±РєР° СЃРѕР·РґР°РЅРёСЏ РїР»Р°РЅР°")
     } finally {
       setLoading(false)
     }
@@ -311,11 +394,11 @@ export default function CoachPage() {
         error?: string
       }
       if (!res.ok || payload.status !== "success" || !payload.data?.steps) {
-        throw new Error(payload.error ?? "Не удалось загрузить план")
+        throw new Error(payload.error ?? "РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РїР»Р°РЅ")
       }
       setTaskSteps(taskId, payload.data.steps)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка загрузки плана")
+      setError(err instanceof Error ? err.message : "РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РїР»Р°РЅР°")
     }
   }
 
@@ -334,11 +417,7 @@ export default function CoachPage() {
           error?: string
         }
         if (res.ok && payload.status === "success") {
-          if (payload.data?.dayPlan) {
-            setDayPlan(payload.data.dayPlan)
-          } else {
-            setDayPlan(null)
-          }
+          setDayPlan(payload.data?.dayPlan ?? null)
         }
       } catch (err) {
         console.error("[coach] navigate date error:", err)
@@ -362,16 +441,52 @@ export default function CoachPage() {
   if (!hasGoal) return <GoalSetupFlow recommendations={recommendations} sessionId={sessionId} />
 
   return (
-    <CoachShell>
-      {error ? <CoachErrorBanner message={error} onDismiss={() => setError(null)} /> : null}
-      <CoachTabContent
-        tab={activeTab}
-        onGenerateRoadmap={handleGenerateRoadmap}
-        onGenerateDailyPlan={handleGenerateDailyPlan}
-        onRequestTaskDetail={handleTaskDetail}
-        onNavigateDate={handleNavigateDate}
+    <>
+      <CoachShell>
+        {error ? <CoachErrorBanner message={error} onDismiss={() => setError(null)} /> : null}
+        <CoachTabContent
+          tab={activeTab}
+          onGenerateRoadmap={handleGenerateRoadmap}
+          onGenerateDailyPlan={handleGenerateDailyPlan}
+          onRequestTaskDetail={handleTaskDetail}
+          onNavigateDate={handleNavigateDate}
+        />
+      </CoachShell>
+
+      <RoadmapDurationModal
+        open={showRoadmapSetup}
+        onClose={() => {
+          setShowRoadmapSetup(false)
+          if (searchParams.get("setup") === "roadmap") {
+            router.replace("/coach")
+          }
+        }}
+        onConfirm={(duration) => {
+          void handleGenerateRoadmap(duration)
+        }}
+        loading={isGeneratingRoadmap}
       />
-    </CoachShell>
+
+      {isGeneratingRoadmap ? <RoadmapGeneratingOverlay /> : null}
+    </>
+  )
+}
+
+function CoachPageSkeleton() {
+  return (
+    <main className="flex min-h-[calc(100vh-3.5rem)] flex-1 items-center justify-center px-4 py-12 sm:px-6">
+      <div className="flex items-center justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    </main>
+  )
+}
+
+export default function CoachPage() {
+  return (
+    <Suspense fallback={<CoachPageSkeleton />}>
+      <CoachPageContent />
+    </Suspense>
   )
 }
 
@@ -388,7 +503,6 @@ function GoalSetupFlow({
   const setDayPlan = useCoachStore((s) => s.setDayPlan)
   const setDailyHistory = useCoachStore((s) => s.setDailyHistory)
   const setError = useCoachStore((s) => s.setError)
-  const setLoading = useCoachStore((s) => s.setLoading)
   const setProfileGoal = useProfileStore((s) => s.setActiveGoal)
   const [submitting, setSubmitting] = useState(false)
   const [localError, setLocalError] = useState<string | null>(null)
@@ -418,7 +532,7 @@ function GoalSetupFlow({
         error?: string
       }
       if (!res.ok || payload.status !== "success" || !payload.data?.goal) {
-        const message = payload.error ?? "Не удалось сохранить цель"
+        const message = payload.error ?? "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ С†РµР»СЊ"
         setLocalError(message)
         setError(message)
         return
@@ -430,7 +544,7 @@ function GoalSetupFlow({
       setDayPlan(null)
       setDailyHistory([])
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Сетевая ошибка"
+      const message = err instanceof Error ? err.message : "РЎРµС‚РµРІР°СЏ РѕС€РёР±РєР°"
       setLocalError(message)
       setError(message)
     } finally {
@@ -454,13 +568,52 @@ function syncProgress(bundle: ActiveGoalBundle) {
   const roadmapWeeks = bundle.roadmap?.weeks ?? []
   const totalTasksPlanned = roadmapWeeks.reduce((sum, week) => sum + week.tasks.length, 0)
   const completedTasks = bundle.dailyHistory.reduce(
-      (sum, plan) => sum + plan.tasks.filter((task) => task.completed).length,
-      0,
-    )
+    (sum, plan) => sum + plan.tasks.filter((task) => task.completed).length,
+    0,
+  )
   const completionPercent = totalTasksPlanned > 0 ? Math.round((completedTasks / totalTasksPlanned) * 100) : 0
   useCoachStore.getState().updateProgress({
     totalTasksPlanned,
     totalTasksCompleted: completedTasks,
     roadmapCompletionPercent: completionPercent,
   })
+}
+
+function RoadmapGeneratingOverlay() {
+  const steps = [
+    "Определяем горизонт подготовки",
+    "Собираем roadmap по неделям",
+    "Подготавливаем future daily plans в базе",
+  ]
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-background/70 px-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-[24px] border border-border bg-card-bg p-6 shadow-xl">
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <p className="text-base font-semibold text-foreground">Создаём ваш Coach roadmap</p>
+            <p className="mt-1 text-sm text-text-secondary">
+              Сейчас сохраняем маршрут и сразу раскладываем будущие дни, чтобы Today мог работать наперёд без швов.
+            </p>
+          </div>
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        </div>
+
+        <div className="mt-5 space-y-3">
+          {steps.map((step, index) => (
+            <div key={step} className="flex items-center gap-3 rounded-[14px] border border-border bg-background px-4 py-3">
+              <div
+                className="h-2.5 w-2.5 animate-pulse rounded-full bg-primary"
+                style={{ animationDelay: `${index * 120}ms` }}
+              />
+              <span className="text-sm text-foreground">{step}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
 }

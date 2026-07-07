@@ -51,6 +51,11 @@ function PlanContent() {
   const plan = bundle ? bundle.generalPlan : cachedPlan
   const recommendationSnapshot = bundle?.recommendationSnapshot ?? null
   const saveState: "idle" | "saved" = plan ? "saved" : "idle"
+  const coachHref = goal
+    ? bundle?.roadmap
+      ? "/coach"
+      : "/coach?setup=roadmap"
+    : `/interview?code=${encodeURIComponent(queryCode)}&title=${encodeURIComponent(queryTitle)}`
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -164,13 +169,9 @@ function PlanContent() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button
+              <button
               onClick={() =>
-                router.push(
-                  goal
-                    ? "/coach"
-                    : `/interview?code=${encodeURIComponent(queryCode)}&title=${encodeURIComponent(queryTitle)}`,
-                )
+                router.push(coachHref)
               }
               disabled={!goal && !queryCode}
               className="inline-flex h-11 items-center gap-2 rounded-[14px] bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-40"
@@ -289,7 +290,7 @@ function PlanContent() {
                 )}
                 <button
                   type="button"
-                  onClick={() => router.push("/coach")}
+                  onClick={() => router.push(coachHref)}
                   className="inline-flex h-10 items-center gap-2 rounded-[12px] bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
                 >
                   Перейти в Coach

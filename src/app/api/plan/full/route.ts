@@ -11,6 +11,22 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
+function pickPreferredTodayPlan(dailyHistory: DailyPlanRecord[]): DailyPlanRecord | null {
+  if (dailyHistory.length === 0) return null
+
+  const today = todayIso()
+  const todayMaterialized = dailyHistory.find((plan) => plan.planDate === today && !plan.isDraft)
+  if (todayMaterialized) return todayMaterialized
+
+  const latestMaterialized = dailyHistory.find((plan) => !plan.isDraft)
+  if (latestMaterialized) return latestMaterialized
+
+  const todayDraft = dailyHistory.find((plan) => plan.planDate === today)
+  if (todayDraft) return todayDraft
+
+  return dailyHistory[0] ?? null
+}
+
 function toDailyPlanRecord(row: Record<string, unknown>, tasks: CoachDayTask[]): DailyPlanRecord {
   const completedTaskIds: string[] = Array.isArray(row.completed_task_ids)
     ? row.completed_task_ids
@@ -43,6 +59,11 @@ function toDailyPlanRecord(row: Record<string, unknown>, tasks: CoachDayTask[]):
     previousDate: typeof row.previous_date === "string" ? row.previous_date : undefined,
     nextDate: typeof row.next_date === "string" ? row.next_date : undefined,
     stats: typeof row.stats === "object" && row.stats !== null ? row.stats as Record<string, unknown> : null,
+    generationContext:
+      typeof row.generation_context === "object" && row.generation_context !== null
+        ? row.generation_context as Record<string, unknown>
+        : null,
+    isDraft: tasks.length === 0,
   }
 }
 
@@ -289,7 +310,7 @@ export async function GET() {
 
     const dailyHistory = dailyPlans.map((row) => toDailyPlanRecord(row, tasksByPlan.get(String(row.id)) ?? []))
     const productHistory = (productHistoryRes.data ?? []).map((row) => toProductHistoryRecord(row as Record<string, unknown>))
-    const today = dailyHistory.find((plan) => plan.planDate === todayIso()) ?? dailyHistory[0] ?? null
+    const today = pickPreferredTodayPlan(dailyHistory)
 
     const roadmap = roadmapRes.data
       ? ({

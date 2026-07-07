@@ -73,6 +73,8 @@ export function toCoachDayPlan(record: DailyPlanRecord | null | undefined): Coac
     nextDate: record.nextDate,
     completedAt: record.updatedAt,
     stats: record.stats,
+    generationContext: record.generationContext,
+    isDraft: record.isDraft,
   }
 }
 

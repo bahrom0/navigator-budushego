@@ -90,6 +90,7 @@ export interface CoachDayPlan {
   completedAt?: number
   stats?: Record<string, unknown> | null
   generationContext?: Record<string, unknown> | null
+  isDraft?: boolean
 }
 
 export interface CoachSubjectLevel {

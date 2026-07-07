@@ -10,7 +10,7 @@ import type { CoachActiveTab, RoadmapDurationWeeks } from "@/types/coach"
 export interface CoachTabContentProps {
   tab: CoachActiveTab
   onGenerateRoadmap?: (durationWeeks?: RoadmapDurationWeeks) => void
-  onGenerateDailyPlan?: () => void
+  onGenerateDailyPlan?: (targetDate?: string) => void
   onRequestTaskDetail?: (taskId: string) => void
   onNavigateDate?: (date: string) => void
 }

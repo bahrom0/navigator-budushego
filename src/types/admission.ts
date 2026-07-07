@@ -30,6 +30,8 @@ export interface DailyPlanRecord {
   previousDate?: string
   nextDate?: string
   stats?: Record<string, unknown> | null
+  generationContext?: Record<string, unknown> | null
+  isDraft?: boolean
 }
 
 export interface DailyTaskRecord extends CoachDayTask {
