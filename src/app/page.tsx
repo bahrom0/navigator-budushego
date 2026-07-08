@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/Button";
+import { StartSelectionButton } from "@/components/marketing/StartSelectionButton";
 import {
   MarketingCtaCard,
   MarketingPageShell,
@@ -61,15 +62,13 @@ export default function Home() {
               </div>
 
               <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <Link href={primaryCta.href}>
-                  <Button
-                    size="lg"
-                    className="w-full rounded-2xl bg-[var(--marketing-foreground)] px-7 text-base text-white hover:bg-[var(--marketing-accent)] sm:w-auto"
-                  >
-                    {primaryCta.label}
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
+                <StartSelectionButton
+                  size="lg"
+                  showArrow
+                  className="w-full rounded-2xl bg-[var(--marketing-foreground)] px-7 text-base text-white hover:bg-[var(--marketing-accent)] sm:w-auto"
+                >
+                  {primaryCta.label}
+                </StartSelectionButton>
 
                 <Link href={secondaryCta.href}>
                   <Button

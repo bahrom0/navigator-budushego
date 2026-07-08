@@ -4,7 +4,6 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import {
-  ArrowRight,
   ChevronRight,
   Info,
   LayoutGrid,
@@ -13,7 +12,7 @@ import {
   Workflow,
   X,
 } from "lucide-react";
-import { Button } from "@/components/Button";
+import { StartSelectionButton } from "@/components/marketing/StartSelectionButton";
 import {
   brandName,
   brandTagline,
@@ -85,14 +84,12 @@ export function MarketingHeader() {
             </nav>
 
             <div className="hidden items-center gap-3 lg:flex">
-              <Link href={primaryCta.href}>
-                <Button
-                  size="md"
-                  className="rounded-2xl bg-[var(--marketing-foreground)] px-5 text-sm text-white hover:bg-[var(--marketing-accent)]"
-                >
-                  {primaryCta.label}
-                </Button>
-              </Link>
+              <StartSelectionButton
+                size="md"
+                className="rounded-2xl bg-[var(--marketing-foreground)] px-5 text-sm text-white hover:bg-[var(--marketing-accent)]"
+              >
+                {primaryCta.label}
+              </StartSelectionButton>
             </div>
 
             <button
@@ -116,7 +113,7 @@ export function MarketingHeader() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
-              className="fixed inset-0 z-40 bg-black/35 backdrop-blur-[6px] lg:hidden dark:bg-black/55"
+              className="fixed inset-0 z-40 bg-[var(--marketing-mobile-overlay)] backdrop-blur-[6px] lg:hidden"
               onClick={() => setIsOpen(false)}
             />
 
@@ -127,7 +124,7 @@ export function MarketingHeader() {
               transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
               className="relative z-[60] mx-auto mt-3 max-w-7xl lg:hidden"
             >
-              <div className="relative overflow-hidden rounded-[2rem] border border-[var(--marketing-border)] bg-[rgba(255,255,255,0.96)] p-4 shadow-[0_28px_70px_rgba(32,28,24,0.14)] ring-1 ring-[rgba(255,255,255,0.28)] backdrop-blur-[26px] before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_42%)] after:pointer-events-none after:absolute after:inset-0 after:opacity-35 after:[background-image:radial-gradient(circle_at_1px_1px,rgba(78,66,52,0.08)_1px,transparent_0)] after:[background-size:16px_16px] dark:bg-[rgba(14,16,21,0.98)] dark:shadow-[0_28px_70px_rgba(0,0,0,0.52)] dark:ring-[rgba(255,255,255,0.08)] dark:before:bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_42%)] dark:after:[background-image:radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.07)_1px,transparent_0)]">
+              <div className="relative overflow-hidden rounded-[2rem] border border-[var(--marketing-border)] bg-[var(--marketing-header-panel-bg)] p-4 shadow-[0_28px_70px_rgba(32,28,24,0.14)] ring-1 ring-[rgba(255,255,255,0.28)] backdrop-blur-[26px] before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_42%)] after:pointer-events-none after:absolute after:inset-0 after:opacity-35 after:[background-image:radial-gradient(circle_at_1px_1px,rgba(78,66,52,0.08)_1px,transparent_0)] after:[background-size:16px_16px]">
                 <nav className="relative flex flex-col gap-2">
                   {marketingNavLinks.map((link, index) => {
                     const Icon = mobileNavIcons[link.href] ?? Sparkles;
@@ -147,10 +144,10 @@ export function MarketingHeader() {
                         <Link
                           href={link.href}
                           onClick={() => setIsOpen(false)}
-                          className="group flex items-center justify-between rounded-2xl px-4 py-3 text-sm text-[var(--marketing-muted)] transition duration-200 hover:bg-[rgba(255,255,255,0.75)] hover:text-[var(--marketing-foreground)] dark:hover:bg-[rgba(255,255,255,0.08)]"
+                          className="group flex items-center justify-between rounded-2xl px-4 py-3 text-sm text-[var(--marketing-muted)] transition duration-200 hover:bg-[var(--marketing-nav-chip-hover)] hover:text-[var(--marketing-foreground)]"
                         >
                           <span className="flex items-center gap-3">
-                            <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--marketing-border)] bg-[rgba(255,255,255,0.86)] shadow-[0_10px_20px_rgba(32,28,24,0.06)] backdrop-blur-xl dark:bg-[rgba(255,255,255,0.08)] dark:shadow-[0_10px_20px_rgba(0,0,0,0.22)]">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--marketing-border)] bg-[var(--marketing-nav-chip)] shadow-[0_10px_20px_rgba(32,28,24,0.06)] backdrop-blur-xl">
                               <Icon className="h-4 w-4 text-[var(--marketing-foreground)]" />
                             </span>
                             <span>{link.label}</span>
@@ -162,18 +159,17 @@ export function MarketingHeader() {
                   })}
                 </nav>
 
-                <Link
-                  href={primaryCta.href}
+                <div
+                  className="relative mt-4 block"
                   onClick={() => setIsOpen(false)}
-                  className="relative block"
                 >
-                  <Button
+                  <StartSelectionButton
                     size="md"
-                    className="mt-4 h-12 w-full rounded-[1.2rem] bg-[var(--marketing-cta-bg)] text-sm font-semibold text-white shadow-[0_18px_40px_rgba(48,99,232,0.3)] hover:bg-[var(--marketing-cta-hover)] dark:shadow-[0_18px_40px_rgba(0,0,0,0.36)]"
+                    className="h-12 w-full rounded-[1.2rem] bg-[var(--marketing-cta-bg)] text-sm font-semibold text-white shadow-[0_18px_40px_rgba(48,99,232,0.3)] hover:bg-[var(--marketing-cta-hover)]"
                   >
                     {primaryCta.label}
-                  </Button>
-                </Link>
+                  </StartSelectionButton>
+                </div>
               </div>
             </motion.div>
           </>
@@ -286,15 +282,13 @@ export function MarketingCtaCard({
             {description}
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link href={primaryHref}>
-              <Button
-                size="lg"
-                className="w-full rounded-2xl bg-[var(--marketing-foreground)] px-7 text-base text-white hover:bg-[var(--marketing-accent)] sm:w-auto"
-              >
-                {primaryLabel}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
+            <StartSelectionButton
+              size="lg"
+              showArrow
+              className="w-full rounded-2xl bg-[var(--marketing-foreground)] px-7 text-base text-white hover:bg-[var(--marketing-accent)] sm:w-auto"
+            >
+              {primaryLabel}
+            </StartSelectionButton>
             <p className="text-sm text-[var(--marketing-muted)]">{brandTagline}</p>
           </div>
         </div>

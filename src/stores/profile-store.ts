@@ -132,6 +132,7 @@ interface ProfileStore extends ProfileData {
   logActivity: (type: string, label: string, isPriority?: boolean) => void
   setLevel: (level: UserLevel) => void
   setActiveGoal: (goal: CoachGoal) => void
+  clearGoalWorkspace: () => void
   clearActiveGoal: () => void
   archiveActiveGoal: () => void
   updateLastCodes: (codes: string[]) => void
@@ -186,6 +187,7 @@ export const useProfileStore = create<ProfileStore>((set, get) => {
 
   setActiveGoal: (goal) =>
     set((state) => {
+      const goalChanged = state.activeGoal?.id !== goal.id
       const history = state.activeGoal && state.activeGoal.id !== goal.id
         ? [state.activeGoal, ...state.goalHistory.filter((g) => g.id !== state.activeGoal?.id)]
         : state.goalHistory
@@ -197,8 +199,40 @@ export const useProfileStore = create<ProfileStore>((set, get) => {
         activeGoal: nextGoal,
         activeGoalId: nextGoal.id,
         goalHistory: history,
+        plans: goalChanged
+          ? state.plans.filter((plan) => plan.goalId === goal.id || plan.nctCode === goal.nctCode)
+          : state.plans,
+        interviews: goalChanged
+          ? state.interviews.filter((interview) => interview.goalId === goal.id || interview.nctCode === goal.nctCode)
+          : state.interviews,
+        activePlanId: goalChanged
+          ? state.plans.find((plan) => plan.goalId === goal.id || plan.nctCode === goal.nctCode)?.id
+          : state.activePlanId,
+        interviewResult: goalChanged
+          ? state.interviews.find((interview) => interview.goalId === goal.id || interview.nctCode === goal.nctCode)
+            ? state.interviewResult
+            : undefined
+          : state.interviewResult,
       }
       persistProfile({ ...get(), ...next } as ProfileData)
+      return next
+    }),
+
+  clearGoalWorkspace: () =>
+    set((state) => {
+      const next = {
+        activeGoal: null,
+        activeGoalId: undefined,
+        activePlanId: undefined,
+        goalHistory: [],
+        lastNctCodes: [],
+        recommendations: [],
+        savedCodes: [],
+        plans: [],
+        interviews: [],
+        interviewResult: undefined,
+      }
+      persistProfile({ ...state, ...next } as ProfileData)
       return next
     }),
 

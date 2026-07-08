@@ -107,11 +107,23 @@ export async function POST(request: Request) {
     }
 
     if (session && user) {
-      await supabase
-        .from("admission_goals")
-        .update({ status: "archived", archived_at: new Date().toISOString() })
+      const { error: clearProfileError } = await supabase
+        .from("profiles")
+        .update({ active_goal_id: null, updated_at: new Date().toISOString() })
         .eq("user_id", user.id)
-        .eq("status", "active")
+
+      if (clearProfileError) {
+        return NextResponse.json({ status: "error", error: clearProfileError.message, data: null }, { status: 500 })
+      }
+
+      const { error: deletePreviousGoalsError } = await supabase
+        .from("admission_goals")
+        .delete()
+        .eq("user_id", user.id)
+
+      if (deletePreviousGoalsError) {
+        return NextResponse.json({ status: "error", error: deletePreviousGoalsError.message, data: null }, { status: 500 })
+      }
 
       const { data: inserted, error: insertError } = await supabase
         .from("admission_goals")
