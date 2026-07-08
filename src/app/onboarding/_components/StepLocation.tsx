@@ -159,7 +159,7 @@ export function StepLocation() {
         />
         <SelectField
           label="Где хотите учиться"
-          placeholder="Выберите город или страну"
+          placeholder="Выберите город"
           options={STUDY_REGIONS}
           value={data.studyCity}
           onChange={(v) => setData({ studyCity: v })}

@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { StartSelectionButton } from "@/components/marketing/StartSelectionButton";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
   brandName,
   brandTagline,
@@ -84,6 +85,7 @@ export function MarketingHeader() {
             </nav>
 
             <div className="hidden items-center gap-3 lg:flex">
+              <ThemeToggle variant="marketing" />
               <StartSelectionButton
                 size="md"
                 className="rounded-2xl bg-[var(--marketing-foreground)] px-5 text-sm text-white hover:bg-[var(--marketing-accent)]"
@@ -92,15 +94,18 @@ export function MarketingHeader() {
               </StartSelectionButton>
             </div>
 
-            <button
-              type="button"
-              aria-expanded={isOpen}
-              aria-label={isOpen ? "Закрыть меню" : "Открыть меню"}
-              onClick={() => setIsOpen((value) => !value)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--marketing-border)] bg-[var(--marketing-surface)] text-[var(--marketing-foreground)] shadow-[0_10px_24px_rgba(32,28,24,0.09)] backdrop-blur-xl transition duration-200 hover:scale-[1.02] hover:border-[var(--marketing-border-strong)] dark:shadow-[0_10px_24px_rgba(0,0,0,0.32)] lg:hidden"
-            >
-              {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-            </button>
+            <div className="flex items-center gap-2 lg:hidden">
+              <ThemeToggle variant="marketing" />
+              <button
+                type="button"
+                aria-expanded={isOpen}
+                aria-label={isOpen ? "Закрыть меню" : "Открыть меню"}
+                onClick={() => setIsOpen((value) => !value)}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--marketing-border)] bg-[var(--marketing-surface)] text-[var(--marketing-foreground)] shadow-[0_10px_24px_rgba(32,28,24,0.09)] backdrop-blur-xl transition duration-200 hover:scale-[1.02] hover:border-[var(--marketing-border-strong)] dark:shadow-[0_10px_24px_rgba(0,0,0,0.32)]"
+              >
+                {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -113,7 +118,7 @@ export function MarketingHeader() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
-              className="fixed inset-0 z-40 bg-[var(--marketing-mobile-overlay)] backdrop-blur-[6px] lg:hidden"
+              className="fixed inset-0 z-40 bg-[var(--marketing-mobile-overlay)] backdrop-blur-[10px] lg:hidden"
               onClick={() => setIsOpen(false)}
             />
 
@@ -124,7 +129,7 @@ export function MarketingHeader() {
               transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
               className="relative z-[60] mx-auto mt-3 max-w-7xl lg:hidden"
             >
-              <div className="relative overflow-hidden rounded-[2rem] border border-[var(--marketing-border)] bg-[var(--marketing-header-panel-bg)] p-4 shadow-[0_28px_70px_rgba(32,28,24,0.14)] ring-1 ring-[rgba(255,255,255,0.28)] backdrop-blur-[26px] before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_42%)] after:pointer-events-none after:absolute after:inset-0 after:opacity-35 after:[background-image:radial-gradient(circle_at_1px_1px,rgba(78,66,52,0.08)_1px,transparent_0)] after:[background-size:16px_16px]">
+              <div className="relative overflow-hidden rounded-[2rem] border border-[var(--marketing-border-strong)] bg-[var(--marketing-header-panel-bg)] p-4 shadow-[0_34px_80px_rgba(26,22,18,0.2)] ring-1 ring-[rgba(255,255,255,0.56)] backdrop-blur-[30px] before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.42),transparent_44%)] after:pointer-events-none after:absolute after:inset-0 after:opacity-28 after:[background-image:radial-gradient(circle_at_1px_1px,rgba(78,66,52,0.06)_1px,transparent_0)] after:[background-size:16px_16px]">
                 <nav className="relative flex flex-col gap-2">
                   {marketingNavLinks.map((link, index) => {
                     const Icon = mobileNavIcons[link.href] ?? Sparkles;
@@ -159,10 +164,7 @@ export function MarketingHeader() {
                   })}
                 </nav>
 
-                <div
-                  className="relative mt-4 block"
-                  onClick={() => setIsOpen(false)}
-                >
+                <div className="relative mt-4 block" onClick={() => setIsOpen(false)}>
                   <StartSelectionButton
                     size="md"
                     className="h-12 w-full rounded-[1.2rem] bg-[var(--marketing-cta-bg)] text-sm font-semibold text-white shadow-[0_18px_40px_rgba(48,99,232,0.3)] hover:bg-[var(--marketing-cta-hover)]"
@@ -203,7 +205,7 @@ export function MarketingFooter() {
               {link.label}
             </Link>
           ))}
-          <span>© 2026 {brandName}</span>
+          <span>В© 2026 {brandName}</span>
         </div>
       </div>
     </footer>
