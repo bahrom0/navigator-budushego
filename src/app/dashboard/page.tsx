@@ -38,7 +38,7 @@ function getNextStep(bundle: ActiveGoalBundle | null): { label: string; href: st
     label: "Продолжить Coach",
     href: "/coach",
     helper: bundle.todayPlan
-      ? "У вас уже есть roadmap и план на день. Продолжайте движение по активной цели."
+      ? "Сохранённые данные удалятся!"
       : "Roadmap готов. Следующий лучший шаг — собрать план на сегодня в Coach.",
   }
 }

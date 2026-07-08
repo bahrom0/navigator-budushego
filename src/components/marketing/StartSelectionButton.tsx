@@ -6,9 +6,9 @@ import { AnimatePresence, motion } from "framer-motion"
 import { AlertTriangle, ArrowRight, Compass, Sparkles, Trash2 } from "lucide-react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/Button"
-import { useProfileStore } from "@/stores/profile-store"
-import { useCoachStore } from "@/stores/coach-store"
 import { resetOnboarding } from "@/stores/onboarding-store"
+import { useCoachStore } from "@/stores/coach-store"
+import { useProfileStore } from "@/stores/profile-store"
 
 interface StartSelectionButtonProps {
   className?: string
@@ -26,15 +26,23 @@ export function StartSelectionButton({
   children,
 }: StartSelectionButtonProps) {
   const router = useRouter()
+
   const activeGoal = useProfileStore((state) => state.activeGoal)
   const plans = useProfileStore((state) => state.plans)
   const clearGoalWorkspace = useProfileStore((state) => state.clearGoalWorkspace)
+
   const coachGoal = useCoachStore((state) => state.goal)
+  const coachPlan = useCoachStore((state) => state.plan)
   const roadmap = useCoachStore((state) => state.roadmap)
+  const dayPlan = useCoachStore((state) => state.dayPlan)
+  const dailyHistory = useCoachStore((state) => state.dailyHistory)
+  const miniTests = useCoachStore((state) => state.miniTests)
+  const messages = useCoachStore((state) => state.messages)
   const setActiveTab = useCoachStore((state) => state.setActiveTab)
   const resetCoach = useCoachStore((state) => state.reset)
 
   const [open, setOpen] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
@@ -46,16 +54,46 @@ export function StartSelectionButton({
   const existingGoal = useMemo(() => {
     if (activeGoal) return activeGoal
     if (coachGoal) return coachGoal
-    const plan = plans[0]
-    if (!plan) return null
 
-    return {
-      nctTitle: plan.nctTitle,
-      nctCode: plan.nctCode,
+    if (coachPlan?.nctTitle && coachPlan?.nctCode) {
+      return {
+        nctTitle: coachPlan.nctTitle,
+        nctCode: coachPlan.nctCode,
+      }
     }
-  }, [activeGoal, coachGoal, plans])
 
-  const hasLocalGoalWorkspace = Boolean(existingGoal || plans.length > 0 || roadmap)
+    const firstPlan = plans[0]
+    if (firstPlan) {
+      return {
+        nctTitle: firstPlan.nctTitle,
+        nctCode: firstPlan.nctCode,
+      }
+    }
+
+    if (roadmap?.nctTitle && roadmap?.nctCode) {
+      return {
+        nctTitle: roadmap.nctTitle,
+        nctCode: roadmap.nctCode,
+      }
+    }
+
+    return null
+  }, [activeGoal, coachGoal, coachPlan, plans, roadmap])
+
+  const hasOrphanedWorkspace = Boolean(
+    !existingGoal
+      && (
+        roadmap
+        || dayPlan
+        || coachPlan
+        || plans.length > 0
+        || dailyHistory.length > 0
+        || miniTests.length > 0
+        || messages.length > 0
+      ),
+  )
+
+  const hasLocalGoalWorkspace = Boolean(existingGoal)
 
   const proceedToOnboarding = useCallback(() => {
     resetOnboarding()
@@ -63,22 +101,48 @@ export function StartSelectionButton({
   }, [router])
 
   const handleStart = useCallback(() => {
+    if (hasOrphanedWorkspace) {
+      clearGoalWorkspace()
+      resetCoach()
+      proceedToOnboarding()
+      return
+    }
+
     if (!hasLocalGoalWorkspace) {
       proceedToOnboarding()
       return
     }
 
     setError(null)
+    setConfirmOpen(false)
     setOpen(true)
-  }, [hasLocalGoalWorkspace, proceedToOnboarding])
+  }, [
+    clearGoalWorkspace,
+    hasLocalGoalWorkspace,
+    hasOrphanedWorkspace,
+    proceedToOnboarding,
+    resetCoach,
+  ])
 
   const handleReturn = useCallback(() => {
+    setConfirmOpen(false)
     setOpen(false)
     setActiveTab("roadmap")
     router.push("/coach")
   }, [router, setActiveTab])
 
-  const handleContinue = useCallback(async () => {
+  const handleRequestDelete = useCallback(() => {
+    setError(null)
+    setConfirmOpen(true)
+  }, [])
+
+  const handleClose = useCallback(() => {
+    if (submitting) return
+    setConfirmOpen(false)
+    setOpen(false)
+  }, [submitting])
+
+  const handleConfirmDelete = useCallback(async () => {
     setSubmitting(true)
     setError(null)
 
@@ -93,6 +157,7 @@ export function StartSelectionButton({
       clearGoalWorkspace()
       resetCoach()
       resetOnboarding()
+      setConfirmOpen(false)
       setOpen(false)
       router.push("/onboarding")
     } catch (err) {
@@ -110,7 +175,7 @@ export function StartSelectionButton({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[140] flex min-h-screen w-screen items-center justify-center bg-[rgba(15,13,10,0.52)] p-3 backdrop-blur-[12px] sm:p-4"
-          onClick={() => !submitting && setOpen(false)}
+          onClick={handleClose}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.96, y: 14 }}
@@ -135,10 +200,29 @@ export function StartSelectionButton({
                     Перед новым подбором нужно очистить текущий путь
                   </h2>
                   <p className="mt-3 text-left text-sm leading-7 text-[var(--marketing-muted)] sm:text-base">
-                    У вас уже есть сохранённое направление. Если продолжить, старая цель, план и Coach roadmap будут удалены локально и из базы.
+                    У вас уже есть сохранённое направление, оно будет удалено.
                   </p>
                 </div>
               </div>
+
+              {confirmOpen ? (
+                <div className="mt-5 rounded-[1.25rem] border border-rose-300/80 bg-[linear-gradient(180deg,rgba(255,244,246,0.99),rgba(255,232,237,0.95))] p-4 text-left shadow-[0_14px_34px_rgba(190,52,85,0.1)] sm:mt-6 sm:p-5 dark:border-rose-200/25 dark:bg-[linear-gradient(180deg,rgba(76,15,23,0.42),rgba(47,10,16,0.34))] dark:shadow-none">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-rose-200/90 bg-rose-200/85 text-rose-800 dark:border-rose-300/25 dark:bg-rose-400/18 dark:text-rose-50">
+                      <Trash2 className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-rose-950 dark:text-rose-50">
+                        Точно удалить план?
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-rose-900 dark:text-rose-100">
+                        Это действие необратимо. Старую цель, план и Coach roadmap
+                        восстановить будет невозможно.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
 
               {existingGoal ? (
                 <div className="mt-5 rounded-[1.25rem] border border-[var(--marketing-border)] bg-[var(--marketing-soft)] p-4 sm:mt-6 sm:rounded-[1.5rem] sm:p-5">
@@ -200,11 +284,15 @@ export function StartSelectionButton({
                   type="button"
                   size="md"
                   loading={submitting}
-                  className="rounded-2xl bg-[var(--marketing-foreground)] text-white hover:bg-[var(--marketing-accent)]"
-                  onClick={handleContinue}
+                  className={`rounded-2xl text-white ${
+                    confirmOpen
+                      ? "bg-rose-600 hover:bg-rose-700"
+                      : "bg-[var(--marketing-foreground)] hover:bg-[var(--marketing-accent)]"
+                  }`}
+                  onClick={confirmOpen ? handleConfirmDelete : handleRequestDelete}
                 >
-                  <Sparkles className="h-4 w-4" />
-                  Продолжить
+                  {confirmOpen ? <Trash2 className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+                  {confirmOpen ? "Удалить навсегда" : "Продолжить"}
                 </Button>
               </div>
             </div>

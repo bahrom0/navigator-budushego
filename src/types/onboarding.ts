@@ -1,16 +1,18 @@
-import { GraduationCap, School, User, Briefcase, Users } from "lucide-react"
+import { Briefcase, GraduationCap, School, User, Users } from "lucide-react"
 
 export type OnboardingStep = "location" | "profile"
 
 export const ONBOARDING_STEPS: OnboardingStep[] = ["location", "profile"]
 
 export type EducationLevel = "after_9" | "after_11" | "applicant" | ""
+export type WorkingGoal = "second_education" | "for_interest" | ""
 
 export interface OnboardingData {
   userCity: string
   studyCity: string
   userType: string
   educationLevel: EducationLevel
+  workingGoal: WorkingGoal
   interests: string[]
 }
 
@@ -19,6 +21,7 @@ export const DEFAULT_ONBOARDING_DATA: OnboardingData = {
   studyCity: "",
   userType: "",
   educationLevel: "",
+  workingGoal: "",
   interests: [],
 }
 

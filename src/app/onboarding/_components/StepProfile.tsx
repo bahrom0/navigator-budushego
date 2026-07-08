@@ -1,34 +1,55 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useOnboardingStore } from "@/stores/onboarding-store"
 import { USER_TYPES } from "@/types/onboarding"
-import type { EducationLevel } from "@/types/onboarding"
+import type { EducationLevel, WorkingGoal } from "@/types/onboarding"
 import { Button } from "@/components/Button"
 
-const EDUCATION_LEVELS: { value: EducationLevel; label: string }[] = [
-  { value: "after_9", label: "После 9 класса" },
-  { value: "after_11", label: "После 11 класса" },
-  { value: "applicant", label: "Абитуриент" },
+const SCHOOL_EDUCATION_LEVELS: { value: EducationLevel; label: string }[] = [
+  { value: "after_9", label: "После 9" },
+  { value: "after_11", label: "После 11" },
 ]
 
-const USER_TYPE_TO_EDUCATION: Record<string, EducationLevel> = {
-  applicant: "applicant",
+const WORKING_GOALS: { value: WorkingGoal; label: string }[] = [
+  { value: "second_education", label: "Второе образование" },
+  { value: "for_interest", label: "Для интереса" },
+]
+
+type ProfileMode = "schoolboy" | "working" | "none"
+
+function getProfileMode(userType: string): ProfileMode {
+  if (userType === "schoolboy") return "schoolboy"
+  if (userType === "working") return "working"
+  return "none"
 }
 
 export function StepProfile() {
   const { data, setData, prevStep } = useOnboardingStore()
   const [error, setError] = useState("")
 
+  const profileMode = getProfileMode(data.userType)
+
   useEffect(() => {
-    const forced = USER_TYPE_TO_EDUCATION[data.userType]
-    if (forced && data.educationLevel !== forced) {
-      setData({ educationLevel: forced })
-    } else if (!forced && data.educationLevel === "applicant") {
-      setData({ educationLevel: "" })
+    if (profileMode === "schoolboy") {
+      if (data.workingGoal) {
+        setData({ workingGoal: "" })
+      }
+      return
     }
-  }, [data.userType, data.educationLevel, setData])
+
+    if (profileMode === "working") {
+      if (data.educationLevel) {
+        setData({ educationLevel: "" })
+      }
+      return
+    }
+
+    if (data.educationLevel || data.workingGoal) {
+      setData({ educationLevel: "", workingGoal: "" })
+    }
+  }, [data.educationLevel, data.workingGoal, profileMode, setData])
 
   const handleFinish = () => {
     if (!data.userType) {
@@ -36,21 +57,18 @@ export function StepProfile() {
       return
     }
 
-    const forcedEducation = USER_TYPE_TO_EDUCATION[data.userType]
-    if (forcedEducation) {
-      if (data.educationLevel !== forcedEducation) {
-        setError("Пожалуйста, подтвердите свой статус")
-        return
-      }
-    } else if (!data.educationLevel || !["after_9", "after_11"].includes(data.educationLevel)) {
+    if (profileMode === "schoolboy" && !data.educationLevel) {
       setError("Пожалуйста, укажите уровень образования")
+      return
+    }
+
+    if (profileMode === "working" && !data.workingGoal) {
+      setError("Пожалуйста, выберите один из вариантов")
       return
     }
 
     window.location.href = "/categories"
   }
-
-  const showEducationPicker = data.userType && data.userType !== "applicant"
 
   return (
     <div className="space-y-6">
@@ -80,14 +98,31 @@ export function StepProfile() {
               type="button"
               onClick={() => {
                 setError("")
+                if (type.id === "schoolboy") {
+                  setData({
+                    userType: type.id,
+                    educationLevel: data.educationLevel === "after_9" || data.educationLevel === "after_11" ? data.educationLevel : "",
+                    workingGoal: "",
+                  })
+                  return
+                }
+
+                if (type.id === "working") {
+                  setData({
+                    userType: type.id,
+                    educationLevel: "",
+                    workingGoal:
+                      data.workingGoal === "second_education" || data.workingGoal === "for_interest"
+                        ? data.workingGoal
+                        : "",
+                  })
+                  return
+                }
+
                 setData({
                   userType: type.id,
-                  educationLevel:
-                    type.id === "applicant"
-                      ? "applicant"
-                      : data.educationLevel === "applicant"
-                        ? ""
-                        : data.educationLevel,
+                  educationLevel: "",
+                  workingGoal: "",
                 })
               }}
               className={`flex w-full items-center gap-3.5 rounded-[1.4rem] border px-4 py-3 text-left transition duration-200 ${
@@ -114,9 +149,9 @@ export function StepProfile() {
       </div>
 
       <AnimatePresence mode="wait">
-        {showEducationPicker && (
+        {profileMode === "schoolboy" && (
           <motion.div
-            key="education"
+            key="schoolboy-education"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
@@ -132,7 +167,7 @@ export function StepProfile() {
               </p>
             </div>
             <div className="grid gap-2.5 sm:grid-cols-2">
-              {EDUCATION_LEVELS.filter((el) => el.value !== "applicant").map((level) => {
+              {SCHOOL_EDUCATION_LEVELS.map((level) => {
                 const selected = data.educationLevel === level.value
                 return (
                   <motion.button
@@ -141,7 +176,7 @@ export function StepProfile() {
                     type="button"
                     onClick={() => {
                       setError("")
-                      setData({ educationLevel: level.value })
+                      setData({ educationLevel: level.value, workingGoal: "" })
                     }}
                     className={`h-11 rounded-[1.2rem] border px-4 text-sm font-medium transition duration-200 ${
                       selected
@@ -150,6 +185,49 @@ export function StepProfile() {
                     }`}
                   >
                     {level.label}
+                  </motion.button>
+                )
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {profileMode === "working" && (
+          <motion.div
+            key="working-goal"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="space-y-2 overflow-hidden"
+          >
+            <div>
+              <h3 className="text-sm font-semibold text-[var(--marketing-foreground)] sm:text-base">
+                Для чего выбираете обучение
+              </h3>
+              <p className="mt-0.5 text-sm text-[var(--marketing-muted)]">
+                Это поможет точнее подобрать рекомендации
+              </p>
+            </div>
+            <div className="grid gap-2.5 sm:grid-cols-2">
+              {WORKING_GOALS.map((goal) => {
+                const selected = data.workingGoal === goal.value
+                return (
+                  <motion.button
+                    key={goal.value}
+                    whileTap={{ scale: 0.98 }}
+                    type="button"
+                    onClick={() => {
+                      setError("")
+                      setData({ workingGoal: goal.value, educationLevel: "" })
+                    }}
+                    className={`h-11 rounded-[1.2rem] border px-4 text-sm font-medium transition duration-200 ${
+                      selected
+                        ? "border-transparent bg-[var(--marketing-foreground)] text-[var(--marketing-bg)] shadow-[0_14px_30px_rgba(31,27,22,0.12)]"
+                        : "border-[var(--marketing-border)] bg-[var(--marketing-surface-muted)] text-[var(--marketing-foreground)] hover:border-[var(--marketing-border-strong)] hover:bg-[var(--marketing-surface-strong)]"
+                    }`}
+                  >
+                    {goal.label}
                   </motion.button>
                 )
               })}
