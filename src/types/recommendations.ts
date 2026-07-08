@@ -1,4 +1,5 @@
 import type { NCTMatchResult, RankedNCT } from "@/types/nct"
+import type { AnalysisStep } from "@/types/analysis"
 
 export interface RecommendationOnboardingContext {
   userCity?: string
@@ -14,6 +15,13 @@ export interface RecommendationDecisionContext {
   onboarding: RecommendationOnboardingContext | null
   overallConfidence: number
   generatedAt: string
+  pipeline: {
+    completedSteps: AnalysisStep[]
+    usedFallbacks: string[]
+    professions: string[]
+    directions: string[]
+    searchIntents: string[]
+  }
 }
 
 export interface CanonicalRecommendation extends RankedNCT {

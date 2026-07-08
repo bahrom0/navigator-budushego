@@ -3,20 +3,29 @@
 import type { AnalysisStep } from "@/types/analysis";
 import { STEPS as STEP_LIST } from "@/types/analysis";
 import { motion } from "framer-motion";
-import { Brain, GitCompare, Building2, Sparkles, CheckCircle2 } from "lucide-react";
+import {
+  Brain,
+  CheckCircle2,
+  SearchCode,
+  SendHorizonal,
+  Sparkles,
+} from "lucide-react";
 
 const ICONS: Record<AnalysisStep, (props: { className?: string }) => React.ReactNode> = {
+  submitting_request: SendHorizonal,
   analyzing_interests: Brain,
-  matching_nct: GitCompare,
-  searching_universities: Building2,
+  searching_nct_codes: SearchCode,
   forming_recommendations: Sparkles,
 };
 
 const SUBTITLES: Record<AnalysisStep, string> = {
-  analyzing_interests: "Обрабатываем ваши интересы и предпочтения",
-  matching_nct: "Сопоставляем с базой кодов НЦТ",
-  searching_universities: "Проверяем доступные университеты",
-  forming_recommendations: "Формируем персонализированные рекомендации",
+  submitting_request: "Сохраняем выбор и отправляем профиль на анализ",
+  analyzing_interests:
+    "DeepSeek выделяет профессии, направления и поисковые намерения",
+  searching_nct_codes:
+    "Локальный поиск подбирает shortlist по базе НЦТ без отправки всей базы в AI",
+  forming_recommendations:
+    "DeepSeek ранжирует shortlist, добавляет объяснения и сохраняет итог",
 };
 
 function PulsingDot() {
@@ -46,7 +55,11 @@ function ConnectingLine({ completed }: { completed: boolean }) {
       <motion.div
         className="h-full w-full origin-top"
         initial={{ scaleY: 0 }}
-        animate={completed ? { scaleY: 1, backgroundColor: "var(--primary)" } : { scaleY: 1, backgroundColor: "var(--border)" }}
+        animate={
+          completed
+            ? { scaleY: 1, backgroundColor: "var(--primary)" }
+            : { scaleY: 1, backgroundColor: "var(--border)" }
+        }
         transition={{ type: "spring", stiffness: 120, damping: 20 }}
       />
     </motion.div>
@@ -68,14 +81,14 @@ export function AnalysisTimeline({
     stiffness: 180,
     damping: 24,
     delay: i * 0.08,
-  })
+  });
 
   return (
-    <div className="w-full max-w-xl space-y-0">
+    <div className="w-full space-y-0">
       {STEP_LIST.map((step, index) => {
         const IconComponent = ICONS[step.key];
         const isActive = isRunning && index === currentIndex;
-        const isCompleted = index < currentIndex;
+        const isCompleted = index < currentIndex || status === "success";
 
         return (
           <motion.div
@@ -85,7 +98,9 @@ export function AnalysisTimeline({
             transition={springIn(index)}
             className="relative flex gap-5"
           >
-            {index < STEP_LIST.length - 1 && <ConnectingLine completed={isCompleted} />}
+            {index < STEP_LIST.length - 1 ? (
+              <ConnectingLine completed={isCompleted} />
+            ) : null}
 
             <div className="z-10 flex h-[26px] w-[26px] shrink-0 items-center justify-center">
               {isActive ? (
@@ -94,12 +109,17 @@ export function AnalysisTimeline({
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.05 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 15,
+                    delay: 0.05,
+                  }}
                 >
                   <CheckCircle2 className="h-[15px] w-[15px] text-primary" />
                 </motion.div>
               ) : (
-                IconComponent && <IconComponent className="h-[14px] w-[14px] text-text-muted" />
+                <IconComponent className="h-[14px] w-[14px] text-text-muted" />
               )}
             </div>
 
@@ -116,7 +136,7 @@ export function AnalysisTimeline({
               >
                 {step.label}
               </motion.p>
-              {isActive && (
+              {isActive ? (
                 <motion.p
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -126,7 +146,7 @@ export function AnalysisTimeline({
                 >
                   {SUBTITLES[step.key]}
                 </motion.p>
-              )}
+              ) : null}
             </div>
           </motion.div>
         );

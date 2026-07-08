@@ -590,7 +590,7 @@ function TeacherPageContent() {
                 animate={{ opacity: 1, y: 0 }}
                 className="mx-auto flex max-w-3xl flex-col items-center text-center"
               >
-                <span className="navigator-kicker navigator-kicker--muted mb-4">Secondary feature · ai study help</span>
+                {/* <span className="navigator-kicker navigator-kicker--muted mb-4">Secondary feature · ai study help</span> */}
                 <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/5">
                   <Sparkles className="h-7 w-7 text-primary/40" />
                 </div>

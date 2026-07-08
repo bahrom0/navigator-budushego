@@ -7,7 +7,7 @@ interface AnimatedShellTitleProps {
 }
 
 export function AnimatedShellTitle({ isChat }: AnimatedShellTitleProps) {
-  const text = isChat ? "Community" : "MMT Navigator";
+  const text = isChat ? "Сообщество" : "MMT Navigator";
   return (
     <span className="relative inline-flex h-5 overflow-hidden align-middle">
       <AnimatePresence mode="wait" initial={false}>

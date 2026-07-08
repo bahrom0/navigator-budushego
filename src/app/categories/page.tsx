@@ -8,7 +8,7 @@ import { BentoCard } from "@/components/BentoCard";
 import { CategoryCard } from "@/components/CategoryCard";
 import { Button } from "@/components/Button";
 import { CATEGORIES } from "@/constants/categories";
-import { useCategoryStore } from "@/stores/category-store";
+import { persistCategories, useCategoryStore } from "@/stores/category-store";
 import { hydrateOnboardingStore, useOnboardingStore } from "@/stores/onboarding-store";
 import { Sparkles, GitCompare, BookOpen, Plus, X } from "lucide-react";
 import type { Category } from "@/types/categories";
@@ -57,6 +57,7 @@ export default function CategoriesPage() {
         .map((id) => allCategories.find((c) => c.id === id))
         .filter(Boolean)
         .map((c) => c!.name)
+      persistCategories()
       useOnboardingStore.getState().setInterests(interestNames)
       logActivityEvent("open_app", `Запуск анализа для ${selected.length} направлений`);
       router.push("/analyze");

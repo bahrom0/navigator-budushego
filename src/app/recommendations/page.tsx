@@ -126,9 +126,22 @@ export default function RecommendationsPage() {
   useEffect(() => {
     if (!onboardingLoaded) return
 
+    const cached = restoreFromCache()
+    if (cached?.decisionContext && Array.isArray(cached.ranked) && cached.ranked.length > 0) {
+      const timeoutId = window.setTimeout(() => {
+        setResults(cached.ranked)
+        setOverallConfidence(cached.overallConfidence ?? null)
+        setCacheRef(cached)
+        setLoading(false)
+        cacheRestoredRef.current = true
+      }, 0)
+
+      return () => window.clearTimeout(timeoutId)
+    }
+
     const restored = hydrateCategoryStore()
 
-    if (categories.length === 0 && !restored) {
+    if (categories.length === 0 && !restored && !cached?.ranked?.length) {
       router.replace("/categories")
       return
     }
@@ -145,7 +158,7 @@ export default function RecommendationsPage() {
     }
 
     init()
-  }, [categories.length, router, fetchResults, onboardingLoaded])
+  }, [categories.length, router, fetchResults, onboardingLoaded, restoreFromCache])
 
   useEffect(() => {
     persistCategories()
@@ -367,7 +380,7 @@ return (
               <ArrowLeft className="h-4 w-4 text-text-secondary" />
             </button>
             <div>
-              <span className="navigator-kicker">Core flow · select goal</span>
+              <span className="navigator-kicker">Выбор</span>
               <h1 className="navigator-page-title mt-3">Рекомендации для выбора цели</h1>
               <p className="navigator-page-subtitle mt-3">
                 Подобрано {displayedResults.length}{cityFilter || studyFormFilter ? ` из ${results.length}` : ""} направлений. Сейчас главное действие одно: выбрать одну цель и только потом уходить в детали, explain и план.

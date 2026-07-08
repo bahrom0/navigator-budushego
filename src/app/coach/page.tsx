@@ -8,7 +8,7 @@ import { useProfileStore } from "@/stores/profile-store"
 import { CoachShell } from "@/components/coach/CoachShell"
 import { CoachErrorBanner } from "@/components/coach/CoachErrorBanner"
 import { CoachTabContent } from "@/components/coach/CoachTabContent"
-import { applyActiveGoalBundle, getPlanId } from "@/lib/coach/bundle-client"
+import { applyActiveGoalBundle, getPlanId, toCoachDayPlan } from "@/lib/coach/bundle-client"
 import { RoadmapDurationModal } from "@/components/coach/RoadmapDurationModal"
 import {
   CoachGoalSetup,
@@ -31,6 +31,7 @@ function CoachPageContent() {
   const searchParams = useSearchParams()
   const goal = useCoachStore((s) => s.goal)
   const plan = useCoachStore((s) => s.plan)
+  const setPlan = useCoachStore((s) => s.setPlan)
   const roadmap = useCoachStore((s) => s.roadmap)
   const dayPlan = useCoachStore((s) => s.dayPlan)
   const dailyHistory = useCoachStore((s) => s.dailyHistory)
@@ -146,9 +147,6 @@ function CoachPageContent() {
       level: localPlan.level,
       goals: localPlan.goals,
       stages: localPlan.stages,
-      id: localPlan.id,
-      goal_id: localPlan.goalId ?? null,
-      roadmap_id: localPlan.roadmapId ?? null,
     })
   }, [effectiveGoal, plan, profilePlans, setPlan])
 
@@ -418,14 +416,18 @@ function CoachPageContent() {
         }
         if (res.ok && payload.status === "success") {
           setDayPlan(payload.data?.dayPlan ?? null)
+          setLoading(false)
+          return
         }
       } catch (err) {
         console.error("[coach] navigate date error:", err)
-      } finally {
-        setLoading(false)
       }
+
+      const localPlan = dailyHistory.find((plan) => plan.planDate === date) ?? null
+      setDayPlan(localPlan ? toCoachDayPlan(localPlan) : null)
+      setLoading(false)
     },
-    [effectiveGoal, setNavigateDate, setDayPlan, setLoading],
+    [dailyHistory, effectiveGoal, setNavigateDate, setDayPlan, setLoading],
   )
 
   if (!mounted) {

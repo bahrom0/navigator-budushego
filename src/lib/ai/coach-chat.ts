@@ -22,9 +22,13 @@ export const CoachChatResponseSchema = z.object({
 
 export type CoachChatResponse = z.infer<typeof CoachChatResponseSchema>
 
-function formatMiniTest(subject?: string, topic?: string, questions?: Array<{ question?: string; options?: string[] }>): string {
+function formatMiniTest(
+  subject?: string,
+  topic?: string,
+  questions?: Array<{ question?: string; options?: string[] }>,
+): string {
   const label = subject || topic || ""
-  const lines: string[] = [`📝 Мини-тест${label ? " по " + label : ""}:`]
+  const lines: string[] = [`Мини-тест${label ? ` по теме ${label}` : ""}:`]
   if (questions) {
     questions.forEach((q, i) => {
       lines.push(`\n${i + 1}. ${q.question ?? ""}`)
@@ -65,7 +69,9 @@ export async function chatWithCoach(
 
   const messages: DeepSeekMessage[] = [systemPrompt]
   if (history) {
-    for (const h of history) messages.push({ role: h.role === "assistant" ? "assistant" : "user", content: h.content })
+    for (const h of history) {
+      messages.push({ role: h.role === "assistant" ? "assistant" : "user", content: h.content })
+    }
   }
   messages.push({ role: "user", content: message })
 
@@ -84,11 +90,19 @@ export async function chatWithCoach(
   const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim()
 
   let parsedResponse: Record<string, unknown>
-  try { parsedResponse = JSON.parse(cleaned) }
-  catch {
+  try {
+    parsedResponse = JSON.parse(cleaned)
+  } catch {
     console.error("[coach-chat] Failed to parse AI response:", raw.slice(0, 300))
     throw new Error("Failed to parse coach chat response JSON")
   }
+
+  let responseType =
+    typeof parsedResponse.type === "string"
+      ? parsedResponse.type
+      : Array.isArray(parsedResponse.questions) || "mini_test" in parsedResponse
+        ? "mini_test"
+        : "text"
 
   let replyText =
     typeof parsedResponse.reply === "string" && parsedResponse.reply.trim()
@@ -105,31 +119,35 @@ export async function chatWithCoach(
                 ? parsedResponse.answer
                 : ""
 
-  // Handle { type: "mini_test", subject, questions } format
-  if (!replyText && parsedResponse.type === "mini_test" && Array.isArray(parsedResponse.questions)) {
-    replyText = parsedResponse.reply && typeof parsedResponse.reply === "string"
-      ? parsedResponse.reply
-      : formatMiniTest(parsedResponse.subject as string | undefined, undefined, parsedResponse.questions as Array<{ question?: string; options?: string[] }>)
+  if (!replyText && responseType === "mini_test" && Array.isArray(parsedResponse.questions)) {
+    replyText = formatMiniTest(
+      parsedResponse.subject as string | undefined,
+      undefined,
+      parsedResponse.questions as Array<{ question?: string; options?: string[] }>,
+    )
   }
 
-  // Handle nested format: { mini_test: { subject, topic, questions } }
   if (!replyText) {
     const nested = Object.values(parsedResponse).find(
-      (v): v is Record<string, unknown> =>
-        v !== null && typeof v === "object" && !Array.isArray(v) && Array.isArray((v as any).questions),
-    ) as Record<string, unknown> | undefined
+      (value): value is Record<string, unknown> =>
+        value !== null
+        && typeof value === "object"
+        && !Array.isArray(value)
+        && Array.isArray((value as { questions?: unknown }).questions),
+    )
+
     if (nested) {
-      const qs = nested.questions as Array<{ question?: string; options?: string[] }>
+      const questions = nested.questions as Array<{ question?: string; options?: string[] }>
       replyText = formatMiniTest(
         nested.subject as string | undefined,
         nested.topic as string | undefined,
-        qs,
+        questions,
       )
-      // Also store subject for the response
-      if (nested.subject && typeof nested.subject === "string") {
-        parsedResponse.subject = nested.subject as string
+      responseType = "mini_test"
+      if (typeof nested.subject === "string") {
+        parsedResponse.subject = nested.subject
       }
-      parsedResponse.questions = qs as any
+      parsedResponse.questions = questions
     }
   }
 
@@ -140,9 +158,9 @@ export async function chatWithCoach(
 
   const validated = CoachChatResponseSchema.safeParse({
     reply: replyText,
-    type: parsedResponse.type === "mini_test" ? "mini_test" : (typeof parsedResponse.type === "string" ? parsedResponse.type : "text"),
-    subject: parsedResponse.type === "mini_test" ? (parsedResponse.subject as string | undefined) : undefined,
-    questions: parsedResponse.type === "mini_test" ? (parsedResponse.questions as any) : undefined,
+    type: responseType === "mini_test" ? "mini_test" : (typeof parsedResponse.type === "string" ? parsedResponse.type : "text"),
+    subject: responseType === "mini_test" ? (parsedResponse.subject as string | undefined) : undefined,
+    questions: responseType === "mini_test" ? (parsedResponse.questions as z.infer<typeof MiniTestQuestionSchema>[]) : undefined,
   })
 
   if (!validated.success) {

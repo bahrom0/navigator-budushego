@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect, useRef } from "react"
 import { useCoachStore } from "@/stores/coach-store"
 import { useProfileStore } from "@/stores/profile-store"
 import { ChatMessages } from "@/components/chat/chat-messages"
 import { ChatComposer } from "@/components/chat/chat-composer"
 import { CoachChatHistory } from "./CoachChatHistory"
 import { CoachMiniTest } from "./CoachMiniTest"
-import type { CoachMessage } from "@/types/coach"
+import type { CoachMessage, CoachMiniTest as CoachMiniTestData, CoachMiniTestResult, CoachMiniTestAnswerReview } from "@/types/coach"
 import type { TeacherMessage } from "@/types/teacher"
 
 function generateId(): string {
@@ -17,22 +17,97 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
-interface MiniTestData {
-  questions: Array<{ question: string; options?: string[]; explanation?: string; correctIndex?: number }>
-  subject?: string
+type PersistedCoachMessageRow = {
+  id: string
+  role: "user" | "coach"
+  content: string
+  message_type?: CoachMessage["type"]
+  created_at?: string
+  metadata?: {
+    miniTest?: CoachMiniTestData
+  } | null
+}
+
+function toMiniTestFromResponse(subject: string | undefined, questions: unknown[]): CoachMiniTestData {
+  return {
+    id: generateId(),
+    subject: subject ?? "",
+    questions: questions.map((question) => {
+      const candidate = question as {
+        question?: string
+        options?: string[]
+        explanation?: string
+        correctIndex?: number
+        correct_answer?: string
+      }
+      let correctIndex = candidate.correctIndex
+      if (correctIndex == null && candidate.correct_answer && Array.isArray(candidate.options)) {
+        const resolved = candidate.options.indexOf(candidate.correct_answer)
+        correctIndex = resolved >= 0 ? resolved : 0
+      }
+
+      return {
+        id: generateId(),
+        question: candidate.question ?? "",
+        options: candidate.options ?? [],
+        correctIndex: correctIndex ?? 0,
+        explanation: candidate.explanation ?? "",
+      }
+    }),
+  }
+}
+
+function toCoachMessage(row: PersistedCoachMessageRow): CoachMessage {
+  return {
+    id: row.id,
+    role: row.role,
+    content: row.content,
+    type: row.message_type ?? "text",
+    miniTest: row.metadata?.miniTest,
+    timestamp: row.created_at ? Date.parse(row.created_at) : Date.now(),
+  }
+}
+
+async function persistCoachMessage(message: CoachMessage, goalId?: string): Promise<void> {
+  await fetch("/api/coach/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id: message.id,
+      goalId,
+      role: message.role,
+      content: message.content,
+      type: message.type,
+      timestamp: message.timestamp,
+      miniTest: message.miniTest,
+    }),
+  })
+}
+
+async function patchCoachMessage(messageId: string, patch: { content?: string; miniTest?: CoachMiniTestData }): Promise<void> {
+  await fetch("/api/coach/messages", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id: messageId,
+      ...patch,
+    }),
+  })
 }
 
 export function CoachChat() {
   const {
-    messages,
+    messages: rawMessages,
+    setMessages,
     addMessage,
     goal,
     plan,
     roadmap,
     dayPlan,
     dailyHistory,
-    diagnostics,
-    miniTests,
+    diagnostics: rawDiagnostics,
+    miniTests: rawMiniTests,
+    setMiniTests,
     addMiniTest,
     setMiniTestResult,
     progress,
@@ -46,22 +121,66 @@ export function CoachChat() {
 
   const [input, setInput] = useState("")
   const [streamingId, setStreamingId] = useState<string | null>(null)
-  const [activeMiniTest, setActiveMiniTest] = useState<MiniTestData & { id?: string } | null>(null)
-  const [miniTestMsgId, setMiniTestMsgId] = useState<string | null>(null)
+  const hydratedGoalRef = useRef<string | null>(null)
+  const messages = Array.isArray(rawMessages) ? rawMessages : []
+  const diagnostics = Array.isArray(rawDiagnostics) ? rawDiagnostics : []
+  const miniTests = Array.isArray(rawMiniTests) ? rawMiniTests : []
 
   const chatMessages = useMemo<TeacherMessage[]>(
     () =>
-      messages.map((m: CoachMessage) => ({
-        id: m.id,
-        role: m.role === "coach" ? "assistant" : "user",
-        content: m.content,
-        timestamp: m.timestamp,
+      messages.map((message) => ({
+        id: message.id,
+        role: message.role === "coach" ? "assistant" : "user",
+        content: message.content,
+        timestamp: message.timestamp,
       })),
     [messages],
   )
 
-  const handleSend = useCallback(async () => {
-    const text = input.trim()
+  useEffect(() => {
+    const goalId = resolvedGoal?.id
+    if (!goalId || hydratedGoalRef.current === goalId) return
+    const activeGoalId = goalId
+
+    let cancelled = false
+
+    async function loadPersistedMessages() {
+      try {
+        const res = await fetch(`/api/coach/messages?goalId=${encodeURIComponent(activeGoalId)}`, {
+          method: "GET",
+        })
+
+        if (!res.ok) {
+          return
+        }
+
+        const payload = await res.json()
+        if (cancelled || payload.status !== "success" || !Array.isArray(payload.data)) {
+          return
+        }
+
+        const nextMessages: CoachMessage[] = payload.data.map((row: PersistedCoachMessageRow) => toCoachMessage(row))
+        const nextMiniTests = nextMessages
+          .map((message: CoachMessage) => message.miniTest)
+          .filter((item): item is CoachMiniTestData => Boolean(item))
+
+        setMessages(nextMessages)
+        setMiniTests(nextMiniTests)
+        hydratedGoalRef.current = activeGoalId
+      } catch {
+        // fall back to persisted client state
+      }
+    }
+
+    void loadPersistedMessages()
+
+    return () => {
+      cancelled = true
+    }
+  }, [resolvedGoal?.id, setMessages, setMiniTests])
+
+  const handleSend = useCallback(async (prefilledText?: string) => {
+    const text = (prefilledText ?? input).trim()
     if (!text || isLoading) return
 
     setInput("")
@@ -75,15 +194,17 @@ export function CoachChat() {
       timestamp: Date.now(),
     }
     addMessage(userMsg)
+    if (resolvedGoal?.id) {
+      void persistCoachMessage(userMsg, resolvedGoal.id)
+    }
 
     setLoading(true)
     setError(null)
 
-    const allHistory = messages.slice(0, -1).map((m) => ({
-      role: (m.role === "coach" ? "assistant" : "user") as "user" | "assistant",
-      content: m.content,
+    const history = messages.slice(-20).map((message) => ({
+      role: (message.role === "coach" ? "assistant" : "user") as "user" | "assistant",
+      content: message.content,
     }))
-    const history = allHistory.length > 20 ? allHistory.slice(-20) : allHistory
 
     try {
       const res = await fetch("/api/coach/chat", {
@@ -97,14 +218,13 @@ export function CoachChat() {
           roadmap,
           dayPlan,
           dailyHistory,
-          diagnostics,
-          miniTests,
+          diagnostics: diagnostics[0] ?? null,
+          miniTests: miniTests.map((test) => test.result).filter(Boolean),
           progress,
         }),
       })
 
       const result = await res.json()
-
       if (result.status === "error") {
         setError(result.error ?? "Ошибка при получении ответа")
         return
@@ -116,78 +236,111 @@ export function CoachChat() {
         return
       }
 
-      const msgId = generateId()
-      const msgType = result.data?.type ?? "text"
+      let nextMiniTest: CoachMiniTestData | undefined
+      if (result.data?.type === "mini_test" && Array.isArray(result.data.questions) && result.data.questions.length > 0) {
+        nextMiniTest = toMiniTestFromResponse(result.data.subject, result.data.questions)
+        addMiniTest(nextMiniTest)
+      }
+
       const coachMsg: CoachMessage = {
-        id: msgId,
+        id: generateId(),
         role: "coach",
         content: reply,
-        type: msgType,
+        type: result.data?.type ?? "text",
+        miniTest: nextMiniTest,
         timestamp: Date.now(),
       }
-      addMessage(coachMsg)
-      setStreamingId(msgId)
 
-      if (msgType === "mini_test" && result.data?.questions?.length) {
-        const questions = result.data.questions.map((q: any) => {
-          let ci = q.correctIndex
-          if (ci == null && q.correct_answer != null) {
-            const idx = (q.options as string[])?.indexOf(q.correct_answer)
-            ci = idx >= 0 ? idx : 0
-          }
-          return {
-            question: q.question,
-            options: q.options,
-            explanation: q.explanation,
-            correctIndex: ci ?? 0,
-          }
-        })
-        const testId = generateId()
-        setActiveMiniTest({ id: testId, questions, subject: result.data.subject })
-        setMiniTestMsgId(msgId)
-        addMiniTest({
-          id: testId,
-          subject: result.data.subject ?? "",
-          questions: questions.map((q: any) => ({
-            id: generateId(),
-            question: q.question,
-            options: q.options ?? [],
-            correctIndex: q.correctIndex ?? 0,
-            explanation: q.explanation ?? "",
-          })),
-        })
+      addMessage(coachMsg)
+      setStreamingId(coachMsg.id)
+
+      if (resolvedGoal?.id) {
+        void persistCoachMessage(coachMsg, resolvedGoal.id)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка сети")
     } finally {
       setLoading(false)
     }
-  }, [input, isLoading, messages, addMessage, setLoading, setError, resolvedGoal, plan, roadmap, dayPlan, dailyHistory, diagnostics, miniTests, progress])
+  }, [input, isLoading, addMessage, messages, resolvedGoal, setLoading, setError, plan, roadmap, dayPlan, dailyHistory, diagnostics, miniTests, progress, addMiniTest])
 
-  const handleMiniTestComplete = useCallback(
-    (results: { correct: number; total: number }) => {
-      if (activeMiniTest?.id) {
-        setMiniTestResult(activeMiniTest.id, {
-          totalQuestions: results.total,
-          correctAnswers: results.correct,
-          subject: activeMiniTest.subject ?? "",
-          takenAt: Date.now(),
-        })
-      }
+  const handleMiniTestComplete = useCallback(async (
+    testId: string,
+    results: {
+      correct: number
+      total: number
+      selectedAnswers: Array<number | null>
+      review: CoachMiniTestAnswerReview[]
     },
-    [activeMiniTest?.id, activeMiniTest?.subject, setMiniTestResult],
-  )
+  ) => {
+    const miniTest = miniTests.find((item) => item.id === testId)
+      ?? messages.find((message) => message.miniTest?.id === testId)?.miniTest
+
+    if (!miniTest) return
+
+    const resultPayload: CoachMiniTestResult = {
+      totalQuestions: results.total,
+      correctAnswers: results.correct,
+      subject: miniTest.subject ?? "",
+      takenAt: Date.now(),
+      selectedAnswers: results.selectedAnswers,
+      review: results.review,
+    }
+
+    setMiniTestResult(testId, resultPayload)
+
+    const ownerMessage = messages.find((message) => message.miniTest?.id === testId)
+    const persistedMiniTest: CoachMiniTestData = {
+      ...miniTest,
+      result: resultPayload,
+    }
+
+    if (ownerMessage?.id) {
+      void patchCoachMessage(ownerMessage.id, { miniTest: persistedMiniTest })
+    }
+
+    try {
+      const res = await fetch("/api/coach/mini-test-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          miniTest: persistedMiniTest,
+          result: resultPayload,
+        }),
+      })
+
+      const payload = await res.json()
+      if (payload.status !== "success" || !payload.data?.reply?.trim()) {
+        return
+      }
+
+      const reportMessage: CoachMessage = {
+        id: generateId(),
+        role: "coach",
+        content: payload.data.reply.trim(),
+        type: "progress_update",
+        timestamp: Date.now(),
+      }
+
+      addMessage(reportMessage)
+      if (resolvedGoal?.id) {
+        void persistCoachMessage(reportMessage, resolvedGoal.id)
+      }
+    } catch {
+      // Non-blocking: the quiz result is already saved locally/server-side.
+    }
+  }, [miniTests, messages, setMiniTestResult, addMessage, resolvedGoal?.id])
 
   const regenerateMessage = useCallback(
     (messageId: string) => {
-      const messageIndex = chatMessages.findIndex((m) => m.id === messageId)
+      const messageIndex = chatMessages.findIndex((message) => message.id === messageId)
       const previousUserMessage = chatMessages
         .slice(0, messageIndex)
         .reverse()
-        .find((m) => m.role === "user")
+        .find((message) => message.role === "user")
+
       if (previousUserMessage) {
-        setInput(previousUserMessage.content)
-        handleSend()
+        void handleSend(previousUserMessage.content)
       }
     },
     [chatMessages, handleSend],
@@ -202,19 +355,21 @@ export function CoachChat() {
           error={error}
           streamingId={streamingId}
           onRegenerate={regenerateMessage}
-          renderAfterMessage={(msgId) =>
-            activeMiniTest && msgId === miniTestMsgId
-              ? (
-                <div className="mx-auto w-full max-w-[760px] sm:px-6">
-                  <CoachMiniTest
-                    questions={activeMiniTest.questions}
-                    subject={activeMiniTest.subject}
-                    onComplete={handleMiniTestComplete}
-                  />
-                </div>
-              )
-              : null
-          }
+          renderAfterMessage={(messageId) => {
+            const message = messages.find((item) => item.id === messageId)
+            if (!message?.miniTest) return null
+
+            return (
+              <div className="mx-auto w-full max-w-[760px] sm:px-6">
+                <CoachMiniTest
+                  questions={message.miniTest.questions}
+                  subject={message.miniTest.subject}
+                  result={message.miniTest.result}
+                  onComplete={(results) => void handleMiniTestComplete(message.miniTest!.id, results)}
+                />
+              </div>
+            )
+          }}
         />
         <div className="z-20 shrink-0 bg-gradient-to-t from-background via-background to-transparent pt-4">
           <ChatComposer

@@ -1,10 +1,12 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Check, X, Sparkles, RotateCcw, ListChecks, ArrowLeft } from "lucide-react"
+import type { CoachMiniTestAnswerReview, CoachMiniTestResult } from "@/types/coach"
 
 interface MiniTestQuestion {
+  id?: string
   question: string
   options?: string[]
   correctIndex?: number
@@ -14,7 +16,13 @@ interface MiniTestQuestion {
 interface CoachMiniTestProps {
   questions: MiniTestQuestion[]
   subject?: string
-  onComplete?: (results: { correct: number; total: number }) => void
+  result?: CoachMiniTestResult
+  onComplete?: (results: {
+    correct: number
+    total: number
+    selectedAnswers: Array<number | null>
+    review: CoachMiniTestAnswerReview[]
+  }) => void
   onRetry?: () => void
 }
 
@@ -26,11 +34,11 @@ function FeedbackBanner({ isCorrect, correctAnswer, explanation }: { isCorrect: 
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
       className={`mb-3 overflow-hidden rounded-xl ${
         isCorrect
-          ? "bg-success/10 border border-success/30"
-          : "bg-error/5 border border-error/20"
+          ? "border border-success/30 bg-success/10"
+          : "border border-error/20 bg-error/5"
       }`}
     >
-      <div className={`px-4 py-3 ${isCorrect ? "" : ""}`}>
+      <div className="px-4 py-3">
         <div className="flex items-center gap-2">
           <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
             isCorrect ? "bg-success text-white" : "bg-error text-white"
@@ -43,14 +51,14 @@ function FeedbackBanner({ isCorrect, correctAnswer, explanation }: { isCorrect: 
         </div>
 
         {!isCorrect && (
-          <div className="mt-2 ml-9">
-            <p className="text-xs text-text-secondary mb-1">Правильный ответ:</p>
+          <div className="ml-9 mt-2">
+            <p className="mb-1 text-xs text-text-secondary">Правильный ответ:</p>
             <p className="text-sm font-semibold text-success">{correctAnswer}</p>
           </div>
         )}
 
         {explanation && (
-          <div className={`mt-2 ${isCorrect ? "ml-9" : "ml-9"}`}>
+          <div className="ml-9 mt-2">
             <p className="text-xs leading-relaxed text-text-secondary">
               {explanation}
             </p>
@@ -61,24 +69,54 @@ function FeedbackBanner({ isCorrect, correctAnswer, explanation }: { isCorrect: 
   )
 }
 
-export function CoachMiniTest({ questions, subject, onComplete, onRetry }: CoachMiniTestProps) {
+function buildReview(questions: MiniTestQuestion[], selectedAnswers: Array<number | null>): CoachMiniTestAnswerReview[] {
+  return questions.map((question, index) => {
+    const selectedIndex = selectedAnswers[index] ?? null
+    const correctIndex = question.correctIndex ?? 0
+    return {
+      questionId: question.id ?? `question-${index + 1}`,
+      question: question.question,
+      selectedIndex,
+      selectedAnswer: selectedIndex != null && question.options ? question.options[selectedIndex] : undefined,
+      correctIndex,
+      correctAnswer: question.options?.[correctIndex],
+      explanation: question.explanation,
+      isCorrect: selectedIndex != null && selectedIndex === correctIndex,
+    }
+  })
+}
+
+export function CoachMiniTest({ questions, subject, result, onComplete, onRetry }: CoachMiniTestProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selected, setSelected] = useState<number | null>(null)
-  const [answers, setAnswers] = useState<(number | null)[]>(() => Array(questions.length).fill(null))
-  const [phase, setPhase] = useState<"answering" | "answered" | "complete" | "history">("answering")
+  const [answers, setAnswers] = useState<(number | null)[]>(() => result?.selectedAnswers ?? Array(questions.length).fill(null))
+  const [phase, setPhase] = useState<"answering" | "answered" | "complete" | "history">(
+    result ? "complete" : "answering",
+  )
+
+  useEffect(() => {
+    setAnswers(result?.selectedAnswers ?? Array(questions.length).fill(null))
+    setCurrentIndex(0)
+    setSelected(null)
+    setPhase(result ? "complete" : "answering")
+  }, [questions, result])
 
   const current = questions[currentIndex]
   const isLast = currentIndex === questions.length - 1
 
-  const calcCorrect = () => answers.filter((a, i) => {
-    const q = questions[i]
-    return a != null && q != null && a === q.correctIndex
+  const calcCorrect = () => answers.filter((answer, index) => {
+    const question = questions[index]
+    return answer != null && question != null && answer === question.correctIndex
   }).length
 
   const handleSelect = useCallback((index: number) => {
     if (phase !== "answering") return
     setSelected(index)
-    setAnswers((prev) => { const next = [...prev]; next[currentIndex] = index; return next })
+    setAnswers((prev) => {
+      const next = [...prev]
+      next[currentIndex] = index
+      return next
+    })
     setPhase("answered")
   }, [phase, currentIndex])
 
@@ -89,14 +127,17 @@ export function CoachMiniTest({ questions, subject, onComplete, onRetry }: Coach
   }, [])
 
   const handleFinish = useCallback(() => {
-    const total = questions.length
-    const correctCount = answers.filter((a, i) => {
-      const q = questions[i]
-      return a != null && q != null && a === q.correctIndex
-    }).length
+    const correct = calcCorrect()
+    const nextAnswers = answers.map((answer) => answer ?? null)
+    const review = buildReview(questions, nextAnswers)
     setPhase("complete")
-    onComplete?.({ correct: correctCount, total })
-  }, [answers, questions, onComplete])
+    onComplete?.({
+      correct,
+      total: questions.length,
+      selectedAnswers: nextAnswers,
+      review,
+    })
+  }, [answers, onComplete, questions])
 
   const handleRetry = useCallback(() => {
     setCurrentIndex(0)
@@ -104,12 +145,12 @@ export function CoachMiniTest({ questions, subject, onComplete, onRetry }: Coach
     setAnswers(Array(questions.length).fill(null))
     setPhase("answering")
     onRetry?.()
-  }, [questions, onRetry])
+  }, [questions.length, onRetry])
 
-  const correct = calcCorrect()
+  const correct = result?.correctAnswers ?? calcCorrect()
   const incorrect = questions.length - correct
+  const review = result?.review ?? buildReview(questions, answers.map((answer) => answer ?? null))
 
-  // === RESULTS SCREEN ===
   if (phase === "complete") {
     return (
       <motion.div
@@ -130,11 +171,11 @@ export function CoachMiniTest({ questions, subject, onComplete, onRetry }: Coach
           </p>
           <div className="flex items-center gap-3 text-sm">
             <span className="flex items-center gap-1">
-              <span className="text-success font-semibold">{correct}</span>
+              <span className="font-semibold text-success">{correct}</span>
               <span className="text-text-secondary">правильно</span>
             </span>
             <span className="flex items-center gap-1">
-              <span className="text-error font-semibold">{incorrect}</span>
+              <span className="font-semibold text-error">{incorrect}</span>
               <span className="text-text-secondary">неправильно</span>
             </span>
           </div>
@@ -142,19 +183,25 @@ export function CoachMiniTest({ questions, subject, onComplete, onRetry }: Coach
             <motion.div
               className="h-full rounded-full bg-success"
               initial={{ width: 0 }}
-              animate={{ width: `${(correct / questions.length) * 100}%` }}
+              animate={{ width: `${questions.length > 0 ? (correct / questions.length) * 100 : 0}%` }}
               transition={{ type: "spring", stiffness: 100, damping: 20 }}
             />
           </div>
         </div>
         <div className="flex gap-2 pt-1">
-          <button type="button" onClick={() => setPhase("history")}
-            className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-[12px] border border-border text-sm font-medium text-text-secondary transition-colors hover:bg-border/30">
+          <button
+            type="button"
+            onClick={() => setPhase("history")}
+            className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-[12px] border border-border text-sm font-medium text-text-secondary transition-colors hover:bg-border/30"
+          >
             <ListChecks className="h-4 w-4" />
             Посмотреть ответы
           </button>
-          <button type="button" onClick={handleRetry}
-            className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-[12px] bg-primary text-sm font-medium text-white transition-colors hover:bg-primary-hover">
+          <button
+            type="button"
+            onClick={handleRetry}
+            className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-[12px] bg-primary text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+          >
             <RotateCcw className="h-4 w-4" />
             Повторить
           </button>
@@ -163,61 +210,60 @@ export function CoachMiniTest({ questions, subject, onComplete, onRetry }: Coach
     )
   }
 
-  // === HISTORY REVIEW SCREEN ===
   if (phase === "history") {
     return (
       <div className="rounded-[12px] border border-border bg-card-bg p-4">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-sm font-semibold">История ответов</p>
-          <button type="button" onClick={() => setPhase("complete")}
-            className="text-xs text-primary hover:underline">Назад</button>
+          <button type="button" onClick={() => setPhase("complete")} className="text-xs text-primary hover:underline">
+            Назад
+          </button>
         </div>
         <div className="space-y-3">
-          {questions.map((q, i) => {
-            const userAnswer = answers[i]
-            const isCorrect = userAnswer != null && userAnswer === q.correctIndex
-            const correctAnswerText = q.correctIndex != null && q.options ? q.options[q.correctIndex] : ""
-            return (
-              <div key={i} className={`rounded-[10px] border p-3 text-sm ${
-                isCorrect ? "border-success/20 bg-success/[0.03]" : "border-error/15 bg-error/[0.02]"
-              }`}>
-                <div className="flex items-start gap-2">
-                  <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
-                    isCorrect ? "bg-success/10 text-success" : "bg-error/10 text-error"
-                  }`}>
-                    {isCorrect ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium">{i + 1}. {q.question}</p>
-                    <div className="mt-1.5 space-y-1 text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="text-text-secondary">Ваш ответ:</span>
-                        <span className={`font-medium ${
-                          isCorrect ? "text-success" : "text-error"
-                        }`}>
-                          {userAnswer != null && q.options ? q.options[userAnswer] : "—"}
-                        </span>
-                      </div>
-                      {!isCorrect && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-text-secondary">Правильный:</span>
-                          <span className="font-medium text-success">{correctAnswerText}</span>
-                        </div>
-                      )}
+          {review.map((item, index) => (
+            <div
+              key={item.questionId}
+              className={`rounded-[10px] border p-3 text-sm ${
+                item.isCorrect ? "border-success/20 bg-success/[0.03]" : "border-error/15 bg-error/[0.02]"
+              }`}
+            >
+              <div className="flex items-start gap-2">
+                <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+                  item.isCorrect ? "bg-success/10 text-success" : "bg-error/10 text-error"
+                }`}>
+                  {item.isCorrect ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{index + 1}. {item.question}</p>
+                  <div className="mt-1.5 space-y-1 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="text-text-secondary">Ваш ответ:</span>
+                      <span className={`font-medium ${item.isCorrect ? "text-success" : "text-error"}`}>
+                        {item.selectedAnswer ?? "—"}
+                      </span>
                     </div>
-                    {q.explanation && (
-                      <p className="mt-1.5 text-xs leading-relaxed text-text-secondary">
-                        {q.explanation}
-                      </p>
+                    {!item.isCorrect && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-text-secondary">Правильный:</span>
+                        <span className="font-medium text-success">{item.correctAnswer ?? "—"}</span>
+                      </div>
                     )}
                   </div>
+                  {item.explanation && (
+                    <p className="mt-1.5 text-xs leading-relaxed text-text-secondary">
+                      {item.explanation}
+                    </p>
+                  )}
                 </div>
               </div>
-            )
-          })}
+            </div>
+          ))}
         </div>
-        <button type="button" onClick={() => setPhase("complete")}
-          className="mt-3 flex h-10 w-full items-center justify-center gap-1.5 rounded-[12px] border border-border text-sm font-medium text-text-secondary transition-colors hover:bg-border/30">
+        <button
+          type="button"
+          onClick={() => setPhase("complete")}
+          className="mt-3 flex h-10 w-full items-center justify-center gap-1.5 rounded-[12px] border border-border text-sm font-medium text-text-secondary transition-colors hover:bg-border/30"
+        >
           <ArrowLeft className="h-4 w-4" />
           Назад к результатам
         </button>
@@ -225,21 +271,23 @@ export function CoachMiniTest({ questions, subject, onComplete, onRetry }: Coach
     )
   }
 
-  // === ANSWERING / ANSWERED PHASE ===
-  const currentCI = current.correctIndex
-  const isCurrentCorrect = selected != null && currentCI != null && selected === currentCI
-  const correctAnswerText = currentCI != null && current.options
-    ? current.options[currentCI]
+  const currentCorrectIndex = current.correctIndex
+  const isCurrentCorrect = selected != null && currentCorrectIndex != null && selected === currentCorrectIndex
+  const correctAnswerText = currentCorrectIndex != null && current.options
+    ? current.options[currentCorrectIndex]
     : ""
 
   return (
     <div className="rounded-[12px] border border-border bg-card-bg p-4">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex gap-1.5">
-          {questions.map((_, i) => (
-            <div key={i} className={`h-2 w-2 rounded-full transition-colors ${
-              i === currentIndex ? "bg-primary" : i < currentIndex ? "bg-success" : "bg-border"
-            }`} />
+          {questions.map((_, index) => (
+            <div
+              key={index}
+              className={`h-2 w-2 rounded-full transition-colors ${
+                index === currentIndex ? "bg-primary" : index < currentIndex ? "bg-success" : "bg-border"
+              }`}
+            />
           ))}
         </div>
         <span className="text-xs text-text-secondary">Вопрос {currentIndex + 1} из {questions.length}</span>
@@ -268,10 +316,10 @@ export function CoachMiniTest({ questions, subject, onComplete, onRetry }: Coach
           )}
 
           <div className="flex flex-col gap-2">
-            {current.options?.map((option, i) => {
+            {current.options?.map((option, index) => {
               const answered = phase === "answered"
-              const isSelected = selected === i
-              const isCorrect = currentCI != null && i === currentCI
+              const isSelected = selected === index
+              const isCorrect = currentCorrectIndex != null && index === currentCorrectIndex
               const isWrongSelected = answered && isSelected && !isCorrect
 
               let btnStyle = "border-border hover:border-primary hover:bg-primary/[0.02]"
@@ -279,10 +327,15 @@ export function CoachMiniTest({ questions, subject, onComplete, onRetry }: Coach
               else if (isWrongSelected) btnStyle = "border-error/50 bg-error/8 text-error"
 
               return (
-                <button key={i} type="button" disabled={answered} onClick={() => handleSelect(i)}
+                <button
+                  key={index}
+                  type="button"
+                  disabled={answered}
+                  onClick={() => handleSelect(index)}
                   className={`flex min-h-[44px] items-center rounded-[12px] border px-4 text-sm transition-all disabled:cursor-default ${
                     !answered ? "active:scale-[0.98]" : ""
-                  } ${btnStyle}`}>
+                  } ${btnStyle}`}
+                >
                   <span className="flex-1 text-left">{option}</span>
                   {answered && isCorrect && <Check className="h-4 w-4 shrink-0" />}
                   {isWrongSelected && <X className="h-4 w-4 shrink-0" />}
@@ -298,8 +351,10 @@ export function CoachMiniTest({ questions, subject, onComplete, onRetry }: Coach
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          type="button" onClick={isLast ? handleFinish : handleNext}
-          className="mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-[12px] bg-primary text-sm font-semibold text-white transition-colors hover:bg-primary-hover active:scale-[0.98]">
+          type="button"
+          onClick={isLast ? handleFinish : handleNext}
+          className="mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-[12px] bg-primary text-sm font-semibold text-white transition-colors hover:bg-primary-hover active:scale-[0.98]"
+        >
           {isLast ? "Завершить" : "Далее"}
         </motion.button>
       )}

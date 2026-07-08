@@ -180,6 +180,19 @@ function buildDetailedHistoryContext(dailyHistory?: DailyPlanRecord[] | null): s
 function buildDayContext(dayContext?: Record<string, unknown> | null): string {
   if (!dayContext) return ""
 
+  const progressionMode = (() => {
+    const dayNumber = typeof dayContext.dayNumber === "number" ? dayContext.dayNumber : null
+    if (!dayNumber) return null
+    const modes = [
+      "foundation: короткое укрепление базы и вход в тему",
+      "application: применение темы на практике и на типовых задачах",
+      "analysis: разбор ошибок, сравнение подходов и поиск слабых мест",
+      "assessment: мини-проверка, самоконтроль и измерение прогресса",
+      "extension: усложнение, перенос знания в новый контекст, углубление",
+    ]
+    return modes[(dayNumber - 1) % modes.length]
+  })()
+
   return [
     "",
     "=== КОНТЕКСТ ТЕКУЩЕГО ДНЯ ===",
@@ -189,6 +202,7 @@ function buildDayContext(dayContext?: Record<string, unknown> | null): string {
       : null,
     typeof dayContext.weekNumber === "number" ? `Номер недели: ${dayContext.weekNumber}` : null,
     typeof dayContext.weekTitle === "string" ? `Фокус недели: ${dayContext.weekTitle}` : null,
+    progressionMode ? `Логика этого дня: ${progressionMode}` : null,
   ]
     .filter((line): line is string => typeof line === "string" && line.length > 0)
     .join("\n")
@@ -269,6 +283,8 @@ export async function generateDailyPlan(options: GenerateDailyPlanOptions): Prom
       "Нельзя повторять уже выполненные задачи прошлых дней ни дословно, ни по смыслу.",
       "Если вчера была теория по теме, сегодня нужен следующий шаг: практика, применение, разбор ошибок, мини-тест или углубление.",
       "Каждая задача должна иметь новый микро-фокус внутри темы, а не быть косметическим переписыванием вчерашней формулировки.",
+      "Сделай все 4-6 задач разными по функции: задачи не должны дублировать друг друга по смыслу.",
+      "Если история прошлых дней непустая, используй её как главный запрет на повтор и как основу для следующего шага вперёд.",
       "Ответь строго JSON по схеме:",
       "{",
       '  "tasks": [',

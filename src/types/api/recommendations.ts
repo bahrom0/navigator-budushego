@@ -100,6 +100,20 @@ export const RecommendationsResponseSchema = z.object({
       onboarding: OnboardingSchema.nullable(),
       overallConfidence: z.number(),
       generatedAt: z.string(),
+      pipeline: z.object({
+        completedSteps: z.array(
+          z.enum([
+            "submitting_request",
+            "analyzing_interests",
+            "searching_nct_codes",
+            "forming_recommendations",
+          ]),
+        ),
+        usedFallbacks: z.array(z.string()),
+        professions: z.array(z.string()),
+        directions: z.array(z.string()),
+        searchIntents: z.array(z.string()),
+      }),
     }),
   }),
   error: z.string().optional(),

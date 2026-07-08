@@ -69,11 +69,22 @@ function PlanContent() {
       }
       if (parsed?.plan && parsed.plan.nctCode && (!queryCode || parsed.plan.nctCode === queryCode)) {
         setCachedPlan(parsed.plan)
+        upsertPlan({
+          goalId: profileGoal?.id,
+          nctCode: parsed.plan.nctCode,
+          nctTitle: parsed.plan.nctTitle,
+          level: parsed.plan.level,
+          goals: parsed.plan.goals,
+          stages: parsed.plan.stages,
+          status: "active",
+          completedSteps: [],
+          planType: "general",
+        })
       }
     } catch {
       // ignore bad cache
     }
-  }, [])
+  }, [profileGoal?.id, queryCode, upsertPlan])
 
   const loadBundle = useCallback(async () => {
     setLoading(true)

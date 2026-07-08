@@ -1,14 +1,14 @@
 export type AnalysisStep =
+  | "submitting_request"
   | "analyzing_interests"
-  | "matching_nct"
-  | "searching_universities"
+  | "searching_nct_codes"
   | "forming_recommendations";
 
 export type AnalysisStatus = "idle" | "running" | "success" | "error";
 
 export const STEPS: { key: AnalysisStep; label: string }[] = [
-  { key: "analyzing_interests", label: "Анализируем интересы" },
-  { key: "matching_nct", label: "Сопоставляем с НЦТ" },
-  { key: "searching_universities", label: "Изучаем университеты" },
-  { key: "forming_recommendations", label: "Формируем рекомендации" },
+  { key: "submitting_request", label: "Отправка запроса" },
+  { key: "analyzing_interests", label: "Анализ интересов" },
+  { key: "searching_nct_codes", label: "Поиск кодов НЦТ" },
+  { key: "forming_recommendations", label: "Формирование рекомендаций" },
 ];

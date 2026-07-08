@@ -66,6 +66,74 @@ function StreamingContent({ content }: { content: string }) {
   )
 }
 
+function renderInlineMarkdown(text: string): ReactNode[] {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g)
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={index} className="font-semibold text-foreground">{part.slice(2, -2)}</strong>
+    }
+    return <span key={index}>{part}</span>
+  })
+}
+
+function renderMarkdownContent(content: string): ReactNode {
+  const lines = content.split(/\r?\n/)
+  const blocks: ReactNode[] = []
+  let listItems: string[] = []
+
+  const flushList = () => {
+    if (listItems.length === 0) return
+    blocks.push(
+      <ul key={`list-${blocks.length}`} className="ml-5 list-disc space-y-1">
+        {listItems.map((item, index) => (
+          <li key={index}>{renderInlineMarkdown(item)}</li>
+        ))}
+      </ul>,
+    )
+    listItems = []
+  }
+
+  lines.forEach((rawLine, index) => {
+    const line = rawLine.trim()
+
+    if (!line) {
+      flushList()
+      return
+    }
+
+    if (line.startsWith("- ") || line.startsWith("* ")) {
+      listItems.push(line.slice(2).trim())
+      return
+    }
+
+    flushList()
+
+    if (line.startsWith("### ")) {
+      blocks.push(<h4 key={`h3-${index}`} className="mt-3 text-base font-semibold">{renderInlineMarkdown(line.slice(4))}</h4>)
+      return
+    }
+
+    if (line.startsWith("## ")) {
+      blocks.push(<h3 key={`h2-${index}`} className="mt-3 text-lg font-semibold">{renderInlineMarkdown(line.slice(3))}</h3>)
+      return
+    }
+
+    if (line.startsWith("# ")) {
+      blocks.push(<h2 key={`h1-${index}`} className="mt-3 text-xl font-semibold">{renderInlineMarkdown(line.slice(2))}</h2>)
+      return
+    }
+
+    blocks.push(
+      <p key={`p-${index}`} className="whitespace-pre-wrap">
+        {renderInlineMarkdown(rawLine)}
+      </p>,
+    )
+  })
+
+  flushList()
+  return <div className="space-y-2">{blocks}</div>
+}
+
 function MessageItem({
   message,
   isStreaming,
@@ -102,13 +170,13 @@ function MessageItem({
         )}
 
         <div className={`min-w-0 flex-1 ${isUser ? "text-right" : "text-left"}`}>
-          <p className="text-[15px] leading-relaxed text-foreground">
+          <div className="text-[15px] leading-relaxed text-foreground">
             {isStreaming ? (
               <StreamingContent content={message.content} />
             ) : (
-              message.content
+              renderMarkdownContent(message.content)
             )}
-          </p>
+          </div>
           <p className="mt-1 text-[11px] text-text-muted">{time}</p>
           {!isUser && !isStreaming && (
             <div className="mt-2 flex items-center gap-1" aria-label="Действия с ответом">

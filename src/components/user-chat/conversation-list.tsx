@@ -62,7 +62,7 @@ export function ConversationList({
       <div className="shrink-0 border-b border-border bg-card-bg/72 px-3 py-3 backdrop-blur">
         {communityTitle ? (
           <div className="mb-3">
-            <span className="navigator-kicker navigator-kicker--muted">Secondary feature · community</span>
+            <span className="navigator-kicker navigator-kicker--muted">Сообщество</span>
             <p className="mt-3 text-sm font-semibold text-foreground">{communityTitle}</p>
             {communityDescription ? (
               <p className="mt-1 text-xs leading-5 text-text-secondary">{communityDescription}</p>

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { chatWithCoach } from "@/lib/ai/coach-chat"
 import type { CoachGoal, CoachRoadmap, CoachDayPlan, CoachDiagnosticResult, CoachMiniTestResult, CoachProgress } from "@/types/coach"
+import type { DevelopmentPlan } from "@/types/plan"
+import type { DailyPlanRecord } from "@/types/admission"
 
 export const dynamic = "force-dynamic"
 
@@ -11,8 +13,10 @@ const CoachChatRequestSchema = z.object({
     .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string() }))
     .optional(),
   goal: z.unknown().optional(),
+  plan: z.unknown().optional(),
   roadmap: z.unknown().optional(),
   dayPlan: z.unknown().optional(),
+  dailyHistory: z.unknown().optional(),
   diagnostics: z.unknown().optional(),
   miniTests: z.unknown().optional(),
   progress: z.unknown().optional(),
@@ -30,11 +34,13 @@ export async function POST(request: Request) {
       )
     }
 
-    const { message, history, goal: rawGoal, roadmap: rawRoadmap, dayPlan: rawDayPlan, diagnostics: rawDiagnostics, miniTests: rawMiniTests, progress: rawProgress } = parsed.data
+    const { message, history, goal: rawGoal, plan: rawPlan, roadmap: rawRoadmap, dayPlan: rawDayPlan, dailyHistory: rawDailyHistory, diagnostics: rawDiagnostics, miniTests: rawMiniTests, progress: rawProgress } = parsed.data
     const result = await chatWithCoach(message, history, {
       goal: rawGoal as CoachGoal | null | undefined,
+      plan: rawPlan as DevelopmentPlan | null | undefined,
       roadmap: rawRoadmap as CoachRoadmap | null | undefined,
       dayPlan: rawDayPlan as CoachDayPlan | null | undefined,
+      dailyHistory: rawDailyHistory as DailyPlanRecord[] | null | undefined,
       diagnostics: rawDiagnostics as CoachDiagnosticResult | null | undefined,
       miniTests: rawMiniTests as CoachMiniTestResult[] | null | undefined,
       progress: rawProgress as CoachProgress | null | undefined,

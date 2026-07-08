@@ -117,11 +117,24 @@ export interface CoachMiniTestQuestion {
   explanation: string
 }
 
+export interface CoachMiniTestAnswerReview {
+  questionId: string
+  question: string
+  selectedIndex: number | null
+  selectedAnswer?: string
+  correctIndex: number
+  correctAnswer?: string
+  explanation?: string
+  isCorrect: boolean
+}
+
 export interface CoachMiniTestResult {
   totalQuestions: number
   correctAnswers: number
   subject: string
   takenAt: number
+  selectedAnswers?: Array<number | null>
+  review?: CoachMiniTestAnswerReview[]
 }
 
 export interface CoachMiniTest {

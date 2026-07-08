@@ -50,10 +50,12 @@ interface CoachStore {
   clearDiagnostics: () => void
 
   miniTests: CoachMiniTest[]
+  setMiniTests: (tests: CoachMiniTest[]) => void
   addMiniTest: (test: CoachMiniTest) => void
   setMiniTestResult: (testId: string, result: CoachMiniTestResult) => void
 
   messages: CoachMessage[]
+  setMessages: (messages: CoachMessage[]) => void
   addMessage: (msg: CoachMessage) => void
   clearMessages: () => void
 
@@ -98,6 +100,8 @@ type PersistedCoachState = Pick<
   | "dayPlan"
   | "navigateDate"
   | "diagnostics"
+  | "miniTests"
+  | "messages"
   | "progress"
   | "activeTab"
 >
@@ -106,11 +110,13 @@ function buildPersistedState(state: Partial<CoachStore>): PersistedCoachState {
   return {
     goal: state.goal ?? null,
     plan: state.plan ?? null,
-    dailyHistory: state.dailyHistory ?? [],
+    dailyHistory: Array.isArray(state.dailyHistory) ? state.dailyHistory : [],
     roadmap: state.roadmap ?? null,
     dayPlan: state.dayPlan ?? null,
     navigateDate: state.navigateDate ?? new Date().toISOString().slice(0, 10),
-    diagnostics: state.diagnostics ?? [],
+    diagnostics: Array.isArray(state.diagnostics) ? state.diagnostics : [],
+    miniTests: Array.isArray(state.miniTests) ? state.miniTests : [],
+    messages: Array.isArray(state.messages) ? state.messages : [],
     progress: state.progress ?? initialProgress,
     activeTab: state.activeTab ?? "today",
   }
@@ -121,7 +127,7 @@ function persistCoachState(state: Partial<CoachStore>): void {
 }
 
 export const useCoachStore = create<CoachStore>((set, get) => {
-  const persisted = cacheGet<PersistedCoachState>(STORAGE_KEY) ?? buildPersistedState({})
+  const persisted = buildPersistedState(cacheGet<PersistedCoachState>(STORAGE_KEY) ?? {})
 
   return {
   bundle: null,
@@ -169,7 +175,7 @@ export const useCoachStore = create<CoachStore>((set, get) => {
   archiveGoal: () =>
     set((state) => {
       if (!state.goal) return state
-      const next = { ...state, goal: { ...state.goal, status: "changed" } }
+      const next = { ...state, goal: { ...state.goal, status: "changed" as const } }
       persistCoachState(next)
       return next
     }),
@@ -300,28 +306,69 @@ export const useCoachStore = create<CoachStore>((set, get) => {
     return next
   }),
 
-  miniTests: [],
+  miniTests: persisted.miniTests,
+  setMiniTests: (tests) =>
+    set((state) => {
+      const next = { ...state, miniTests: tests }
+      persistCoachState(next)
+      return next
+    }),
   addMiniTest: (test) =>
     set((state) => {
       const existing = state.miniTests.find((t) => t.id === test.id)
-      if (existing) {
-        return {
-          miniTests: state.miniTests.map((t) => (t.id === test.id ? test : t)),
-        }
-      }
-      return { miniTests: [test, ...state.miniTests] }
+      const next = existing
+        ? {
+            ...state,
+            miniTests: state.miniTests.map((t) => (t.id === test.id ? test : t)),
+          }
+        : {
+            ...state,
+            miniTests: [test, ...state.miniTests],
+          }
+      persistCoachState(next)
+      return next
     }),
   setMiniTestResult: (testId, result) =>
-    set((state) => ({
-      miniTests: state.miniTests.map((t) =>
-        t.id === testId ? { ...t, result } : t,
-      ),
-    })),
+    set((state) => {
+      const next = {
+        ...state,
+        miniTests: state.miniTests.map((t) =>
+          t.id === testId ? { ...t, result } : t,
+        ),
+        messages: state.messages.map((message) =>
+          message.miniTest?.id === testId
+            ? {
+                ...message,
+                miniTest: {
+                  ...message.miniTest,
+                  result,
+                },
+              }
+            : message,
+        ),
+      }
+      persistCoachState(next)
+      return next
+    }),
 
-  messages: [],
+  messages: persisted.messages,
+  setMessages: (messages) =>
+    set((state) => {
+      const next = { ...state, messages }
+      persistCoachState(next)
+      return next
+    }),
   addMessage: (msg) =>
-    set((state) => ({ messages: [...state.messages, msg] })),
-  clearMessages: () => set({ messages: [] }),
+    set((state) => {
+      const next = { ...state, messages: [...state.messages, msg] }
+      persistCoachState(next)
+      return next
+    }),
+  clearMessages: () => set((state) => {
+    const next = { ...state, messages: [] }
+    persistCoachState(next)
+    return next
+  }),
 
   progress: persisted.progress,
   updateProgress: (partial) =>
@@ -353,7 +400,7 @@ export const useCoachStore = create<CoachStore>((set, get) => {
   error: null,
   setError: (error) => set({ error }),
 
-    reset: () =>
+  reset: () => {
     set({
       bundle: null,
       goal: null,
@@ -370,7 +417,8 @@ export const useCoachStore = create<CoachStore>((set, get) => {
       activeTab: "today",
       isLoading: false,
       error: null,
-    }),
-    cacheRemove(STORAGE_KEY),
+    })
+    cacheRemove(STORAGE_KEY)
+  },
   }
 })

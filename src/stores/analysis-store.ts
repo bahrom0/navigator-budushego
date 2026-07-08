@@ -20,7 +20,7 @@ interface AnalysisStore {
   clearCache: () => void
 }
 
-const INITIAL_STEP: AnalysisStep = "analyzing_interests"
+const INITIAL_STEP: AnalysisStep = "submitting_request"
 
 export const useAnalysisStore = create<AnalysisStore>((set, get) => ({
   status: "idle",
@@ -36,9 +36,9 @@ export const useAnalysisStore = create<AnalysisStore>((set, get) => ({
   nextStep: () => {
     const { stepIndex } = get()
     const steps: AnalysisStep[] = [
+      "submitting_request",
       "analyzing_interests",
-      "matching_nct",
-      "searching_universities",
+      "searching_nct_codes",
       "forming_recommendations",
     ]
     const nextIndex = Math.min(stepIndex + 1, steps.length - 1)

@@ -354,10 +354,10 @@ export default function UserChatPage() {
     [communityContext],
   )
   const communityTitle = communityContext
-    ? `Community around ${communityContext.nctCode}`
-    : "Community around your goal"
+    ? `Ваш код ${communityContext.nctCode}`
+    : "Сообщество вокруг вашей цели"
   const communityDescription = communityContext
-    ? "User Chat stays a secondary community layer: discuss the chosen code, meet peers with a similar goal, and compare roadmap rhythm without replacing Coach."
+    ? ""
     : "Use Community to talk to people around your goal. Goal, plan, roadmap, and today still stay in the core flow."
 
   const loadDiscovery = useCallback(async (

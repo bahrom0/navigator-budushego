@@ -8,6 +8,9 @@ import type { TeacherBundleContext, TeacherEntryContext } from "@/types/teacher"
 
 export const dynamic = "force-dynamic"
 
+const TEACHER_EMPTY_REPLY =
+  "Сейчас у меня не собрался полноценный ответ по этому сообщению. Попробуйте переформулировать вопрос чуть конкретнее: укажите тему, этап плана или задачу Coach, и я разберу это по шагам."
+
 const TeacherChatSchema = z.object({
   message: z.string().min(1),
   history: z
@@ -115,6 +118,13 @@ export async function POST(request: Request) {
       )
     }
 
+    let responseType =
+      typeof parsedResponse.type === "string"
+        ? parsedResponse.type
+        : Array.isArray(parsedResponse.questions)
+          ? "quiz"
+          : "text"
+
     const replyText =
       typeof parsedResponse.reply === "string" && parsedResponse.reply.trim()
         ? parsedResponse.reply
@@ -122,18 +132,29 @@ export async function POST(request: Request) {
           ? parsedResponse.message
           : typeof parsedResponse.text === "string" && parsedResponse.text.trim()
             ? parsedResponse.text
-            : ""
+            : typeof parsedResponse.response === "string" && parsedResponse.response.trim()
+              ? parsedResponse.response
+              : typeof parsedResponse.content === "string" && parsedResponse.content.trim()
+                ? parsedResponse.content
+                : typeof parsedResponse.answer === "string" && parsedResponse.answer.trim()
+                  ? parsedResponse.answer
+                  : Array.isArray(parsedResponse.questions)
+                    ? [
+                        `Мини-тест${typeof parsedResponse.subject === "string" ? ` по теме ${parsedResponse.subject}` : ""}:`,
+                        ...(parsedResponse.questions as Array<Record<string, unknown>>).map((question, index) => {
+                          const options = Array.isArray(question.options)
+                            ? question.options.map((option, optionIndex) => `   ${String.fromCharCode(97 + optionIndex)}) ${String(option)}`).join("\n")
+                            : ""
+                          return `${index + 1}. ${String(question.question ?? "")}${options ? `\n${options}` : ""}`
+                        }),
+                      ].join("\n\n")
+                    : ""
 
-    if (!replyText) {
-      return NextResponse.json(
-        { status: "error", error: "AI response missing text content", data: null },
-        { status: 502 },
-      )
-    }
+    const safeReply = replyText || TEACHER_EMPTY_REPLY
 
     const validated = TeacherChatResponseSchema.safeParse({
-      reply: replyText,
-      type: parsedResponse.type ?? "text",
+      reply: safeReply,
+      type: responseType === "quiz" ? "quiz" : parsedResponse.type ?? "text",
     })
 
     if (!validated.success) {
