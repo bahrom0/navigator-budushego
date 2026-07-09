@@ -49,9 +49,9 @@ function groupSessions(sessions: ChatSessionRecord[]): ChatHistoryGroup[] {
   }
 
   return ([
-    { label: "Today", sessions: groups.Today },
-    { label: "Yesterday", sessions: groups.Yesterday },
-    { label: "Earlier", sessions: groups.Earlier },
+    { label: "Сегодня", sessions: groups.Today },
+    { label: "Вчера", sessions: groups.Yesterday },
+    { label: "Давно", sessions: groups.Earlier },
   ] as ChatHistoryGroup[]).filter((g) => g.sessions.length > 0)
 }
 
@@ -583,7 +583,7 @@ function TeacherPageContent() {
             error={error}
             streamingId={streamingId}
             onRegenerate={regenerateMessage}
-            loadingText="AI Chat готовит ответ..."
+            loadingText="Думаю"
             emptyState={(
               <motion.div
                 initial={{ opacity: 0, y: 12 }}

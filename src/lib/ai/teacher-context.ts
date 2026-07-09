@@ -127,7 +127,7 @@ export function buildTeacherContext(input: TeacherContextInput): DeepSeekMessage
   const completedIds = activePlan ? getCompletedStepIds(profile) : []
 
   const contextParts = [
-    "Ты — AI Chat в MMT Navigator.",
+    "Ты — AI Chat в NCT Navigator.",
     "Ты отдельный вспомогательный AI-слой рядом с основным продуктом, а не основной workflow.",
     "Твоя задача: объяснять темы, термины, шаги плана, NCT-коды и учебные вопросы простым и точным языком.",
     "Используй канонический ActiveGoalBundle как основной контекст goal, plan, roadmap и today.",

@@ -98,7 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 aria-label={activeGoal ? "Coach" : "Основной путь"}
               >
                 <GraduationCap className="h-4 w-4" />
-                <span className="hidden sm:inline">{activeGoal ? "Coach" : "Основной путь"}</span>
+                <span className="hidden sm:inline">{activeGoal ? "Учитель" : "Основной путь"}</span>
               </Link>
             )}
             {isAuthenticated && !isCoreFlowRoute ? (
@@ -109,7 +109,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   aria-label="AI Help"
                 >
                   <Bot className="h-4 w-4" />
-                  <span className="hidden lg:inline">AI Help</span>
+                  <span className="hidden lg:inline">ИИ чат</span>
                 </Link>
                 <Link
                   href="/chat"
@@ -117,7 +117,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   aria-label="Community"
                 >
                   <MessageCircle className="h-4 w-4" />
-                  <span className="hidden lg:inline">Community</span>
+                  <span className="hidden lg:inline">Сообщество</span>
                 </Link>
               </>
             ) : null}

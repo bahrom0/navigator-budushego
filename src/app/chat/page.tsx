@@ -358,7 +358,7 @@ export default function UserChatPage() {
     : "Сообщество вокруг вашей цели"
   const communityDescription = communityContext
     ? ""
-    : "Use Community to talk to people around your goal. Goal, plan, roadmap, and today still stay in the core flow."
+    : ""
 
   const loadDiscovery = useCallback(async (
     scope: CommunityScope | null,
@@ -655,12 +655,12 @@ export default function UserChatPage() {
   const selectedCommunityFilter = communityFilters.find((filter) => filter.id === communityFilter) ?? null
   const emptyStateTitle = communityContext
     ? `Ваш код ${communityContext.nctCode}`
-    : "Open Community from your goal"
+    : "Открытое сообщество, исходя из вашей цели"
   const emptyStateBody = selectedCommunityFilter
-    ? `Now looking for people in "${selectedCommunityFilter.label}". Goal and roadmap remain in Coach and Plan; Community is only for peer discussion.`
+    ? `Сейчас ищем людей в "${selectedCommunityFilter.label}". Цель и план действий остаются в разделе "Коучинг" и "План"; сообщество предназначено только для обсуждения между участниками.`
     : communityContext
-      ? "Use Community to discuss the selected code, find people with a similar goal, or compare the current roadmap week."
-      : "Community appears after you choose a goal. It stays connected to the active goal instead of becoming a separate social feed."
+      ? "Используйте сообщество, чтобы обсудить выбранный код, найти людей со схожей целью или сравнить текущие планы на неделю."
+      : "Сообщество появляется после выбора цели. Оно остается связанным с активной целью, а не превращается в отдельную социальную ленту."
   const communityEmptyState = (
     <CommunityHome
       title={emptyStateTitle}
@@ -972,19 +972,19 @@ function CommunityHome({
         <div className="navigator-surface p-4 text-left">
           <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <Users className="h-4 w-4 text-primary" />
-            Goal-centered peers
+            Одно направление
           </div>
           <p className="mt-2 text-sm leading-6 text-text-secondary">
-            Find people with the same code, city, university, or roadmap week and open a direct conversation from there.
+            Найдите людей с похожим кодом, городом, университетом или планами на те же недели и начните прямое общение.
           </p>
         </div>
         <div className="navigator-surface p-4 text-left">
           <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <MapPinned className="h-4 w-4 text-primary" />
-            Safe boundary
+            Будут вопросы?
           </div>
           <p className="mt-2 text-sm leading-6 text-text-secondary">
-            Community supports the active goal. It does not replace Coach, does not create a parallel plan flow, and does not turn MMT Navigator into a social feed.
+            Сообщество поддерживает активную цель. Оно не заменяет тренера, не создает параллельного потока планирования и не превращает NCT Navigator в социальную ленту.
           </p>
         </div>
       </div>
