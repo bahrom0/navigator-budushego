@@ -303,4 +303,19 @@ button {
   .navigator-page {
     padding: 1.25rem 1rem 5rem;
   }
+
+  .navigator-kicker {
+    white-space: normal;
+    line-height: 1.35;
+    letter-spacing: 0.08em;
+  }
+
+  .navigator-page-title {
+    font-size: 2rem;
+  }
+
+  .navigator-page-subtitle {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
 }

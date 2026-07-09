@@ -246,7 +246,7 @@ const displayedResults = useMemo(() => {
         })
         setActiveGoal(goal)
         logActivityEvent("coach_goal_set", `Активная цель: ${result.code} - ${result.title_ru}`)
-        router.push("/plan")
+        router.push(`/interview?code=${encodeURIComponent(result.code)}&title=${encodeURIComponent(result.title_ru)}`)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Не удалось выбрать цель")
       }

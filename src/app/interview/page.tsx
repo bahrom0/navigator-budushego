@@ -43,12 +43,20 @@ function InterviewContent() {
   const [textAnswer, setTextAnswer] = useState("")
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
 
-  const createPlanFromInterview = useCallback(async () => {
+  const createPlanFromInterview = useCallback(async (
+    options?: {
+      answers?: Array<{ question: string; answer: string }>
+      summary?: string
+      level?: "beginner" | "intermediate" | "advanced"
+    },
+  ) => {
     if (!nctCode || !nctTitle || creatingPlan) return
     setCreatingPlan(true)
     setPlanError(null)
 
-    const interviewAnswers = answers.map((item) => ({ question: item.question, answer: item.answer }))
+    const interviewAnswers = options?.answers ?? answers.map((item) => ({ question: item.question, answer: item.answer }))
+    const interviewSummary = options?.summary ?? finalSummary
+    const interviewLevel = options?.level ?? finalLevel
     try {
       const res = await fetch("/api/generate-plan", {
         method: "POST",
@@ -63,12 +71,12 @@ function InterviewContent() {
           previousAnswers: interviewAnswers,
           diagnosticContext: {
             source: "interview",
-            summary: finalSummary || undefined,
-            level: finalLevel,
+            summary: interviewSummary || undefined,
+            level: interviewLevel,
             answers: interviewAnswers,
           },
           assessment: {
-            level: finalLevel,
+            level: interviewLevel,
             skills: [],
             strengths: [],
             gaps: [],
@@ -180,9 +188,18 @@ function InterviewContent() {
       })
 
       if (result.data?.isComplete) {
+        const completedSummary = result.data.summary || "Интервью завершено."
+        const completedLevel = result.data.level || "beginner"
+        const completedAnswers = [
+          ...answers.map((a) => ({ question: a.question, answer: a.answer })),
+          { question: currentQuestion.question, answer },
+        ]
         setCompleted(result.data.summary || "Интервью завершено.")
         setFinalSummary(result.data.summary || "Интервью завершено.")
         setFinalLevel(result.data.level || "beginner")
+        setCompleted(completedSummary)
+        setFinalSummary(completedSummary)
+        setFinalLevel(completedLevel)
         upsertInterview({
           nctCode,
           nctTitle: nctTitle || "выбранное направление",
@@ -193,6 +210,11 @@ function InterviewContent() {
           level: result.data.level,
         })
         logActivityEvent("finish_interview", `Интервью для ${nctCode} завершено`)
+        void createPlanFromInterview({
+          answers: completedAnswers,
+          summary: completedSummary,
+          level: completedLevel,
+        })
       } else {
         nextQuestion()
       }
@@ -201,7 +223,7 @@ function InterviewContent() {
     } finally {
       setSubmitting(false)
     }
-  }, [currentQuestion, selectedOption, textAnswer, answers, currentQuestionIndex, nctCode, nctTitle])
+  }, [answers, createPlanFromInterview, currentQuestion, currentQuestionIndex, nctCode, nctTitle, selectedOption, textAnswer])
 
   if (currentStep === "loading") {
     return (
@@ -223,7 +245,7 @@ function InterviewContent() {
           </p>
           <div className="mt-8 flex flex-col gap-3">
             <button
-              onClick={createPlanFromInterview}
+              onClick={() => void createPlanFromInterview()}
               disabled={creatingPlan}
               className="inline-flex h-12 items-center justify-center gap-2 rounded-[14px] bg-primary px-6 text-base font-medium text-white transition-colors hover:bg-primary-hover disabled:cursor-wait disabled:opacity-70"
             >

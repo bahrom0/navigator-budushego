@@ -22,9 +22,9 @@ interface TabConfig {
 
 const TABS: TabConfig[] = [
   { id: "roadmap", label: "Roadmap", icon: Map },
-  { id: "today", label: "Today", icon: Target },
-  { id: "chat", label: "Chat", icon: MessageCircle },
-  { id: "progress", label: "Progress", icon: TrendingUp },
+  { id: "today", label: "Сегодня", icon: Target },
+  { id: "chat", label: "Чат", icon: MessageCircle },
+  { id: "progress", label: "Прогресс", icon: TrendingUp },
 ];
 
 interface CoachShellProps {
@@ -58,7 +58,7 @@ export function CoachShell({ children }: CoachShellProps) {
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <StreakBadge value={streak} />
-            {resolvedGoal ? (
+            {/* {resolvedGoal ? (
               <button
                 type="button"
                 onClick={archiveGoal}
@@ -68,7 +68,7 @@ export function CoachShell({ children }: CoachShellProps) {
               >
                 <Settings2 className="h-4 w-4" />
               </button>
-            ) : null}
+            ) : null} */}
           </div>
         </div>
         <div className="mt-2 hidden md:block">

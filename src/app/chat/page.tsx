@@ -654,7 +654,7 @@ export default function UserChatPage() {
   const otherMember = conversations.find((c) => c.id === activeConversationId)?.other_member
   const selectedCommunityFilter = communityFilters.find((filter) => filter.id === communityFilter) ?? null
   const emptyStateTitle = communityContext
-    ? `Start from ${communityContext.nctCode}`
+    ? `Ваш код ${communityContext.nctCode}`
     : "Open Community from your goal"
   const emptyStateBody = selectedCommunityFilter
     ? `Now looking for people in "${selectedCommunityFilter.label}". Goal and roadmap remain in Coach and Plan; Community is only for peer discussion.`
@@ -939,7 +939,7 @@ function CommunityHome({
 }) {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col items-center px-6 text-center">
-      <span className="navigator-kicker navigator-kicker--muted">Secondary feature · community</span>
+      {/* <span className="navigator-kicker navigator-kicker--muted">Secondary feature · community</span> */}
       <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/10 text-primary">
         <Compass className="h-8 w-8" />
       </div>

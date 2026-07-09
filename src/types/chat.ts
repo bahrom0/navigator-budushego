@@ -42,6 +42,6 @@ export interface Attachment {
 }
 
 export interface ChatHistoryGroup {
-  label: "Today" | "Yesterday" | "Earlier"
+  label: "Сегодня" | "Вчера" | "Давно"
   sessions: ChatSession[]
 }

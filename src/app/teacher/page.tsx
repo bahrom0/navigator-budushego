@@ -445,7 +445,7 @@ function TeacherPageContent() {
 
   const entryHeadline = useMemo(() => {
     if (entryContext?.taskTitle) return `Помощь по задаче: ${entryContext.taskTitle}`
-    if (entryContext?.weekTitle) return `Помощь по неделе roadmap: ${entryContext.weekTitle}`
+    if (entryContext?.weekTitle) return `${entryContext.weekTitle}`
     if (entryContext?.stageTitle) return `Помощь по этапу плана: ${entryContext.stageTitle}`
     if (bundleGoal ?? activeGoal) return `AI Chat рядом с целью ${(bundleGoal ?? activeGoal)?.nctCode}`
     return "AI Chat как вторичный помощник"
@@ -456,15 +456,15 @@ function TeacherPageContent() {
       return "AI Chat поможет разобрать тему или задачу, но приоритеты и следующий шаг по-прежнему остаются в Coach."
     }
 
-    if (entryContext?.source === "coach_roadmap") {
-      return "Используйте AI Chat, чтобы понять смысл текущей недели roadmap, темы и учебные риски, не превращая его в замену Coach."
-    }
+    // if (entryContext?.source === "coach_roadmap") {
+    //   return "Используйте AI Chat, чтобы понять смысл текущей недели roadmap, темы и учебные риски, не превращая его в замену Coach."
+    // }
 
-    if (entryContext?.source === "plan") {
-      return "Используйте AI Chat, чтобы понять этапы общего плана, термины и учебные темы, не превращая его в замену Coach."
-    }
+    // if (entryContext?.source === "plan") {
+    //   return "Используйте AI Chat, чтобы понять этапы общего плана, термины и учебные темы, не превращая его в замену Coach."
+    // }
 
-    return "AI Chat объясняет темы, термины и шаги плана. Он не выбирает цель, не строит roadmap и не ведёт ежедневное выполнение вместо Coach."
+    // return "AI Chat объясняет темы, термины и шаги плана. Он не выбирает цель, не строит roadmap и не ведёт ежедневное выполнение вместо Coach."
   }, [entryContext])
 
   if (!mounted || authLoading) {

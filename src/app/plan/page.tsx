@@ -37,6 +37,7 @@ function PlanContent() {
   const queryTitle = searchParams.get("title") || ""
 
   const profileGoal = useProfileStore((s) => s.activeGoal)
+  const interviews = useProfileStore((s) => s.interviews)
   const setProfileGoal = useProfileStore((s) => s.setActiveGoal)
   const upsertPlan = useProfileStore((s) => s.upsertPlan)
 
@@ -49,6 +50,9 @@ function PlanContent() {
     ? bundle.goal
     : profileGoal ?? (queryCode ? toGoalFallback(queryCode, queryTitle || "Выбранное направление") : null)
   const plan = bundle ? bundle.generalPlan : cachedPlan
+  const goalCode = goal?.nctCode ?? queryCode
+  const goalTitle = goal?.nctTitle ?? queryTitle
+  const hasInterviewForGoal = Boolean(goalCode) && interviews.some((interview) => interview.nctCode === goalCode)
   const recommendationSnapshot = bundle?.recommendationSnapshot ?? null
   const saveState: "idle" | "saved" = plan ? "saved" : "idle"
   const coachHref = goal
@@ -56,6 +60,7 @@ function PlanContent() {
       ? "/coach"
       : "/coach?setup=roadmap"
     : `/interview?code=${encodeURIComponent(queryCode)}&title=${encodeURIComponent(queryTitle)}`
+  const interviewHref = `/interview?code=${encodeURIComponent(goalCode)}&title=${encodeURIComponent(goalTitle)}`
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -142,6 +147,11 @@ function PlanContent() {
     void loadBundle()
   }, [loadBundle])
 
+  useEffect(() => {
+    if (loading || plan || !goalCode || hasInterviewForGoal) return
+    router.replace(interviewHref)
+  }, [goalCode, hasInterviewForGoal, interviewHref, loading, plan, router])
+
   if (loading && !goal) {
     return (
       <main className="navigator-page navigator-page--narrow flex flex-1 items-center justify-center py-24">
@@ -164,7 +174,7 @@ function PlanContent() {
   return (
     <main className="navigator-page navigator-page--narrow flex flex-1 flex-col">
       <div className="mx-auto w-full max-w-5xl">
-        <div className="navigator-hero mb-8 flex items-start gap-3 p-5 sm:p-6">
+        <div className="navigator-hero mb-8 flex flex-wrap items-start gap-4 p-5 sm:p-6">
           <button
             onClick={() => window.history.back()}
             className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-border bg-card-bg transition-colors hover:bg-background"
@@ -172,20 +182,20 @@ function PlanContent() {
           >
             <ArrowLeft className="h-4 w-4 text-text-secondary" />
           </button>
-          <div className="flex-1">
-            <span className="navigator-kicker">Core flow · general plan</span>
+          <div className="min-w-[15rem] flex-1">
+            <span className="navigator-kicker">Изучите план</span>
             <h1 className="navigator-page-title mt-3">План цели</h1>
             <p className="navigator-page-subtitle mt-3">
               {goal ? `${goal.nctTitle} · ${goal.nctCode}` : "Сначала выберите цель и пройдите интервью"}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full items-center gap-2 sm:w-auto">
               <button
               onClick={() =>
-                router.push(coachHref)
+                router.push(goal ? coachHref : interviewHref)
               }
-              disabled={!goal && !queryCode}
-              className="inline-flex h-11 items-center gap-2 rounded-[14px] bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-40"
+              disabled={!goalCode}
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[14px] bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-40 sm:w-auto"
             >
               <Target className="h-4 w-4" />
               {goal ? "Перейти в Coach" : "Пройти интервью"}
@@ -224,7 +234,7 @@ function PlanContent() {
           </section>
         ) : null}
 
-        {goal ? (
+        {/* {goal ? (
           <section className="navigator-surface mb-6 p-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="max-w-3xl">
@@ -253,9 +263,9 @@ function PlanContent() {
               </div>
             </div>
           </section>
-        ) : null}
+        ) : null} */}
 
-        {goal ? (
+        {/* {goal ? (
           <section className="navigator-surface mb-6 p-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="max-w-3xl">
@@ -276,7 +286,7 @@ function PlanContent() {
               </button>
             </div>
           </section>
-        ) : null}
+        ) : null} */}
 
         {plan ? (
           <section>
@@ -348,9 +358,7 @@ function PlanContent() {
             title="Интервью завершено"
             text="После интервью здесь появится общий план развития. Если план еще не создан, пройдите интервью по выбранному коду."
             actionLabel="Перейти к интервью"
-            onAction={() =>
-              router.push(`/interview?code=${encodeURIComponent(goal?.nctCode ?? queryCode)}&title=${encodeURIComponent(goal?.nctTitle ?? queryTitle)}`)
-            }
+            onAction={() => router.push(interviewHref)}
           />
         )}
       </div>
@@ -375,10 +383,10 @@ function EmptyPrompt({
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="navigator-surface p-6 text-center"
+      className="navigator-surface p-5 text-left sm:p-6 sm:text-center"
     >
-      <div className="mx-auto flex max-w-sm flex-col items-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-light">
+      <div className="mx-auto flex max-w-[34rem] flex-col items-start sm:items-center">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary-light">
           {icon}
         </div>
         <h3 className="mt-4 text-base font-semibold text-foreground">{title}</h3>
@@ -386,7 +394,7 @@ function EmptyPrompt({
         <button
           type="button"
           onClick={onAction}
-          className="mt-5 inline-flex h-11 items-center gap-2 rounded-[12px] bg-primary px-5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+          className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[12px] bg-primary px-5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover sm:w-auto"
         >
           {actionLabel}
         </button>
